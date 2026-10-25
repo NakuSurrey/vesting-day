@@ -28,3 +28,7 @@ desktop.ini
 .idea/
 *.swp
 *.swo
+
+# Runtime state (H-MEM memory + held drafts); starts empty on a fresh clone
+data/memory/*
+!data/memory/.gitkeep

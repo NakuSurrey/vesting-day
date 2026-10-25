@@ -1,0 +1,43 @@
+{
+  "name": "VESTING DAY",
+  "version": "0.1.0",
+  "track": "Track 1 - Solving Fragmented Intelligence",
+  "team": "VESTING DAY (solo)",
+  "description": "An agent for England's merging councils (West Surrey, vesting day 1 April 2027). It federates three councils' published spend, contracts and Council Tax Support policy in place, resolves which suppliers they share, remembers every human decision with the Meterless H-MEM engine so later answers change, finds the contract cliff and the policy gaps residents hit on day one, and drafts the first actions under a human approval gate.",
+  "entry_point": {
+    "command": "python run.py",
+    "http": { "run": "POST /run", "health": "GET /health", "port_env": "PORT", "default_port": 8000, "bind": "0.0.0.0" },
+    "cli": "python run.py --input input_examples/01_supplier_overlap.json"
+  },
+  "sample_mode": {
+    "env": "SAMPLE_MODE=true (or no .env at all)",
+    "needs": "nothing: no Zetaris, no Nightshift, no Companies House, no network",
+    "data": "data/sample - the councils' published files mapped to one schema with provenance ids (data/raw holds the originals, data/raw/MANIFEST.md the URLs and hashes)",
+    "model": "deterministic template badged sample-mode/template; all numbers computed at run time"
+  },
+  "agents": [
+    { "name": "Router", "role": "Classifies a free-text request into a supported flow or returns a structured unsupported error" },
+    { "name": "Researcher", "role": "Runs federated SQL against the data layer (Zetaris live; cached council files in sample mode)" },
+    { "name": "Resolver", "role": "Normalises supplier names, scores cross-council matches, applies remembered decisions and Companies House identity" },
+    { "name": "Memory", "role": "Meterless H-MEM: recalls and stores human decisions with provenance" },
+    { "name": "Critic", "role": "Validates provenance and thresholds; rejects and returns work below the bar" },
+    { "name": "Writer", "role": "Drafts briefings and letters from the evidence table (NVIDIA Nemotron via Meterless Nightshift)" },
+    { "name": "ApprovalGate", "role": "Holds drafts for human approval and records human confirmations; no autonomous action" }
+  ],
+  "sponsor_technology": {
+    "zetaris": "data layer: the three councils' spend, contracts and policy tables are registered in Zetaris and queried in place over its REST API (app/adapters/datalayer.py)",
+    "meterless_engine": "H-MEM, implemented as a Python port of the reference (app/engines/hmem), conformance 13/13 on the upstream vectors (tests/test_hmem_conformance.py), bit-exact against the TypeScript reference (tests/test_hmem_golden.py), used by the Memory agent",
+    "meterless_nightshift": "primary AI provider: app/adapters/nightshift.py speaks Nightshift's OpenAI-compatible endpoint with the runtime token; every response's signed compute receipt is kept",
+    "nvidia": "nvidia/nemotron-3.5-lightning-30b-a3b through Nightshift for the Writer and the match judge; the model name is logged per request"
+  },
+  "traces": "logs/trace-<run_id>.jsonl, one JSON object per agent action, written by the agents as they run",
+  "inputs": "input_examples/*.json (run 01, 02, 03 in order to see memory change the answer)",
+  "data_period": "the newest six months each council has published (Woking Nov 2025-Apr 2026 monthly; Guildford and Waverley Apr-Sep 2026); every answer carries a per-council period badge",
+  "synthetic_data": "data/sample/residents_synthetic.csv only, labelled SYNTHETIC in every output",
+  "limitations": [
+    "Supplier identity below the exact/Companies-House bar is never asserted; it is queued for a human",
+    "Only the Lightning Nemotron lane is used (the Super-class endpoints were unavailable to this account during the event)",
+    "Waverley's Council Tax Support scheme is not yet in the clause table; the policy flow covers Woking and Guildford",
+    "Drafts are held, never sent"
+  ]
+}

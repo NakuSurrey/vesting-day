@@ -1,0 +1,157 @@
+{
+  "run_id": "example-06",
+  "status": "success",
+  "output": {
+    "summary": "draft-1 is now approved. It has not been sent anywhere - approval records intent; sending is a human step outside this system. Decision stored in H-MEM as mem-2.",
+    "recommendations": [
+      "Export the approved text from output.artifacts and send it through the council's own channels."
+    ],
+    "artifacts": [
+      {
+        "type": "run_mode",
+        "sample_mode": true,
+        "flow": "approve_draft",
+        "router_confidence": 0.95,
+        "data_layer": "local-sqlite (SAMPLE_MODE cache of the published council files)",
+        "model": "sample-mode/template",
+        "note": "SAMPLE_MODE: cached published council data, deterministic template instead of a model"
+      },
+      {
+        "type": "draft",
+        "title": "IKEN 011240 Managed Services for Temporary Agency Resources (Call-Off Contract under the ESPO MSTAR4 Framework Agreement 653F/23 dated 11 April 2023)",
+        "draft": {
+          "kind": "novation_letter",
+          "title": "IKEN 011240 Managed Services for Temporary Agency Resources (Call-Off Contract under the ESPO MSTAR4 Framework Agreement 653F/23 dated 11 April 2023)",
+          "text": "Draft - not sent. For approval by the Guildford procurement lead.\n\nTo: Comensura Limited\nSubject: Contract IKEN 011240 - Managed Services for Temporary Agency Resources (Call-Off Contract under the ESPO MSTAR4 Framework Agreement 653F/23 dated 11 April 2023) - arrangements at vesting day\n\nDear supplier,\n\nOur register shows that contract IKEN 011240 (Managed Services for Temporary Agency Resources (Call-Off Contract under the ESPO MSTAR4 Framework Agreement 653F/23 dated 11 April 2023)) with Guildford Borough Council ends on 2027-04-14, which is 13 days after the vesting day of the new West Surrey authority (2027-04-01). The register states a contract value of GBP 8,500,000.\n\nAhead of vesting day we need to agree one of: novation of this contract to the new authority, a short extension to align with the successor arrangements, or planned expiry. Please confirm your preferred route and any conditions by return.\n\nThis letter is a draft prepared from the published contracts register (entry gui:guildford_contracts_2026_q4.xlsx:99) and requires human approval before it is sent.",
+          "model": "sample-mode/template",
+          "receipt_id": null,
+          "evidence_ids": [
+            "gui:guildford_contracts_2026_q4.xlsx:99"
+          ],
+          "recipient": "Comensura Limited",
+          "run_id": "example-04",
+          "id": "draft-1",
+          "status": "approved",
+          "created_at": "2026-10-25T21:08:02.309110+00:00",
+          "decided_by": "human",
+          "decided_at": "2026-10-25T21:08:03.177642+00:00"
+        }
+      },
+      {
+        "type": "memory",
+        "ledger_tail": [
+          {
+            "memoryId": "mem-1",
+            "action": "create",
+            "actor": "vesting-day",
+            "timestamp": 1792962480973,
+            "newState": {
+              "id": "mem-1",
+              "content": "Supplier match decision: 'Unit 4 Business Software Ltd' (Waverley) and 'Unit4 Business Software Ltd' (Guildford) are the same organisation. Decided by human.",
+              "type": "factual",
+              "layer": "long_term",
+              "timestamp": 1792962480973,
+              "lastAccessed": 1792962480973,
+              "accessCount": 0,
+              "tags": [
+                "decision:supplier-match",
+                "pair:Guildford:UNIT4 BUSINESS SOFTWARE <> Waverley:UNIT 4 BUSINESS SOFTWARE",
+                "verdict:same",
+                "council:Waverley",
+                "council:Guildford"
+              ],
+              "confidence": 1.0,
+              "source": "human:approval-gate",
+              "provenance": {
+                "origin": "user_correction",
+                "learnedAt": 1792962480973,
+                "label": "human decision via ApprovalGate"
+              },
+              "domain": "general",
+              "namespace": "general/facts",
+              "entities": [
+                "supplier",
+                "unit",
+                "business",
+                "software",
+                "ltd",
+                "waverley",
+                "guildford",
+                "decided"
+              ],
+              "relatedTo": []
+            }
+          },
+          {
+            "memoryId": "mem-1",
+            "action": "read",
+            "actor": "vesting-day",
+            "timestamp": 1792962481805,
+            "details": {
+              "query": "supplier match decision Unit4 Business Software Ltd Unit 4 Business Software Ltd"
+            }
+          },
+          {
+            "memoryId": "mem-2",
+            "action": "create",
+            "actor": "vesting-day",
+            "timestamp": 1792962483178,
+            "newState": {
+              "id": "mem-2",
+              "content": "Draft draft-1 (novation_letter: IKEN 011240 Managed Services for Temporary Agency Resources (Call-Off Contract under the ESPO MSTAR4 Framework Agreement 653F/23 dated 11 April 2023)) was approved by a human.",
+              "type": "factual",
+              "layer": "long_term",
+              "timestamp": 1792962483178,
+              "lastAccessed": 1792962483178,
+              "accessCount": 0,
+              "tags": [
+                "decision:draft",
+                "draft:draft-1",
+                "status:approved"
+              ],
+              "confidence": 1.0,
+              "source": "human:approval-gate",
+              "provenance": {
+                "origin": "user_correction",
+                "learnedAt": 1792962483178,
+                "label": "human approval decision"
+              },
+              "domain": "tech",
+              "namespace": "tech/facts",
+              "entities": [
+                "draft",
+                "iken",
+                "managed",
+                "services",
+                "temporary",
+                "agency",
+                "resources",
+                "call",
+                "off",
+                "contract"
+              ],
+              "relatedTo": []
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "agents": [
+    {
+      "name": "Router",
+      "role": "Classifies a free-text request into a supported flow, extracts councils and parameters, or returns a structured unsupported error"
+    },
+    {
+      "name": "ApprovalGate",
+      "role": "Holds every draft for human approval and records human confirmations of supplier matches; no action is ever taken autonomously"
+    },
+    {
+      "name": "Memory",
+      "role": "Meterless H-MEM: recalls earlier human decisions (supplier matches, approvals) and stores new ones with provenance"
+    }
+  ],
+  "trace_id": "trace-example-06",
+  "log_file": "logs/trace-example-06.jsonl",
+  "execution_time_seconds": 0.13
+}

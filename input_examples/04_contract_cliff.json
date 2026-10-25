@@ -1,0 +1,5 @@
+{
+  "run_id": "example-04",
+  "input": { "query": "Which contracts end within six months of vesting day?" },
+  "options": { "sample_mode": true }
+}

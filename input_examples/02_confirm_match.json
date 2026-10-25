@@ -1,0 +1,5 @@
+{
+  "run_id": "example-02",
+  "input": { "query": "Confirm that 'Unit 4 Business Software Ltd' (Waverley) is the same supplier as 'Unit4 Business Software Ltd' (Guildford)" },
+  "options": { "sample_mode": true }
+}

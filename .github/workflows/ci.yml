@@ -1,0 +1,55 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.11.32"
+      - run: uv python install 3.12
+      - run: uv sync --all-groups
+      - name: Unit, conformance and SAMPLE_MODE end-to-end tests
+        run: uv run pytest -q
+      - name: Secrets scan (committed files must carry no keys)
+        run: |
+          set -e
+          if git grep -nE "nvapi-[A-Za-z0-9_-]{10,}|sk-[A-Za-z0-9]{20,}|BEGIN (RSA|OPENSSH|EC) PRIVATE KEY" -- . ':!uv.lock'; then
+            echo "secret-like string found"; exit 1; fi
+          test ! -f .env || (echo ".env must not be committed" && exit 1)
+      - name: Fresh-clone run with no .env, no network (SAMPLE_MODE fallback)
+        run: |
+          set -e
+          rm -f .env
+          uv run python run.py --input input_examples/01_supplier_overlap.json > /tmp/out.json
+          python3 -c "import json; d=json.load(open('/tmp/out.json')); assert d['status']=='success', d; print('ok', d['execution_time_seconds'], 's')"
+          test -f logs/trace-example-01.jsonl
+
+  docker:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the image
+        run: docker build -t vesting-day:ci .
+      - name: Run the container with NO network and no credentials, hit POST /run from inside it
+        run: |
+          set -e
+          docker run -d --rm --name vd --network none vesting-day:ci
+          for i in $(seq 1 40); do docker exec vd python3 -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=2)" && break || sleep 1; done
+          docker exec vd python3 - <<'PY'
+          import json, urllib.request
+          body = json.dumps({"run_id": "ci-001", "input": {"query": "Which contracts end within six months of vesting day?"}, "options": {"sample_mode": True}}).encode()
+          req = urllib.request.Request("http://127.0.0.1:8000/run", data=body, headers={"Content-Type": "application/json"})
+          d = json.loads(urllib.request.urlopen(req, timeout=120).read())
+          assert d["status"] == "success", d
+          print(d["output"]["summary"][:300])
+          PY
+          docker logs vd | grep -c '"agent_name"'
+          docker stop vd

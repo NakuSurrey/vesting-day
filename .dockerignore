@@ -1,0 +1,10 @@
+.git
+.venv
+.env
+**/__pycache__
+.pytest_cache
+data/memory/*
+!data/memory/.gitkeep
+scripts
+tests
+docs

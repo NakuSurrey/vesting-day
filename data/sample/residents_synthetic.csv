@@ -1,0 +1,9 @@
+resident_id,label,home_council,band,capital_gbp,weekly_liability_gbp,household,note
+SYN-01,SYNTHETIC,Woking,B,4500,31.20,single working age,below both capital limits
+SYN-02,SYNTHETIC,Woking,C,7200,35.60,couple working age,between Guildford limit (6000) and Woking limit (10000)
+SYN-03,SYNTHETIC,Guildford,D,9800,40.10,lone parent working age,between the two limits
+SYN-04,SYNTHETIC,Guildford,A,12500,26.70,single working age,above both limits
+SYN-05,SYNTHETIC,Woking,F,5500,57.80,couple working age,band F: excluded in Guildford, capped at band D in Woking
+SYN-06,SYNTHETIC,Guildford,E,6000,49.00,single working age,exactly at the Guildford limit
+SYN-07,SYNTHETIC,Woking,B,3000,31.20,single working age low award,tests the minimum award difference (5 vs 10 per week)
+SYN-08,SYNTHETIC,Guildford,C,10000,35.60,couple working age,exactly at the Woking limit

@@ -1,0 +1,5 @@
+{
+  "run_id": "example-05",
+  "input": { "query": "Where do the Council Tax Support schemes differ between Woking and Guildford?" },
+  "options": { "sample_mode": true }
+}

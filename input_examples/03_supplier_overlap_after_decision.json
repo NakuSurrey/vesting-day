@@ -1,0 +1,5 @@
+{
+  "run_id": "example-03",
+  "input": { "query": "Which suppliers do Guildford and Waverley share?" },
+  "options": { "sample_mode": true }
+}
