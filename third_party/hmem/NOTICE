@@ -1,0 +1,11 @@
+Third-party material in this directory
+
+vectors.json - the H-MEM conformance vectors, copied unmodified from
+https://github.com/Meterless/Meterless (path engines/hmem/conformance/vectors/vectors.json,
+commit 1742dec56a66e58eef9dda2d2b865823758ca8cd, 2026-10-19).
+Copyright Meterless. Licensed under the Apache License, Version 2.0 (see LICENSE here).
+
+The Python engine in app/engines/hmem is our own port of the Meterless TypeScript
+reference implementation (same repository, engines/hmem/reference/src), written for
+VESTING DAY and released under this repository's Apache-2.0 license. The spec it
+implements is engines/hmem/AGENTS.md from the same repository.
