@@ -1,0 +1,116 @@
+{
+  "built_from": "data/raw (files as published by each council; see data/raw/MANIFEST.md)",
+  "rules": {
+    "natural_person_payees_dropped": 395,
+    "rows_dropped_missing_amount_or_supplier": 1,
+    "account_holder_names_never_copied": true
+  },
+  "councils": {
+    "Woking": {
+      "cadence": "monthly",
+      "basis": "payment (clearance) date",
+      "format": "CSV + XLSX",
+      "window_label": "Nov 2025 - Apr 2026",
+      "rows": 9718,
+      "total_gbp": 64974729.21,
+      "payment_date_min": "2025-11-03",
+      "payment_date_max": "2026-04-30",
+      "accounting_periods": [],
+      "distinct_suppliers": 904
+    },
+    "Guildford": {
+      "cadence": "quarterly (financial-year quarters)",
+      "basis": "payment date",
+      "format": "XLSX",
+      "window_label": "Apr - Sep 2026 (FY2026/27 Q1-Q2)",
+      "rows": 6883,
+      "total_gbp": 48624787.75,
+      "payment_date_min": "2026-04-02",
+      "payment_date_max": "2026-09-29",
+      "accounting_periods": [
+        "2026-01",
+        "2026-02",
+        "2026-03",
+        "2026-04",
+        "2026-05",
+        "2026-06"
+      ],
+      "distinct_suppliers": 756
+    },
+    "Waverley": {
+      "cadence": "half-yearly",
+      "basis": "accounting period (payment date not published)",
+      "format": "CSV",
+      "window_label": "Apr - Sep 2026 (FY2026/27 periods 1-6)",
+      "rows": 3246,
+      "total_gbp": 28275155.15,
+      "payment_date_min": null,
+      "payment_date_max": null,
+      "accounting_periods": [
+        "2026-01",
+        "2026-02",
+        "2026-03",
+        "2026-04",
+        "2026-05",
+        "2026-06"
+      ],
+      "distinct_suppliers": 534
+    }
+  },
+  "contracts": {
+    "Woking": 221,
+    "Guildford": 179,
+    "Waverley": 101
+  },
+  "files": {
+    "woking/woking_2025_11.csv": {
+      "rows_in": 1773,
+      "rows_kept": 1725
+    },
+    "woking/woking_2025_12.xlsx": {
+      "rows_in": 1863,
+      "rows_kept": 1795
+    },
+    "woking/woking_2026_01.xlsx": {
+      "rows_in": 1584,
+      "rows_kept": 1542
+    },
+    "woking/woking_2026_02.csv": {
+      "rows_in": 1232,
+      "rows_kept": 1201
+    },
+    "woking/woking_2026_03.csv": {
+      "rows_in": 2127,
+      "rows_kept": 2057
+    },
+    "woking/woking_2026_04.csv": {
+      "rows_in": 1533,
+      "rows_kept": 1398
+    },
+    "guildford/guildford_2026_Q1.xlsx": {
+      "rows_in": 3366,
+      "rows_kept": 3364
+    },
+    "guildford/guildford_2026_Q2.xlsx": {
+      "rows_in": 3519,
+      "rows_kept": 3519
+    },
+    "waverley/waverley_over500_q1q2_2026_27.csv": {
+      "rows_in": 3246,
+      "rows_kept": 3246
+    },
+    "woking/woking_contracts_2026_27_q1.csv": {
+      "rows_in": 223,
+      "rows_kept": 221
+    },
+    "guildford/guildford_contracts_2026_q4.xlsx": {
+      "rows_in": 188,
+      "rows_kept": 179
+    },
+    "waverley/waverley_contracts_fy2526_q4.xlsx": {
+      "rows_in": 101,
+      "rows_kept": 101
+    }
+  },
+  "vesting_day": "2027-04-01"
+}
