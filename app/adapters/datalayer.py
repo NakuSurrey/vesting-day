@@ -92,16 +92,24 @@ class ZetarisDataLayer(DataLayer):
     POST {REST_URL}/sql-editor/sqls/run, Bearer key, X-Org-ID, fresh X-Request-ID,
     body {queryId, sql, source: "SqlEditor", limit}; rows come back in .data."""
 
-    name = "zetaris (federated query-in-place)"
+    name = "zetaris (federated query-in-place over woking_pg, guildford_pg, waverley_pg)"
 
-    def __init__(self, rest_url: str, org_id: str, api_key: str, table_prefix: str = "", timeout: float = 60.0) -> None:
+    # The three councils are three registered Zetaris datasources (scripts/zetaris/register_sources.sql).
+    # Every {spend} / {contracts} / {policy_clause} placeholder becomes a federated UNION across them,
+    # so one SQL statement from the Researcher is answered by Zetaris querying all three sources in place.
+    SOURCES = ("woking_pg", "guildford_pg", "waverley_pg")
+
+    def __init__(self, rest_url: str, org_id: str, api_key: str, sources: tuple[str, ...] = SOURCES, timeout: float = 60.0) -> None:
         self.rest_url = rest_url.rstrip("/")
         self.org_id = org_id
         self.api_key = api_key
         self.timeout = timeout
-        p = table_prefix
-        self.tables = {"spend": f"{p}spend", "contracts": f"{p}contracts", "policy_clause": f"{p}policy_clause"}
+        self.sources = sources
+        self.tables = {t: self._federated(t) for t in ("spend", "contracts", "policy_clause")}
         self._client = httpx.Client(timeout=timeout)
+
+    def _federated(self, table: str) -> str:
+        return "(" + " UNION ALL ".join(f"SELECT * FROM {src}.{table}" for src in self.sources) + f") AS {table}"
 
     def run_sql(self, sql: str, limit: int = 1000) -> list[dict[str, Any]]:
         q = self.render(sql)

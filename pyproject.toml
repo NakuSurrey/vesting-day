@@ -27,6 +27,7 @@ dev = [
 prep = [
     "openpyxl>=3.1",
     "pypdf>=4.0",
+    "psycopg[binary]>=3.1",
 ]
 
 [tool.pytest.ini_options]
