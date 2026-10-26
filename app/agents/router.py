@@ -19,7 +19,8 @@ FLOWS: dict[str, dict[str, Any]] = {
     "supplier_overlap": {
         "description": "Which suppliers two or three of the councils share, with spend, and which matches still need a human",
         "phrases": ["supplier", "suppliers", "vendor", "vendors", "overlap", "share", "shared", "common", "duplicate",
-                    "reconcile", "conflict", "same supplier", "match", "payee", "payees", "spend with"],
+                    "reconcile", "conflict", "same supplier", "match", "payee", "payees", "spend with",
+                    "company", "companies", "firm", "firms", "paid by", "both pay", "pay the same"],
         "example": "Which suppliers do Woking, Guildford and Waverley share?",
     },
     "confirm_match": {
@@ -31,7 +32,8 @@ FLOWS: dict[str, dict[str, Any]] = {
     "contract_cliff": {
         "description": "Contracts that end or need novation around vesting day (1 April 2027), across the councils' registers",
         "phrases": ["contract", "contracts", "cliff", "expire", "expiring", "expiry", "end date", "ending", "novation",
-                    "novate", "vesting day", "renew", "register", "procurement"],
+                    "novate", "vesting day", "renew", "register", "procurement",
+                    "deal", "deals", "agreement", "agreements", "run out", "lapse", "terminate"],
         "example": "Which contracts end within six months of vesting day?",
     },
     "policy_gap": {
@@ -47,6 +49,30 @@ FLOWS: dict[str, dict[str, Any]] = {
         "example": "Approve draft draft-1",
     },
 }
+
+
+_NUMBER_WORDS = {"a": 1, "an": 1, "one": 1, "first": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "seven": 7, "eight": 8,
+                 "nine": 9, "ten": 10, "eleven": 11, "twelve": 12, "eighteen": 18, "twenty-four": 24}
+_UNIT_DAYS = {"day": 1, "week": 7, "month": 30, "quarter": 90, "year": 365}   # 30-day months: "six months" = 180, the default
+_WORDS = "|".join(sorted(_NUMBER_WORDS, key=len, reverse=True))
+_WINDOW = re.compile(r"\b(?:(\d+)[\s-]*|(" + _WORDS + r")[\s-]+)(day|week|month|quarter|year)s?\b")
+
+
+def window_days_in(q: str) -> int | None:
+    """The time window a question asks for, in days: 'within a year' -> 365, 'three months' -> 90.
+
+    Judges type their own questions, so the window is read from digits or number words with any
+    of days, weeks, months or years. Returns None when the question names no window.
+    """
+    q = q.lower()
+    if re.search(r"\bhalf[\s-]+(?:a[\s-]+)?year\b", q):
+        return 180
+    for m in _WINDOW.finditer(q):
+        n = int(m.group(1)) if m.group(1) else _NUMBER_WORDS[m.group(2)]
+        days = n * _UNIT_DAYS[m.group(3)]
+        if 1 <= days <= 3650:
+            return days
+    return None
 
 
 @dataclass
@@ -95,10 +121,10 @@ class RouterAgent(Agent):
             if m:
                 params["decision"] = m.group(1)
                 params["draft_id"] = m.group(2)
-        m = re.search(r"(\d+)\s*(?:days|months)", q)
-        if best == "contract_cliff" and m:
-            n = int(m.group(1))
-            params["window_days"] = n * 30 if "month" in m.group(0) else n
+        if best == "contract_cliff":
+            days = window_days_in(q)
+            if days:
+                params.setdefault("window_days", days)   # an explicit window_days in the request wins
         self.trace("classify", query, f"flow={best} councils={councils} params={params}", target_agent=self._target(best), confidence=round(conf, 2))
         return Route(flow=best, confidence=round(conf, 2), councils=councils, params=params)
 
@@ -111,7 +137,7 @@ class RouterAgent(Agent):
     def _parse_confirm(query: str) -> dict[str, Any]:
         """Pull "'A' (Council) is the same supplier as 'B' (Council)" out of free text."""
         out: dict[str, Any] = {"decision": "split" if re.search(r"\b(split|not the same|different)\b", query, re.I) else "same"}
-        quoted = re.findall(r"['\"‘’“”]([^'\"‘’“”]{2,120})['\"‘’“”]\s*\(?\s*(Woking|Guildford|Waverley)?", query, re.I)
+        quoted = re.findall(r"['\"\u2018\u2019\u201c\u201d]([^'\"\u2018\u2019\u201c\u201d]{2,120})['\"\u2018\u2019\u201c\u201d]\s*\(?\s*(Woking|Guildford|Waverley)?", query, re.I)
         if len(quoted) >= 2:
             out["a_name"], a_c = quoted[0][0].strip(), quoted[0][1]
             out["b_name"], b_c = quoted[1][0].strip(), quoted[1][1]
