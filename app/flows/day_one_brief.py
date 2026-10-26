@@ -14,7 +14,7 @@ from typing import Any, Callable
 from app.adapters.datalayer import DataLayerError
 from app.adapters.nightshift import ModelError
 from app.agents.base import RunContext
-from app.agents.critic import HUMAN_ONLY_CLAIMS, SYNTHETIC_LABEL_CLAIM, CriticAgent, must_name_claims
+from app.agents.critic import HUMAN_ONLY_CLAIMS, SYNTHETIC_LABEL_CLAIM, CriticAgent, cliff_timing_claims, must_name_claims
 from app.agents.planner import COUNCILS, PlannerAgent, Step
 from app.agents.writer import WriterAgent
 from app.flows import contract_cliff, policy_gap, supplier_overlap
@@ -105,6 +105,11 @@ def run(ctx: RunContext, sources: dict[str, Any]) -> dict[str, Any]:
         + ("Held for approval, nothing sent: " + "; ".join(f"{d['id']} ({d['title']})" for d in drafts_held) + ".\n" if drafts_held else "No action was drafted.\n")
         + "Numbers come from the councils' own published files; each row carries a provenance id."
     )
+    cliff = next((s for s in done if s["check"] == "contract_cliff"), None)
+    cliff_window = None
+    if cliff:
+        cliff_window = next((a.get("window_days") for a in cliff["artifacts"] if a.get("type") == "run_stats" and a.get("window_days")), None) \
+            or cliff["params"].get("window_days") or ctx.settings.cliff_window_days
     instruction = (
         f"Write a day-one brief for the finance lead of the West Surrey shadow authority in about 160 words, covering {', '.join(asked_councils or COUNCILS)}. "
         "One headline line, then one numbered priority per check in the order given, each with the number that justifies it, then one line "
@@ -113,6 +118,7 @@ def run(ctx: RunContext, sources: dict[str, Any]) -> dict[str, Any]:
         "confirmed it. Say 'no extension date recorded', not 'no extension option'. Residents are SYNTHETIC test residents."
         + (f" The evidence says remembered human decision(s) {', '.join(recalled_ids)} changed an answer: name them." if recalled_ids else "")
         + (" Name any check that was not available." if failures else "")
+        + (f" The contracts end within {cliff_window} days of vesting day, not on it: say 'within {cliff_window} days of vesting day'." if cliff_window else "")
     )
     allowed = numbers_in([s["summary"] for s in done] + [s["note"] for s in done] + [len(plan.steps), len(done), len(drafts_held)]
                          + [d["id"] for d in drafts_held] + [d["title"] for d in drafts_held]
@@ -120,7 +126,14 @@ def run(ctx: RunContext, sources: dict[str, Any]) -> dict[str, Any]:
     claims = list(HUMAN_ONLY_CLAIMS) + must_name_claims(recalled_ids)
     if any(s["check"] == "policy_gap" for s in done):
         claims += SYNTHETIC_LABEL_CLAIM
-    draft, draft_bounces = checked_draft(writer, critic, "day-one brief", instruction, evidence, template, allowed, claims)
+    if cliff_window:
+        claims += cliff_timing_claims(int(cliff_window))
+    # priority N of the brief must only use numbers from check N (in the order the plan ran them)
+    sections = [(s["heading"], numbers_in([s.get("summary"), s.get("note")] + list(s.get("recommendations") or [])
+                                          + [v for a in s.get("artifacts", []) if a.get("type") == "run_stats" for v in a.values()]
+                                          + [a["draft"]["title"] for a in s.get("artifacts", []) if a.get("type") == "draft" and a.get("draft")]))
+                for s in step_results]
+    draft, draft_bounces = checked_draft(writer, critic, "day-one brief", instruction, evidence, template, allowed, claims, sections)
     bounces += draft_bounces
 
     recommendations: list[str] = []

@@ -42,6 +42,19 @@ SYNTHETIC_LABEL_CLAIM: list[Claim] = [
 ]
 
 
+def cliff_timing_claims(window_days: int) -> list[Claim]:
+    """The contract cliff counts contracts ending in a window around vesting day, not on it.
+
+    A brief must not compress "within 180 days of vesting day" into "end on vesting day": that
+    claims more than the register shows. Specific dates ("ends on 14 April 2027") are not matched.
+    """
+    return [(
+        r"\b(?:end|ends|ending|expire|expires|expiring|lapse|lapses|terminate|terminates)\s+(?:exactly\s+|all\s+|precisely\s+)?"
+        r"(?:on|at)\s+(?:the\s+)?(?:vesting\s+day|1(?:st)?\s+april\s+2027|april\s+1(?:st)?,?\s+2027|2027-04-01)\b",
+        f"these contracts end within {window_days} days either side of vesting day, not on it; say 'within {window_days} days of vesting day'",
+    )]
+
+
 def must_name_claims(decision_ids: Sequence[str]) -> list[Claim]:
     """Claims that a briefing must NAME each remembered human decision it was built on.
 
@@ -100,13 +113,15 @@ class CriticAgent(Agent):
         self.trace("critique_rows", f"{len(rows)} rows", "every row carries a provenance id", target_agent="Writer", confidence=1.0)
         return Verdict(True)
 
-    def review_draft(self, draft: str, evidence_numbers: set[str], claims: Sequence[Claim] = ()) -> Verdict:
+    def review_draft(self, draft: str, evidence_numbers: set[str], claims: Sequence[Claim] = (),
+                     sections: Sequence[tuple[str, set[str]]] = ()) -> Verdict:
         found = {m.group(0).replace(",", "") for m in _NUM.finditer(draft)}
         allowed = {n.replace(",", "") for n in evidence_numbers}
         unknown = sorted(n for n in found if n not in allowed and not _is_trivial(n))
         reasons: list[str] = []
         if unknown:
             reasons.append(f"numbers not in evidence: {unknown[:6]}")
+        reasons += _misplaced_numbers(draft, sections)
         flat = " ".join(draft.split())
         for pattern, why in claims:
             m = re.search(pattern, flat, flags=re.IGNORECASE | re.DOTALL)
@@ -121,6 +136,47 @@ class CriticAgent(Agent):
                    "every number traces to the evidence table" + ("; no claim goes beyond the evidence" if claims else ""),
                    target_agent="ApprovalGate", confidence=1.0)
         return Verdict(True)
+
+
+_ITEM = re.compile(r"^\s*(?:[*_#>]+\s*)?(\d{1,2})[.)]\s+")
+
+
+def _misplaced_numbers(draft: str, sections: Sequence[tuple[str, set[str]]]) -> list[str]:
+    """In a numbered brief, priority N must only use numbers from check N.
+
+    A number can be in the evidence and still be in the wrong place: "229 shared pairs, which
+    includes 45 suppliers" takes the 45 from the contract check. Each numbered line is compared
+    with the numbers of its own check; a number that only belongs to another check is reported.
+    A priority is its numbered line plus any indented lines under it. Lines that are not
+    numbered -> nothing to compare, no finding.
+    """
+    if not sections:
+        return []
+    items: dict[int, list[str]] = {}
+    current = None
+    for line in draft.splitlines():
+        m = _ITEM.match(line)
+        if m:
+            current = int(m.group(1))
+            items.setdefault(current, []).append(line[m.end():])
+        elif current is not None and line.strip() and line[:1].isspace():
+            items[current].append(line)          # an indented line continues the priority above it
+        else:
+            current = None                       # a blank or unindented line ends it
+    reasons = []
+    norm = [(name, {n.replace(",", "") for n in nums}) for name, nums in sections]
+    for k, lines in sorted(items.items()):
+        if not 1 <= k <= len(norm):
+            continue
+        name, own = norm[k - 1]
+        for m in _NUM.finditer(" ".join(lines)):
+            n = m.group(0).replace(",", "")
+            if n in own or _is_trivial(n):
+                continue
+            other = next((o for j, (o, nums) in enumerate(norm) if j != k - 1 and n in nums), None)
+            if other:
+                reasons.append(f"number {m.group(0)} in priority {k} ({name}) comes from the {other} check, not this one")
+    return reasons
 
 
 def _is_trivial(n: str) -> bool:

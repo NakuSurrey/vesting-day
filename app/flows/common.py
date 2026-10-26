@@ -36,18 +36,19 @@ def numbers_in(values: Iterable[Any]) -> set[str]:
 
 
 def checked_draft(writer: Any, critic: Any, kind: str, instruction: str, evidence: list[str], template: str,
-                  allowed: set[str], claims: Sequence[tuple[str, str]] = ()) -> tuple[dict[str, Any], int]:
+                  allowed: set[str], claims: Sequence[tuple[str, str]] = (),
+                  sections: Sequence[tuple[str, set[str]]] = ()) -> tuple[dict[str, Any], int]:
     """Writer -> Critic, with one retry that carries the Critic's reasons, then the template.
 
     Returns (draft, bounces). A draft only leaves this function if the Critic accepted it,
     or it is the evidence-only template badged "template-fallback" - never a rejected draft.
     """
     draft = writer.draft(kind, instruction, evidence, template)
-    verdict = critic.review_draft(draft["text"], allowed, claims)
+    verdict = critic.review_draft(draft["text"], allowed, claims, sections)
     if verdict.accepted:
         return draft, 0
     draft = writer.draft(kind, instruction, evidence, template, retry=1, reasons=verdict.reasons)
-    second = critic.review_draft(draft["text"], allowed, claims)
+    second = critic.review_draft(draft["text"], allowed, claims, sections)
     if second.accepted:
         return draft, 1
     return writer.fallback(kind, template, second.reasons), 2

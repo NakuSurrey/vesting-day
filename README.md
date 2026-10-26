@@ -153,7 +153,9 @@ flowchart TD
   confirmation bar return to the Resolver; a draft returns to the Writer with the exact
   reasons when it uses a number not in the evidence, calls a pair confirmed or verified
   without a human decision, drops the SYNTHETIC label, or fails to name a remembered human
-  decision it relied on. A draft rejected twice is replaced by the evidence-only template.
+  decision it relied on. In a day-one brief it also rejects contracts said to end "on vesting
+  day" (they end within the window) and a number placed under the wrong check. A draft
+  rejected twice is replaced by the evidence-only template.
 - **Writer** drafts briefings and letters from the evidence table only. Live: NVIDIA Nemotron
   (`nvidia/nemotron-3.5-lightning-30b-a3b`) through Meterless Nightshift, with the signed
   compute receipt id kept. Sample: a deterministic template.
@@ -232,7 +234,7 @@ Copy `.env.example` to `.env`, fill in the keys and set `SAMPLE_MODE=false`:
 
 ```bash
 uv sync --all-groups
-uv run pytest -q          # 106 tests
+uv run pytest -q          # 109 tests
 ```
 
 - `tests/test_hmem_conformance.py` - the official H-MEM conformance suite, ported to pytest,
@@ -252,8 +254,9 @@ uv run pytest -q          # 106 tests
 - `tests/test_planner.py` - a valid model plan is used (with its receipt in the trace), an invalid
   one is rejected for the rule-based plan and the trace says so, unknown checks are dropped, a
   step that cannot run as asked is revised, a failed step is skipped and named, every step
-  failing returns a structured error, and an empty contract window is widened on the Critic's
-  request and labelled.
+  failing returns a structured error, an empty contract window is widened on the Critic's
+  request and labelled, and a brief that says contracts end "on vesting day" or puts a number
+  under the wrong check is sent back.
 - `tests/test_config_sample_fallback.py` - a copied `.env.example` runs in SAMPLE_MODE.
 - `tests/test_web_ui.py` - the web page is served with nothing loaded from the internet, the
   trace route returns the agents' real steps and rejects bad ids, and the memory demo works

@@ -3296,6 +3296,7 @@
         "presented": 228,
         "needs_human": 217,
         "unlikely": 444,
+        "shared_spend_gbp": 34786201.65,
         "judge_hints": {
           "same": 0,
           "different": 0,
@@ -3338,5 +3339,5 @@
   ],
   "trace_id": "trace-example-01",
   "log_file": "logs/trace-example-01.jsonl",
-  "execution_time_seconds": 1.31
+  "execution_time_seconds": 1.84
 }

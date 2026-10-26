@@ -3281,7 +3281,7 @@
             "content": "Supplier match decision: 'Unit 4 Business Software Ltd' (Waverley) and 'Unit4 Business Software Ltd' (Guildford) are the same organisation. Decided by human.",
             "confidence": 1.0,
             "relevance": 0.6344,
-            "decided_at": 1793023703409
+            "decided_at": 1793040956649
           }
         },
         "ledger_tail": [
@@ -3289,14 +3289,14 @@
             "memoryId": "mem-1",
             "action": "create",
             "actor": "vesting-day",
-            "timestamp": 1793023703409,
+            "timestamp": 1793040956649,
             "newState": {
               "id": "mem-1",
               "content": "Supplier match decision: 'Unit 4 Business Software Ltd' (Waverley) and 'Unit4 Business Software Ltd' (Guildford) are the same organisation. Decided by human.",
               "type": "factual",
               "layer": "long_term",
-              "timestamp": 1793023703409,
-              "lastAccessed": 1793023703409,
+              "timestamp": 1793040956649,
+              "lastAccessed": 1793040956649,
               "accessCount": 0,
               "tags": [
                 "decision:supplier-match",
@@ -3309,7 +3309,7 @@
               "source": "human:approval-gate",
               "provenance": {
                 "origin": "user_correction",
-                "learnedAt": 1793023703409,
+                "learnedAt": 1793040956649,
                 "label": "human decision via ApprovalGate"
               },
               "domain": "general",
@@ -3331,7 +3331,7 @@
             "memoryId": "mem-1",
             "action": "read",
             "actor": "vesting-day",
-            "timestamp": 1793023704228,
+            "timestamp": 1793040957986,
             "details": {
               "query": "supplier match decision Unit4 Business Software Ltd Unit 4 Business Software Ltd"
             }
@@ -3352,6 +3352,7 @@
         "presented": 92,
         "needs_human": 110,
         "unlikely": 174,
+        "shared_spend_gbp": 14971880.66,
         "judge_hints": {
           "same": 0,
           "different": 0,
@@ -3393,5 +3394,5 @@
   ],
   "trace_id": "trace-example-03",
   "log_file": "logs/trace-example-03.jsonl",
-  "execution_time_seconds": 0.55
+  "execution_time_seconds": 0.93
 }

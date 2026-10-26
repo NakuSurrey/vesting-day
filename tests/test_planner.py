@@ -122,6 +122,8 @@ def test_broad_question_is_planned_delegated_and_assessed(tmp_path: Path) -> Non
     s = r.output.summary
     assert "173 contracts" in s and "228 supplier pairs shared" in s and "4 of 9" in s and "SYNTHETIC" in s
     assert "draft-1" in s and "draft-2" in s and "nothing sent" in s
+    assert _art(r, "generated_text")["model"] == "sample-mode/template"   # the Critic accepts the evidence-only brief as written
+    assert stats["critic_bounces"] == 1                                   # only the overlap step's planned bounce
 
 
 def test_planner_runs_only_the_area_the_question_names(tmp_path: Path) -> None:
@@ -228,3 +230,66 @@ def test_normal_window_is_not_widened(tmp_path: Path) -> None:
     assert r.status == "success"
     assert not any(e["action"] == "critique_coverage" for e in _trace(orch, "w-02"))
     assert _art(r, "run_stats")["widened_to"] is None and not r.output.summary.startswith("No contract")
+
+
+# --- the Critic on the brief: timing and numbers in the right place ----------------------------
+
+TWO_STEP_PLAN = ('{"focus": "contracts and suppliers", "steps": [{"check": "contract_cliff", "why": "dated deadlines", "window_days": 180}, '
+                 '{"check": "supplier_overlap", "why": "shared spend"}]}')
+
+
+class BriefFake(FakeLive):
+    """Like FakeLive, but the day-one brief itself is a fixed text (as Nemotron wrote it live)."""
+
+    def __init__(self, plan_text: str, brief: str) -> None:
+        super().__init__(plan_text)
+        self.brief = brief
+
+    def complete(self, system: str, user: str, max_tokens: int = 768, temperature: float = 0.1) -> Completion:
+        if "Write the day-one brief now" in user:
+            self.calls.append("brief")
+            return Completion(text=self.brief, model=self.badge, receipt_id=f"rcpt_fake_{len(self.calls)}", provider="fake", usage={})
+        return super().complete(system, user, max_tokens, temperature)
+
+
+def test_brief_that_overstates_timing_or_moves_a_number_is_sent_back(tmp_path: Path) -> None:
+    # the two mistakes Nemotron made in the first live run: "end on vesting day", and the cliff's 45 put under suppliers
+    brief = ("Vesting day risk brief\n\n"
+             "1. **Contract cliff exposure**: 173 contracts end on vesting day with no extension date recorded.\n"
+             "2. **Shared supplier consolidation**: the shared pairs include 45 suppliers paid by multiple councils.\n\n"
+             "Held for approval: draft-1.")
+    orch = _orch(tmp_path, sample=False, model=BriefFake(TWO_STEP_PLAN, brief))
+    r = _run(orch, "c-01", RISKS_Q)
+    assert r.status == "success", getattr(r, "error", None)
+    ev = _trace(orch, "c-01")
+    rejected = [e["output_summary"] for e in ev if e["action"] == "critique_draft" and e["status"] == "rejected"]
+    assert any("not on it" in x for x in rejected)
+    assert any("number 45 in priority 2" in x and "Contract" in x for x in rejected)
+    text = _art(r, "generated_text")
+    assert text["model"] == "template-fallback"             # rejected twice -> the evidence-only template ships
+    assert "end on vesting day" not in r.output.summary and "within 180 days of vesting day" in r.output.summary
+
+
+def test_brief_with_numbers_in_their_own_sections_passes(tmp_path: Path) -> None:
+    brief = ("Vesting day risk brief\n\n"
+             "1. **Contract cliff**: 173 contracts end within 180 days of vesting day with no extension date recorded; "
+             "45 of their suppliers are also paid by another council.\n"
+             "2. **Shared suppliers**: 228 supplier pairs are shared across the councils.\n\n"
+             "Held for approval: draft-1.")
+    orch = _orch(tmp_path, sample=False, model=BriefFake(TWO_STEP_PLAN, brief))
+    r = _run(orch, "c-02", RISKS_Q)
+    assert r.status == "success", getattr(r, "error", None)
+    assert _art(r, "generated_text")["model"] == "fake/nemotron"
+    assert r.output.summary.startswith("Vesting day risk brief")
+
+
+def test_cliff_timing_rule_only_catches_on_vesting_day() -> None:
+    import re
+    from app.agents.critic import cliff_timing_claims
+    (pattern, why), = cliff_timing_claims(180)
+    hit = lambda t: re.search(pattern, t, flags=re.IGNORECASE)
+    assert hit("173 contracts end on vesting day") and hit("contracts expiring on 1 April 2027") and hit("they all end at vesting day")
+    assert not hit("173 contracts end within 180 days of vesting day")
+    assert not hit("the largest ends on 14 April 2027, 13 days after vesting day")
+    assert not hit("contracts that end on or around vesting day")
+    assert "within 180 days" in why
