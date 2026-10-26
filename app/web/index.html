@@ -1,0 +1,564 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VESTING DAY</title>
+<style>
+/* Palette: the colours of UK public-service websites (black, blue, green, yellow focus), nothing else borrowed. */
+:root {
+  --bg: #F3F2F1; --panel: #FFFFFF; --ink: #0B0C0C; --muted: #505A5F; --line: #B1B4B6; --line-soft: #D8DADB;
+  --blue: #1D70B8; --blue-dark: #003078; --blue-tint: #E8F1F8; --green: #00703C; --green-tint: #E9F3EC;
+  --yellow: #FFDD00; --red: #D4351C; --red-tint: #FBEAE7; --head: #0B0C0C; --head-ink: #FFFFFF;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0B0C0C; --panel: #1A1C1E; --ink: #F3F2F1; --muted: #B1B4B6; --line: #505A5F; --line-soft: #2E3236;
+    --blue: #5694CA; --blue-dark: #8FB8E0; --blue-tint: #16283A; --green: #5BB084; --green-tint: #15291E;
+    --red: #F08A7B; --red-tint: #3A1D19; --head: #000000; --head-ink: #FFFFFF;
+  }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--ink); }
+body { font-family: Arial, "Helvetica Neue", Helvetica, sans-serif; font-size: 16px; line-height: 1.5; }
+a { color: var(--blue); } a:hover { color: var(--blue-dark); }
+header { background: var(--head); color: var(--head-ink); border-bottom: 10px solid var(--blue); padding: 16px 24px 14px; }
+.head-row { display: flex; flex-wrap: wrap; gap: 10px 24px; align-items: center; max-width: 1600px; margin: 0 auto; }
+header h1 { margin: 0; font-size: 28px; font-weight: 700; letter-spacing: 0.5px; }
+header .sub { color: #B1B4B6; font-size: 15px; }
+header nav { margin-left: auto; display: flex; gap: 18px; font-size: 15px; }
+header nav a { color: #FFFFFF; }
+.tag { display: inline-block; padding: 3px 10px; font-size: 13px; font-weight: 700; letter-spacing: 0.3px; }
+.tag.track { background: var(--yellow); color: #0B0C0C; }
+.tag.mode { background: var(--blue); color: #FFFFFF; }
+.tag.mode.live { background: var(--green); }
+main { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 24px; padding: 24px 24px 8px; max-width: 1600px; margin: 0 auto; }
+main > div { min-width: 0; }
+@media (max-width: 1100px) { main { grid-template-columns: minmax(0, 1fr); } }
+@media (min-width: 1101px) { #traceCard { position: sticky; top: 16px; max-height: calc(100vh - 32px); overflow-y: auto; } }
+section.card { background: var(--panel); border: 1px solid var(--line-soft); border-top: 4px solid var(--blue); padding: 20px 22px; margin-bottom: 24px; }
+section.card.quiet { border-top-color: var(--line); }
+h2 { font-size: 22px; margin: 0 0 12px; font-weight: 700; }
+h3 { font-size: 17px; margin: 20px 0 8px; font-weight: 700; }
+.muted { color: var(--muted); } .small { font-size: 14px; }
+form.ask { display: flex; gap: 10px; }
+form.ask input { flex: 1; min-width: 0; font-size: 17px; padding: 10px 12px; border: 2px solid var(--ink); background: var(--panel); color: var(--ink); }
+button { font: inherit; font-size: 16px; cursor: pointer; border: 2px solid transparent; background: var(--green); color: #FFFFFF; padding: 9px 16px; font-weight: 700; box-shadow: 0 2px 0 #002D18; transition: transform 120ms ease, box-shadow 120ms ease; }
+button:hover { filter: brightness(1.06); }
+button:active { transform: translateY(2px); box-shadow: 0 0 0 #002D18; }
+button.ghost { background: var(--panel); color: var(--ink); border-color: var(--ink); box-shadow: 0 2px 0 var(--ink); }
+button.warm { background: var(--blue); box-shadow: 0 2px 0 var(--blue-dark); }
+button.tiny { padding: 3px 9px; font-size: 13px; box-shadow: 0 1px 0 rgba(0,0,0,0.5); }
+button:disabled { opacity: 0.5; cursor: progress; transform: none; }
+button:focus-visible, input:focus-visible, a:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--yellow); outline-offset: 0; box-shadow: 0 0 0 5px var(--ink); }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.chips button { background: var(--blue-tint); color: var(--ink); border-color: var(--blue-tint); box-shadow: none; font-weight: 400; font-size: 14px; }
+.chips button:hover { border-color: var(--blue); filter: none; }
+.demo-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--line-soft); }
+.status-line { margin-top: 10px; min-height: 24px; font-size: 14px; color: var(--muted); display: flex; align-items: center; gap: 8px; }
+.status-line.running { color: var(--ink); }
+.dot { width: 10px; height: 10px; border-radius: 50%; background: var(--blue); display: none; }
+.running .dot { display: inline-block; animation: pulse 1s ease-in-out infinite; }
+@keyframes pulse { 0%, 100% { transform: scale(0.7); opacity: 0.5; } 50% { transform: scale(1.1); opacity: 1; } }
+.runmode { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 14px; color: var(--muted); margin-bottom: 10px; }
+.runmode b { color: var(--ink); }
+.summary { white-space: pre-wrap; background: var(--bg); border-left: 6px solid var(--blue); padding: 14px 16px; }
+.badge { display: inline-block; font-size: 13px; border: 1px solid var(--line); padding: 1px 8px; margin: 6px 6px 0 0; color: var(--muted); background: var(--panel); }
+.badge.model { border-color: var(--blue); color: var(--blue-dark); }
+.badge.jump { cursor: pointer; border-color: var(--red); color: var(--red); font-weight: 700; }
+.err { background: var(--red-tint); border-left: 6px solid var(--red); padding: 14px 16px; }
+.tiles { display: flex; flex-wrap: wrap; gap: 10px; }
+.tile { background: var(--bg); border-left: 4px solid var(--blue); padding: 10px 14px; min-width: 130px; }
+.tile .n { font-size: 24px; font-weight: 700; } .tile .l { font-size: 13px; color: var(--muted); }
+.tablewrap { overflow-x: auto; border: 1px solid var(--line-soft); }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { text-align: left; padding: 7px 9px; border-bottom: 1px solid var(--line-soft); vertical-align: top; }
+th { background: var(--bg); font-weight: 700; white-space: nowrap; }
+td.num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+td.prov { font-family: Consolas, "Courier New", monospace; font-size: 12px; color: var(--muted); }
+.draft { border: 1px solid var(--line-soft); border-left: 6px solid var(--yellow); padding: 12px 14px; background: var(--panel); }
+.draft pre { white-space: pre-wrap; font-family: inherit; margin: 8px 0; }
+.trace-head { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.roster { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 14px; }
+.roster span { font-size: 13px; padding: 2px 9px; border: 1px solid var(--line-soft); color: var(--muted); background: var(--bg); transition: background 220ms ease, color 220ms ease, border-color 220ms ease; }
+.roster span.lit { background: var(--blue-tint); color: var(--blue-dark); border-color: var(--blue); }
+.roster span.hot { background: var(--blue); color: #FFFFFF; border-color: var(--blue); }
+ol.trace { list-style: none; margin: 0; padding: 0; }
+ol.trace li { border: 1px solid var(--line-soft); border-left: 5px solid var(--blue); padding: 8px 10px; margin-bottom: 8px; background: var(--panel); }
+ol.trace li.rejected, ol.trace li.needs_revision { border-left-color: var(--red); background: var(--red-tint); }
+ol.trace li.fallback, ol.trace li.error { border-left-color: var(--red); }
+ol.trace li.skipped { border-left-color: var(--line); }
+ol.trace li.planner { border-left-color: var(--green); }
+ol.trace li.reveal { animation: reveal 320ms ease-out both; }
+@keyframes reveal { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+ol.trace li.flash { animation: reveal 320ms ease-out both, flash 1400ms ease-out 320ms 1; }
+@keyframes flash { 0% { box-shadow: 0 0 0 0 rgba(212,53,28,0.55); } 100% { box-shadow: 0 0 0 14px rgba(212,53,28,0); } }
+.ev-top { display: flex; flex-wrap: wrap; gap: 6px; align-items: baseline; }
+.agent { font-weight: 700; font-size: 14px; padding: 1px 8px; background: var(--bg); }
+.action { font-family: Consolas, "Courier New", monospace; font-size: 12px; color: var(--muted); }
+.arrow { font-size: 12px; color: var(--muted); }
+.st { font-size: 11px; font-weight: 700; text-transform: uppercase; padding: 1px 7px; background: var(--bg); color: var(--muted); }
+.st.rejected, .st.needs_revision, .st.error, .st.fallback { background: var(--red); color: #FFFFFF; }
+.st.success { color: var(--green); }
+.ev-io { font-size: 14px; margin-top: 3px; overflow-wrap: anywhere; } .ev-io .in { color: var(--muted); }
+.ev-meta { font-size: 12px; color: var(--muted); margin-top: 3px; font-family: Consolas, "Courier New", monospace; overflow-wrap: anywhere; }
+.steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 700px) { .steps { grid-template-columns: 1fr; } }
+.step { border: 1px solid var(--line-soft); border-top: 4px solid var(--green); padding: 10px 12px; background: var(--panel); font-size: 14px; }
+.step.enter { animation: reveal 360ms ease-out both; }
+.step .k { font-size: 12px; font-weight: 700; color: var(--green); }
+.hl { background: var(--yellow); color: #0B0C0C; padding: 0 3px; font-weight: 700; }
+.plan { border: 1px solid var(--line-soft); border-left: 6px solid var(--green); padding: 12px 14px; background: var(--panel); }
+.plan ol { margin: 8px 0 0 18px; padding: 0; } .plan li { margin: 4px 0; }
+.rev { background: var(--red-tint); border-left: 4px solid var(--red); padding: 6px 10px; margin-top: 8px; font-size: 14px; }
+.stepres { border: 1px solid var(--line-soft); border-left: 6px solid var(--blue); padding: 12px 14px; margin-top: 12px; background: var(--panel); }
+.stepres.failed { border-left-color: var(--red); }
+.stepres .hd { font-weight: 700; display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; }
+.stepres .hd .c { font-weight: 400; color: var(--muted); font-size: 14px; }
+details { margin-top: 8px; } details summary { cursor: pointer; color: var(--blue); font-weight: 700; }
+details[open] summary { margin-bottom: 8px; }
+footer { max-width: 1600px; margin: 0 auto; padding: 4px 24px 28px; font-size: 14px; color: var(--muted); }
+footer code, .card code { font-family: Consolas, "Courier New", monospace; font-size: 13px; background: var(--bg); padding: 1px 5px; }
+.empty { color: var(--muted); font-style: italic; }
+.fade { animation: fadein 260ms ease-out both; }
+@keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="head-row">
+    <div>
+      <h1>VESTING DAY</h1>
+      <div class="sub">One question across three councils that become one authority on 1 April 2027 - Woking, Guildford, Waverley</div>
+    </div>
+    <span class="tag track">Solving Fragmented Intelligence</span>
+    <span class="tag mode" id="modePill">checking mode...</span>
+    <nav>
+      <a href="/docs">API docs</a>
+      <a href="https://github.com/NakuSurrey/vesting-day" rel="noopener">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div>
+    <section class="card" aria-labelledby="askTitle">
+      <h2 id="askTitle">Ask the agent</h2>
+      <form class="ask" id="askForm">
+        <label for="q" class="muted small" style="position:absolute;left:-9999px">Your question</label>
+        <input id="q" name="q" autocomplete="off" placeholder="e.g. What are the biggest risks on vesting day?">
+        <button type="submit" id="runBtn">Run</button>
+      </form>
+      <div class="chips" id="chips"></div>
+      <div class="demo-row">
+        <button type="button" class="warm" id="demoBtn">Watch memory change the answer (3 steps)</button>
+        <span class="muted small">Asks, lets a person confirm one supplier pair, then asks again.</span>
+        <button type="button" class="ghost tiny" id="resetBtn" style="margin-left:auto">Reset demo memory</button>
+      </div>
+      <div class="status-line" id="status" role="status" aria-live="polite"><span class="dot" aria-hidden="true"></span><span id="statusText"></span></div>
+    </section>
+
+    <section class="card" id="demoCard" hidden aria-labelledby="demoTitle">
+      <h2 id="demoTitle">Memory changing the answer</h2>
+      <div class="steps" id="demoSteps"></div>
+      <div id="demoCompare"></div>
+    </section>
+
+    <section class="card quiet" aria-labelledby="ansTitle">
+      <h2 id="ansTitle">Answer</h2>
+      <div id="answer"><p class="empty">Run a question to see the answer, the evidence behind it and every agent step.</p></div>
+    </section>
+  </div>
+
+  <div>
+    <section class="card" id="traceCard" aria-labelledby="traceTitle">
+      <h2 id="traceTitle">What the agents did</h2>
+      <p class="muted small" id="traceFile">Each step is one line of the run's trace file, written by the agents as they work.</p>
+      <div class="roster" id="roster" aria-label="agents"></div>
+      <div class="trace-head" id="traceHead"></div>
+      <ol class="trace" id="trace"></ol>
+    </section>
+  </div>
+</main>
+
+<footer>
+  A hackathon prototype, not a government service. This page is a thin layer over <code>POST /run</code> - the same entry point the README's curl commands and the HackOS judges use.
+  Every run writes <code>logs/trace-&lt;run_id&gt;.jsonl</code>. Numbers are computed at run time from the councils' own published files; each row carries a provenance id (council:file:row).
+  The eight test residents are SYNTHETIC. Drafts are held for a person, never sent.
+  <span id="health"></span>
+</footer>
+
+<script>
+"use strict";
+var EXAMPLES = [
+  "What are the biggest risks on vesting day?",
+  "Which suppliers do Woking, Guildford and Waverley share?",
+  "Which contracts end within six months of vesting day?",
+  "Where do the Council Tax Support schemes differ between Woking and Guildford?",
+  "Which Guildford contracts end within a year of vesting day?",
+  "What are Waverley's risks on vesting day?"
+];
+var AGENTS = ["Router", "Planner", "Researcher", "Resolver", "Memory", "Critic", "Writer", "ApprovalGate"];
+var GW_Q = "Which suppliers do Guildford and Waverley share?";
+var CONFIRM_Q = "Confirm that 'Unit 4 Business Software Ltd' (Waverley) is the same supplier as 'Unit4 Business Software Ltd' (Guildford)";
+var busy = false;
+var REDUCED = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+function el(tag, attrs, kids) {
+  var n = document.createElement(tag);
+  if (attrs) { for (var k in attrs) {
+    if (k === "class") n.className = attrs[k];
+    else if (k === "text") n.textContent = attrs[k];
+    else if (k.slice(0, 2) === "on") n.addEventListener(k.slice(2), attrs[k]);
+    else n.setAttribute(k, attrs[k]);
+  } }
+  (kids || []).forEach(function (c) { if (c === null || c === undefined) return; n.appendChild(typeof c === "string" ? document.createTextNode(c) : c); });
+  return n;
+}
+function clear(n) { while (n.firstChild) n.removeChild(n.firstChild); return n; }
+function $(id) { return document.getElementById(id); }
+function gbp(v) { var x = Number(v); if (!isFinite(x)) return String(v); return "GBP " + x.toLocaleString("en-GB", { maximumFractionDigits: Math.abs(x) >= 1000 ? 0 : 2 }); }
+function newId(prefix) { return prefix + "-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 6); }
+function setStatus(t, running) { $("statusText").textContent = t || ""; $("status").className = "status-line" + (running ? " running" : ""); }
+function withMemIds(text) {
+  var out = el("span"); var parts = String(text).split(/(mem-\d+)/);
+  parts.forEach(function (p) { out.appendChild(/^mem-\d+$/.test(p) ? el("span", { class: "hl", text: p }) : document.createTextNode(p)); });
+  return out;
+}
+function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+
+async function api(path, body) {
+  var opts = body === undefined ? {} : { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) };
+  var r = await fetch(path, opts);
+  var data = null; try { data = await r.json(); } catch (e) { data = null; }
+  if (!r.ok && !(data && data.status)) throw new Error((data && data.detail) ? JSON.stringify(data.detail) : ("HTTP " + r.status));
+  return data;
+}
+
+async function refreshHealth() {
+  try {
+    var h = await api("/health");
+    var pill = $("modePill");
+    pill.textContent = h.sample_mode ? "Sample mode: cached published files, template writer" : "Live: Zetaris + Nemotron via Nightshift";
+    pill.className = "tag mode" + (h.sample_mode ? "" : " live");
+    $("health").textContent = " Memory: " + h.memories + " stored decision(s); " + h.pending_drafts + " draft(s) held for approval.";
+  } catch (e) { $("modePill").textContent = "server not reachable"; }
+}
+
+function drawRoster(active) {
+  var r = clear($("roster"));
+  AGENTS.forEach(function (a) { r.appendChild(el("span", { text: a, "data-agent": a, class: active && active[a] ? "lit" : "" })); });
+}
+
+async function runQuery(q, opts) {
+  opts = opts || {};
+  var id = newId("web");
+  if (!opts.quiet) setStatus("Running: " + q, true);
+  drawRoster({});
+  var r = await api("/run", { run_id: id, input: { query: q } });
+  if (!opts.noRender) renderAnswer(r, q);
+  await showTrace(id, !opts.quiet);
+  refreshHealth();
+  if (!opts.quiet) setStatus("Done in " + Number(r.execution_time_seconds || 0).toFixed(2) + " s - run id " + id, false);
+  return { id: id, r: r };
+}
+
+function lock(on) {
+  busy = on;
+  ["runBtn", "demoBtn", "resetBtn"].forEach(function (b) { $(b).disabled = on; });
+  Array.prototype.forEach.call(document.querySelectorAll(".chips button, .act"), function (b) { b.disabled = on; });
+}
+async function guarded(fn) {
+  if (busy) return; lock(true);
+  try { await fn(); } catch (e) { setStatus("Error: " + e.message, false); } finally { lock(false); }
+}
+
+/* ---------- answer ---------- */
+function renderAnswer(r, q) {
+  var box = clear($("answer"));
+  box.className = REDUCED ? "" : "fade";
+  box.appendChild(el("p", { class: "muted small" }, ["Question: ", el("b", { text: q })]));
+  if (r.status !== "success") {
+    var e = r.error || {};
+    box.appendChild(el("div", { class: "err" }, [
+      el("b", { text: (e.type || "Error") + (e.recoverable ? " (recoverable)" : "") }), el("br"),
+      el("span", { text: e.message || "" })
+    ]));
+    return;
+  }
+  var out = r.output || {}, arts = out.artifacts || [];
+  var mode = arts.filter(function (a) { return a.type === "run_mode"; })[0];
+  if (mode) box.appendChild(el("div", { class: "runmode" }, [
+    el("span", {}, ["Flow: ", el("b", { text: mode.flow })]),
+    el("span", {}, ["Data layer: ", el("b", { text: mode.data_layer })]),
+    el("span", {}, ["Model: ", el("b", { text: mode.model })])
+  ]));
+  box.appendChild(el("div", { class: "summary" }, [withMemIds(out.summary || "")]));
+  var gen = arts.filter(function (a) { return a.type === "generated_text"; })[0];
+  if (gen) box.appendChild(el("div", {}, [
+    el("span", { class: "badge model", text: "written by " + gen.model }),
+    gen.receipt_id ? el("span", { class: "badge", text: "Meterless receipt " + gen.receipt_id }) : null,
+    el("span", { class: "badge", text: "mode " + gen.mode })
+  ]));
+  if ((out.recommendations || []).length) {
+    box.appendChild(el("h3", { text: "Recommendations" }));
+    box.appendChild(el("ol", {}, out.recommendations.map(function (t) { return el("li", { text: t }); })));
+  }
+  arts.forEach(function (a) { var n = renderArtifact(a); if (n) box.appendChild(n); });
+}
+
+var PREFERRED = [
+  ["pair", ["a_name", "a_council", "a_total_gbp", "b_name", "b_council", "b_total_gbp", "combined_gbp", "similarity", "status", "model_verdict", "decision_id", "a_provenance"]],
+  ["contract_ref", ["council", "supplier_raw", "title", "total_value_gbp", "end_date", "days_from_vesting_day", "max_extension_end", "provenance_id"]],
+  ["resident_id", ["resident_id", "label", "home_council", "band", "capital_gbp", "treatment", "differs_between_councils"]]
+];
+function columnsFor(rows, given) {
+  var keys = Object.keys(rows[0] || {});
+  for (var i = 0; i < PREFERRED.length; i++) if (keys.indexOf(PREFERRED[i][0]) >= 0) return PREFERRED[i][1].filter(function (k) { return keys.indexOf(k) >= 0; });
+  return (given && given.length ? given : keys).slice(0, 8);
+}
+function cell(k, v) {
+  if (v === null || v === undefined || v === "") return el("td", { class: "muted", text: "-" });
+  if (/_gbp$/.test(k) && v !== "" && isFinite(Number(v))) return el("td", { class: "num", text: gbp(v) });
+  if (/provenance/.test(k)) return el("td", { class: "prov", text: String(v) });
+  if (typeof v === "number") return el("td", { class: "num", text: String(v) });
+  if (typeof v === "object") return el("td", { text: JSON.stringify(v) });
+  return el("td", { text: String(v) });
+}
+function confirmText(r, same) {
+  return (same ? "Confirm that " : "Record that ") + "'" + r.a_name + "' (" + r.a_council + ") " + (same ? "is the same supplier as " : "is not the same supplier as ") + "'" + r.b_name + "' (" + r.b_council + ")";
+}
+function tableArtifact(a) {
+  var rows = a.rows || [];
+  var wrap = el("div");
+  var count = (a.count !== undefined && a.count !== null) ? a.count : rows.length;
+  wrap.appendChild(el("h3", { text: (a.title || "Table") + " - " + count }));
+  if (a.synthetic) wrap.appendChild(el("p", { class: "small", text: "These residents are SYNTHETIC test cases, not real people." }));
+  if (!rows.length) { wrap.appendChild(el("p", { class: "empty", text: "None." })); return wrap; }
+  var cols = columnsFor(rows, a.columns);
+  var human = /needing a human decision/i.test(a.title || "");
+  var LIMIT = 12;
+  var tw = el("div", { class: "tablewrap" });
+  var t = el("table");
+  t.appendChild(el("tr", {}, cols.map(function (c) { return el("th", { text: c.replace(/_/g, " ") }); }).concat(human ? [el("th", { text: "a person decides" })] : [])));
+  rows.slice(0, LIMIT).forEach(function (r) {
+    var tr = el("tr", {}, cols.map(function (c) { return cell(c, r[c]); }));
+    if (human) tr.appendChild(el("td", {}, [
+      el("button", { class: "tiny act", type: "button", text: "Same", title: "Record a human decision: same organisation", onclick: function () { guarded(function () { return runQuery(confirmText(r, true)); }); } }), " ",
+      el("button", { class: "tiny ghost act", type: "button", text: "Different", title: "Record a human decision: different organisations", onclick: function () { guarded(function () { return runQuery(confirmText(r, false)); }); } })
+    ]));
+    t.appendChild(tr);
+  });
+  tw.appendChild(t); wrap.appendChild(tw);
+  if (rows.length > LIMIT || count > LIMIT) wrap.appendChild(el("p", { class: "muted small", text: "Showing " + Math.min(LIMIT, rows.length) + " of " + count + ". The full rows are in the JSON response of POST /run." }));
+  return wrap;
+}
+function renderArtifact(a) {
+  switch (a.type) {
+    case "run_mode": case "generated_text": return null;
+    case "table": return tableArtifact(a);
+    case "plan": {
+      var w = el("div", {}, [el("h3", { text: "The plan" })]);
+      var box = el("div", { class: "plan" }, [
+        el("div", {}, [el("b", { text: a.source === "model" ? "Planned by the model" : "Planned by rules (sample mode)" }),
+          a.model ? el("span", { class: "badge model", text: a.model }) : null,
+          a.receipt_id ? el("span", { class: "badge", text: "receipt " + a.receipt_id }) : null]),
+        a.focus ? el("div", { class: "small muted", text: "Focus: " + a.focus }) : null,
+        a.note ? el("div", { class: "rev", text: a.note }) : null,
+        el("ol", {}, (a.steps || []).map(function (s) {
+          return el("li", {}, [el("b", { text: s.check.replace(/_/g, " ") }), s.params && s.params.window_days ? el("span", { class: "muted", text: " (window " + s.params.window_days + " days)" }) : null, s.why ? el("span", { class: "muted", text: " - " + s.why }) : null]);
+        }))
+      ]);
+      (a.revisions || []).forEach(function (r) { box.appendChild(el("div", { class: "rev", text: "Plan revised: " + r.reason + " (" + (r.councils_before || []).join(", ") + " -> " + (r.councils_after || []).join(", ") + ")" })); });
+      w.appendChild(box); return w;
+    }
+    case "step_results": {
+      var w2 = el("div", {}, [el("h3", { text: "What each check found" })]);
+      (a.steps || []).forEach(function (s, i) {
+        var card = el("div", { class: "stepres" + (s.status === "failed" ? " failed" : "") }, [
+          el("div", { class: "hd" }, [el("span", { text: (i + 1) + ". " + s.heading }), el("span", { class: "c", text: (s.councils || []).join(", ") }), el("span", { class: "st " + (s.status === "failed" ? "error" : "success"), text: s.status })]),
+          el("div", {}, [withMemIds(s.note || "")])
+        ]);
+        if (s.status === "done") {
+          var d = el("details", {}, [el("summary", { text: "Show this check's full answer and evidence" })]);
+          d.appendChild(el("div", { class: "summary" }, [withMemIds(s.summary || "")]));
+          (s.artifacts || []).forEach(function (sub) { var n = renderArtifact(sub); if (n) d.appendChild(n); });
+          card.appendChild(d);
+        }
+        w2.appendChild(card);
+      });
+      return w2;
+    }
+    case "run_stats": {
+      var tiles = [];
+      if (a.steps_planned !== undefined) {
+        tiles = [["checks planned", a.steps_planned], ["checks run", a.steps_run], ["plan revisions", a.revisions], ["drafts held for approval", (a.drafts_held || []).length], ["Critic bounces", a.critic_bounces]];
+        if (a.steps_failed) tiles.push(["checks not available", a.steps_failed]);
+        if ((a.recalled_decisions || []).length) tiles.push(["remembered decisions applied", a.recalled_decisions.join(", ")]);
+      } else if (a.presented !== undefined) {
+        tiles = [["shared pairs", a.presented], ["awaiting a human", a.needs_human], ["unlikely, kept for audit", a.unlikely], ["Critic bounces", a.critic_bounces]];
+        if (a.judge_hints && a.judge_hints.reviewed) tiles.push(["judge suggests same / different", a.judge_hints.same + " / " + a.judge_hints.different]);
+      } else if (a.per_council) {
+        Object.keys(a.per_council).forEach(function (c) { tiles.push([c + " - " + a.per_council[c].contracts + " contracts", gbp(a.per_council[c].value_gbp)]); });
+        tiles.push(["suppliers also paid by another council", a.shared_suppliers_on_cliff]);
+        if (a.widened_to) tiles.push(["window widened", a.asked_window_days + " -> " + a.widened_to + " days"]);
+      } else return null;
+      return el("div", {}, [el("h3", { text: "Run statistics" }), el("div", { class: "tiles" }, tiles.map(function (x) { return el("div", { class: "tile" }, [el("div", { class: "n" }, [withMemIds(String(x[1]))]), el("div", { class: "l", text: x[0] })]); }))]);
+    }
+    case "period_badges":
+      return el("div", {}, [el("h3", { text: a.title }), el("div", { class: "tiles" }, (a.data || []).map(function (b) {
+        return el("div", { class: "tile" }, [el("div", { text: b.council, style: "font-weight:700" }), el("div", { class: "l", text: b.window + " - " + b.cadence }), el("div", { class: "l", text: b.rows_published + " rows, " + gbp(b.total_gbp) })]);
+      }))]);
+    case "clause_grid": {
+      var w3 = el("div"); w3.appendChild(el("h3", { text: (a.title || "Clauses") + " - " + (a.differences || []).length + " differ" }));
+      var t = el("table"); var councils = [];
+      (a.differences || []).forEach(function (d) { Object.keys(d).forEach(function (k) { if (d[k] && typeof d[k] === "object" && d[k].council && councils.indexOf(k) < 0) councils.push(k); }); });
+      t.appendChild(el("tr", {}, [el("th", { text: "Clause" })].concat(councils.map(function (c) { return el("th", { text: c }); }))));
+      (a.differences || []).forEach(function (d) {
+        t.appendChild(el("tr", {}, [el("td", { text: d.label || d.clause_key })].concat(councils.map(function (c) { var v = d[c] || {}; return el("td", { text: (v.value_text || "-") + (v.page ? "  (p." + v.page + ")" : "") }); }))));
+      });
+      var tw = el("div", { class: "tablewrap" }); tw.appendChild(t); w3.appendChild(tw);
+      if ((a.agreements || []).length) w3.appendChild(el("p", { class: "muted small", text: "They agree on: " + a.agreements.map(function (g) { return g.label || g.clause_key || String(g); }).join("; ") }));
+      return w3;
+    }
+    case "draft": {
+      var d = a.draft; if (!d) return el("div", {}, [el("h3", { text: a.title || "Draft" }), el("p", { class: "empty", text: "No draft was produced for this run." })]);
+      var pending = d.status === "pending";
+      return el("div", {}, [el("h3", { text: (a.title || "Draft") + " - " + d.id }), el("div", { class: "draft" }, [
+        el("div", {}, [el("b", { text: d.title }), " ", el("span", { class: "tag mode" + (pending ? "" : " live"), text: d.status })]),
+        el("pre", { text: d.text }),
+        el("span", { class: "badge model", text: "written by " + d.model }),
+        d.receipt_id ? el("span", { class: "badge", text: "receipt " + d.receipt_id }) : null,
+        pending ? el("div", { style: "margin-top:8px" }, [
+          el("button", { class: "tiny act", type: "button", text: "Approve " + d.id, onclick: function () { guarded(function () { return runQuery("Approve draft " + d.id); }); } }), " ",
+          el("button", { class: "tiny ghost act", type: "button", text: "Reject", onclick: function () { guarded(function () { return runQuery("Reject draft " + d.id); }); } }),
+          el("span", { class: "muted small", text: "  Approval records intent only; nothing is sent." })
+        ]) : null
+      ])]);
+    }
+    case "decision": {
+      var dd = a.decision || {};
+      return el("div", {}, [el("h3", { text: "Human decision stored in H-MEM" }), el("div", { class: "draft" }, [withMemIds((dd.memory_id || "") + ": " + (dd.content || ""))])]);
+    }
+    case "memory": {
+      var w4 = el("div"); w4.appendChild(el("h3", { text: a.title || "H-MEM" }));
+      var decs = a.decisions ? Object.keys(a.decisions).map(function (k) { return a.decisions[k]; }) : null;
+      if (decs) w4.appendChild(decs.length ? el("ul", {}, decs.map(function (d2) { return el("li", {}, [withMemIds(d2.memory_id + " (" + d2.verdict + ", confidence " + d2.confidence + "): " + d2.content)]); }))
+                                            : el("p", { class: "empty", text: "No remembered human decision applied to this answer." }));
+      var tail = (a.ledger_tail || []).filter(function (x) { return x && x.action; });
+      if (tail.length) w4.appendChild(el("p", { class: "muted small", text: "H-MEM ledger: " + tail.map(function (x) { return x.action + " " + (x.memoryId || ""); }).join(", ") }));
+      return w4;
+    }
+    case "evidence": {
+      var side = function (s) { return el("div", {}, [el("b", { text: s.name + " (" + s.council + ")" }), tableArtifact({ title: "published payments", rows: s.rows, count: (s.rows || []).length })]); };
+      return el("div", {}, [el("h3", { text: a.title }), side(a.a), side(a.b)]);
+    }
+    default: return null;
+  }
+}
+
+/* ---------- trace: the agents' steps, revealed one by one ---------- */
+async function showTrace(id, animate) {
+  var head = clear($("traceHead")), list = clear($("trace"));
+  var t;
+  try { t = await api("/trace/" + encodeURIComponent(id)); } catch (e) { list.appendChild(el("li", { text: "Trace not available: " + e.message })); return; }
+  var ev = t.events || [];
+  $("traceFile").textContent = "Trace file " + t.trace_file + " - " + ev.length + " steps, written by the agents as they ran.";
+  var agents = {}; ev.forEach(function (e) { if (e.agent_name !== "Orchestrator") agents[e.agent_name] = 1; });
+  var back = ev.filter(function (e) { return e.status === "rejected" || e.status === "needs_revision"; }).length;
+  var data = ev.filter(function (e) { return e.action === "query_data_layer"; }).length;
+  var models = ev.filter(function (e) { return e.details && e.details.receipt_id; }).length;
+  var sample = ev.length && /mode=sample/.test(ev[0].output_summary || "");
+  var planned = ev.filter(function (e) { return e.agent_name === "Planner" && e.action === "delegate"; }).length;
+  head.appendChild(el("span", { class: "badge", text: Object.keys(agents).length + " agents" }));
+  if (planned) head.appendChild(el("span", { class: "badge", text: planned + " checks delegated by the Planner" }));
+  head.appendChild(back
+    ? el("span", { class: "badge jump", role: "button", tabindex: "0", title: "Jump to the first step that was sent back", text: back + " sent back - show me",
+        onclick: function () { var f = document.querySelector("#trace li.rejected, #trace li.needs_revision"); if (f) f.scrollIntoView({ behavior: REDUCED ? "auto" : "smooth", block: "center" }); },
+        onkeydown: function (k) { if (k.key === "Enter") this.click(); } })
+    : el("span", { class: "badge", text: "0 sent back" }));
+  head.appendChild(el("span", { class: "badge", text: data + " data-layer queries" }));
+  head.appendChild(el("span", { class: "badge", text: sample ? "0 model calls (sample mode: template writer)" : models + " model calls with receipts" }));
+  drawRoster({});
+  var lit = {};
+  var delay = animate && !REDUCED ? Math.min(140, Math.max(35, 2600 / Math.max(ev.length, 1))) : 0;
+  for (var i = 0; i < ev.length; i++) {
+    var e = ev[i];
+    var cls = (e.status === "rejected" || e.status === "needs_revision") ? e.status : (e.status === "fallback" || e.status === "error" || e.status === "skipped") ? e.status : "";
+    if (e.agent_name === "Planner") cls += " planner";
+    if (delay) cls += (e.status === "rejected" || e.status === "needs_revision") ? " flash" : " reveal";
+    var meta = [];
+    if (e.model) meta.push("model " + e.model);
+    if (e.details && e.details.receipt_id) meta.push("receipt " + e.details.receipt_id);
+    if (e.retry_count) meta.push("retry " + e.retry_count);
+    if (e.confidence !== null && e.confidence !== undefined) meta.push("confidence " + e.confidence);
+    list.appendChild(el("li", { class: cls }, [
+      el("div", { class: "ev-top" }, [
+        el("span", { class: "muted small", text: String(i + 1) + "." }),
+        el("span", { class: "agent", text: e.agent_name }),
+        el("span", { class: "action", text: e.action }),
+        e.target_agent ? el("span", { class: "arrow", text: "-> " + e.target_agent }) : null,
+        el("span", { class: "st " + (e.status || ""), text: e.status })
+      ]),
+      el("div", { class: "ev-io" }, [el("span", { class: "in", text: e.input_summary }), el("br"), withMemIds(e.output_summary)]),
+      meta.length ? el("div", { class: "ev-meta", text: meta.join(" | ") }) : null
+    ]));
+    lit[e.agent_name] = 1;
+    Array.prototype.forEach.call(document.querySelectorAll("#roster span"), function (s) {
+      var a = s.getAttribute("data-agent");
+      s.className = a === e.agent_name ? "hot" : (lit[a] ? "lit" : "");
+    });
+    if (delay) await sleep(delay);
+  }
+  Array.prototype.forEach.call(document.querySelectorAll("#roster span.hot"), function (s) { s.className = "lit"; });
+}
+
+/* ---------- guided memory demo ---------- */
+function stats(r) { return ((r.output || {}).artifacts || []).filter(function (a) { return a.type === "run_stats"; })[0] || {}; }
+function recalled(r) { var m = ((r.output || {}).artifacts || []).filter(function (a) { return a.type === "memory"; })[0]; return m && m.decisions ? Object.keys(m.decisions).map(function (k) { return m.decisions[k].memory_id; }) : []; }
+function step(k, title, body) { return el("div", { class: "step" + (REDUCED ? "" : " enter") }, [el("div", { class: "k", text: k }), el("b", { text: title }), el("div", {}, [body])]); }
+
+async function memoryDemo() {
+  $("demoCard").hidden = false;
+  var steps = clear($("demoSteps")), cmp = clear($("demoCompare"));
+  setStatus("Step 0: clearing the shared demo memory...", true);
+  await api("/demo/reset", {});
+  setStatus("Step 1 of 3: asking which suppliers Guildford and Waverley share...", true);
+  var a = await runQuery(GW_Q, { quiet: true });
+  steps.appendChild(step("Step 1 - ask", "Which suppliers do Guildford and Waverley share?", document.createTextNode(stats(a.r).presented + " shared, " + stats(a.r).needs_human + " awaiting a human. The Unit4 pair is in that queue.")));
+  setStatus("Step 2 of 3: a person confirms the Unit4 pair...", true);
+  var b = await runQuery(CONFIRM_Q, { quiet: true });
+  var dec = ((b.r.output || {}).artifacts || []).filter(function (x) { return x.type === "decision"; })[0];
+  steps.appendChild(step("Step 2 - a person decides", "Unit 4 (Waverley) = Unit4 (Guildford)", withMemIds("Stored in H-MEM as " + ((dec && dec.decision && dec.decision.memory_id) || "?") + ".")));
+  setStatus("Step 3 of 3: asking the same question again...", true);
+  var c = await runQuery(GW_Q, { quiet: true });
+  var ids = recalled(c.r);
+  steps.appendChild(step("Step 3 - ask again", "Same question", withMemIds("Recalled from memory: " + (ids.join(", ") || "none") + ".")));
+  var s1 = stats(a.r), s3 = stats(c.r);
+  var t = el("table");
+  t.appendChild(el("tr", {}, [el("th", { text: "" }), el("th", { text: "Before the decision" }), el("th", { text: "After the decision" })]));
+  [["Shared pairs", s1.presented, s3.presented], ["Awaiting a human decision", s1.needs_human, s3.needs_human], ["Resolved from remembered decisions", recalled(a.r).join(", ") || "none", ids.join(", ") || "none"]]
+    .forEach(function (row) { t.appendChild(el("tr", {}, [el("td", { text: row[0] }), el("td", { class: "num", text: String(row[1]) }), el("td", { class: "num" }, [withMemIds(String(row[2]))])])); });
+  cmp.appendChild(el("h3", { text: "Before and after" }));
+  var tw = el("div", { class: "tablewrap" }); tw.appendChild(t); cmp.appendChild(tw);
+  var sentence = String((c.r.output || {}).summary || "").split(/\n|(?<=\.)\s/).filter(function (x) { return /mem-\d+/.test(x); })[0];
+  if (sentence) cmp.appendChild(el("p", { class: "small" }, ["The new answer says: ", withMemIds(sentence)]));
+  renderAnswer(c.r, GW_Q);
+  await showTrace(c.id, true);
+  setStatus("Done: the same question gave a different answer because a person's decision was remembered. The trace on the right is step 3.", false);
+}
+
+/* ---------- wire up ---------- */
+EXAMPLES.forEach(function (q) { $("chips").appendChild(el("button", { type: "button", text: q, onclick: function () { $("q").value = q; guarded(function () { return runQuery(q); }); } })); });
+$("askForm").addEventListener("submit", function (ev) { ev.preventDefault(); var q = $("q").value.trim(); if (q) guarded(function () { return runQuery(q); }); });
+$("demoBtn").addEventListener("click", function () { guarded(memoryDemo); });
+$("resetBtn").addEventListener("click", function () { guarded(async function () { await api("/demo/reset", {}); refreshHealth(); setStatus("Demo memory cleared: no stored decisions, no held drafts.", false); }); });
+drawRoster({});
+refreshHealth();
+</script>
+<noscript><p style="padding:20px">This page needs JavaScript. Without it, use the API: POST /run (see the README).</p></noscript>
+</body>
+</html>

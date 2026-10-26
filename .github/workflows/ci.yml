@@ -69,6 +69,11 @@ jobs:
           d = json.loads(urllib.request.urlopen(req, timeout=120).read())
           assert d["status"] == "success", d
           print(d["output"]["summary"][:300])
+          page = urllib.request.urlopen("http://127.0.0.1:8000/", timeout=10).read().decode()
+          assert "VESTING DAY" in page and "/trace/" in page, "web page not served"
+          t = json.loads(urllib.request.urlopen("http://127.0.0.1:8000/trace/ci-001", timeout=10).read())
+          assert len(t["events"]) > 5, t
+          print("web page and trace route ok:", len(t["events"]), "trace events")
           PY
           n=$(docker logs vd 2>&1 | grep -c '"agent_name"' || true); echo "trace lines in container logs: $n"; test "$n" -gt 5
           docker stop vd

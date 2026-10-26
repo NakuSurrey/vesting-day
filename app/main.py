@@ -1,16 +1,26 @@
 """VESTING DAY - HTTP entry point.
 
-GET  /health  -> {"status": "ok", "sample_mode": bool, ...}
-POST /run     -> the HackOS run contract (see app/schemas.py)
+GET  /                  -> the web page: ask a question, watch the agents work (a thin layer over POST /run)
+GET  /health            -> {"status": "ok", "sample_mode": bool, ...}
+POST /run               -> the HackOS run contract (see app/schemas.py)
+GET  /trace/{run_id}    -> the run's trace events (logs/trace-<run_id>.jsonl)
+POST /demo/reset        -> clear H-MEM decisions and held drafts (the shared demo memory)
+GET  /api               -> this list as JSON
 
-Start with `python run.py` (binds 0.0.0.0:PORT, default 8000).
+Start with `uv run python run.py` (binds 0.0.0.0:PORT, default 8000).
 """
 
 from __future__ import annotations
 
-from fastapi import FastAPI
-from fastapi.responses import JSONResponse
+import json
+import re
+import threading
+from pathlib import Path
 
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import HTMLResponse, JSONResponse
+
+from app.agents.approval import reset_memory_dir
 from app.config import settings
 from app.orchestrator import Orchestrator
 from app.schemas import RunRequest
@@ -18,6 +28,9 @@ from app.schemas import RunRequest
 app = FastAPI(title="VESTING DAY", version="0.1.0",
               description="Federates merging councils' spend, contract and policy data in place; remembers human decisions; drafts day-one actions under an approval gate.")
 _orchestrator: Orchestrator | None = None
+_lock = threading.Lock()          # one run at a time: H-MEM and the approval store are shared state
+_RUN_ID = re.compile(r"[A-Za-z0-9_-]{1,80}")
+_PAGE = Path(__file__).resolve().parent / "web" / "index.html"
 
 
 def get_orchestrator() -> Orchestrator:
@@ -42,10 +55,38 @@ def health() -> dict:
 
 @app.post("/run")
 def run(req: RunRequest) -> JSONResponse:
-    result = get_orchestrator().run(req)
+    with _lock:
+        result = get_orchestrator().run(req)
     return JSONResponse(content=result.model_dump(), status_code=200)
 
 
-@app.get("/")
-def root() -> dict:
-    return {"service": "vesting-day", "run": "POST /run", "health": "GET /health", "docs": "/docs"}
+@app.get("/trace/{run_id}")
+def trace(run_id: str) -> dict:
+    if not _RUN_ID.fullmatch(run_id):
+        raise HTTPException(status_code=400, detail="run_id may contain only letters, digits, '-' and '_'")
+    path = get_orchestrator().cfg.logs_dir / f"trace-{run_id}.jsonl"
+    if not path.is_file():
+        raise HTTPException(status_code=404, detail=f"no trace for run_id {run_id}")
+    events = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+    return {"run_id": run_id, "trace_file": f"logs/{path.name}", "events": events}
+
+
+@app.post("/demo/reset")
+def demo_reset() -> dict:
+    """Clear stored decisions and held drafts so the memory demo starts from nothing."""
+    global _orchestrator
+    with _lock:
+        reset_memory_dir(get_orchestrator().cfg.memory_dir)
+        _orchestrator = None      # rebuilt on the next request with empty H-MEM and approval stores
+    return {"status": "ok", "memories": 0, "pending_drafts": 0}
+
+
+@app.get("/", response_class=HTMLResponse)
+def page() -> HTMLResponse:
+    return HTMLResponse(_PAGE.read_text(encoding="utf-8"))
+
+
+@app.get("/api")
+def api_index() -> dict:
+    return {"service": "vesting-day", "ui": "GET /", "run": "POST /run", "health": "GET /health",
+            "trace": "GET /trace/{run_id}", "reset_demo_memory": "POST /demo/reset", "docs": "/docs"}
