@@ -29,12 +29,31 @@ with a read-only `vd_reader` login; `scripts/zetaris/register_sources.sql` regis
 (`CREATE DATASOURCE` + `REGISTER DATASOURCE TABLES`). The databases sit on Zetaris's private
 Docker network with no port open to the internet. `docs/ZETARIS_SETUP.md` is the runbook.
 
+**Unified Semantic Layer.** Over the three sources we built the USL
+`lightning.metastore.vesting_day.west_surrey`: four tables (`council`, `spend`, `contracts`,
+`policy_clause`) with primary keys and a foreign key from each to `council`, each activated with
+one SELECT over the three sources, so nothing is copied. Through it Zetaris gives the agent's own
+answers (payments per council; the contract cliff, 173 contracts / GBP 22,671,524.77), and two
+data-quality rules run where the data is: `contract_has_end_date` (501 contracts, 4 invalid -
+the same four the agent lists) and `payment_is_positive` (19,847 lines, 252 invalid - Woking's
+credit and zero lines). Setting `ZETARIS_USL` makes the agent's Researcher read through the USL.
+Building it we found that a filter `A AND B AND (C OR D)` on a USL table was answered as if the
+brackets were dropped (59 contracts became 115); the same filter on the source was correct. The
+USL query avoids `OR`, and the issue is kept as a reproducible step. `docs/ZETARIS_USL.md` maps
+each of Zetaris's evaluation criteria to the evidence.
+
 **Test / evidence.**
 - Live traces `logs/trace-live-0N.jsonl`: every `query_data_layer` event names
   `zetaris (federated query-in-place over woking_pg, guildford_pg, waverley_pg)`.
 - `tests/test_datalayer_zetaris.py`: a fake Zetaris in the real answer shape, backed by three
   separate sources; every Researcher query returns exactly the rows SAMPLE_MODE returns, and
   a partial answer is refused. Proven to fail on the adapter before the fix.
+- `docs/ZETARIS_USL_EVIDENCE.md` and `logs/zetaris-usl-build.jsonl`: the live USL build, 29 of
+  29 steps, written by `scripts/zetaris/build_usl.py` from Zetaris's answers - 9 exploratory
+  queries on the sources, the DDL, the activations, 4 USL queries that each match the agent's
+  data, the bracket repro, and both data-quality rules run.
+- `tests/test_zetaris_usl.py`: the USL mirrors the council tables, its queries give the agent's
+  own contract-cliff answer, and every Researcher query read through it matches SAMPLE_MODE.
 
 ## Meterless - the H-MEM engine (memory) and Nightshift (primary AI provider)
 

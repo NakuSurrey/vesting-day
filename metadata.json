@@ -60,7 +60,7 @@
     }
   ],
   "sponsor_technology": {
-    "zetaris": "data layer: the three councils' spend, contracts and policy tables are registered in Zetaris and queried in place over its REST API (app/adapters/datalayer.py)",
+    "zetaris": "data layer: the three councils' spend, contracts and policy tables are registered in Zetaris and queried in place over its REST API (app/adapters/datalayer.py); a Unified Semantic Layer (lightning.metastore.vesting_day.west_surrey: council, spend, contracts, policy_clause with keys) is built over the three sources by scripts/zetaris/build_usl.py, with data-quality rules run in Zetaris (docs/ZETARIS_USL.md, evidence in docs/ZETARIS_USL_EVIDENCE.md); ZETARIS_USL makes the agent read through it",
     "meterless_engine": "H-MEM, implemented as a Python port of the reference (app/engines/hmem), conformance 13/13 on the upstream vectors (tests/test_hmem_conformance.py), bit-exact against the TypeScript reference (tests/test_hmem_golden.py), used by the Memory agent",
     "meterless_nightshift": "primary AI provider: app/adapters/nightshift.py speaks Nightshift's OpenAI-compatible endpoint with the runtime token; every response's signed compute receipt is kept",
     "nvidia": "nvidia/nemotron-3.5-lightning-30b-a3b through Nightshift: proposes the Planner's plan as JSON (validated by code), writes the briefings, letters and options note, and suggests SAME/DIFFERENT for uncertain supplier pairs (a suggestion for the human queue, never a decision); the model name and receipt are logged per request"

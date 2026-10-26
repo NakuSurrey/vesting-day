@@ -236,6 +236,25 @@ Six live runs are committed in `logs/` (`response-live-0N.json` and `trace-live-
 | live-05 Council Tax Support gap | 4 of 9 clauses differ; 4 of 8 SYNTHETIC residents; the options note drafted by Nemotron and held as draft-2 |
 | live-06 day-one brief: "What are the biggest risks on vesting day?" | Nemotron chose the plan (contract cliff -> supplier overlap -> policy gap, receipt `rcpt_req_wu8606u2`); the Planner handed out each check and assessed each result; 7 federated Zetaris queries; `mem-1` recalled, so 229 shared (228 identical names + 1 resolved by the remembered human decision) and 216 awaiting a human; the Critic rejected the first brief for not naming `mem-1` and the retry passed; 18 Nemotron receipts; the full action lists as 8 CSVs in `logs/exports/live-06/` |
 
+### Zetaris Unified Semantic Layer (live)
+
+Over the three sources we built the Zetaris USL `lightning.metastore.vesting_day.west_surrey`
+(`council`, `spend`, `contracts`, `policy_clause`, with keys), and checked it live: 29 of 29
+steps in `docs/ZETARIS_USL_EVIDENCE.md`, written by `scripts/zetaris/build_usl.py` from what
+Zetaris returned.
+
+| Check | Result through the USL |
+|---|---|
+| Exploratory queries | 3 per source, 9 in all |
+| Payments per council | 9,718 / 6,883 / 3,246, to the penny - same as the agent's data |
+| Contract cliff | 173 contracts / GBP 22,671,524.77 - same as the agent |
+| Rule `contract_has_end_date` | 501 contracts, 4 invalid - the same four the agent lists |
+| Rule `payment_is_positive` | 19,847 lines, 252 invalid - Woking's credit and zero lines |
+| Issue found | a filter `A AND B AND (C OR D)` on a USL table was answered as if the brackets were dropped (59 contracts became 115); the source was correct. Reproduced in the evidence; the USL query avoids `OR` |
+
+`docs/ZETARIS_USL.md` maps this to Zetaris's evaluation criteria, with our write-ups on time
+saved, how a USL helps this work, and requirements to make it stronger.
+
 ## Live mode (Zetaris + Nightshift)
 
 Copy `.env.example` to `.env`, fill in the keys and set `SAMPLE_MODE=false`:
@@ -275,9 +294,11 @@ uv run pytest -q          # 127 tests
   Researcher query returns the same rows as SAMPLE_MODE; a partial answer is refused.
 - `tests/test_zetaris_usl.py` - the Unified Semantic Layer: its steps run in an order Zetaris
   accepts and the four-table COMPILE is sent as one request; its tables carry every column of the
-  council tables, bound from all three sources; its contract-cliff query gives the agent's own
-  answer; with `ZETARIS_USL` set every Researcher query read through it matches SAMPLE_MODE; the
-  runner stops on a failed build step and never writes the key.
+  council tables, bound from all three sources, and every NOT NULL column is fed a value that
+  cannot be null; its contract-cliff query gives the agent's own answer and avoids the `OR` form
+  Zetaris answered wrongly, which the repro steps keep; with `ZETARIS_USL` set every Researcher
+  query read through it matches SAMPLE_MODE; the runner stops on a failed build step, records a
+  re-run's "already exists" without calling it an error, and never writes the key.
 - `tests/test_live_judge_hints.py` - live mode with a fake model: the judge's opinion never
   moves a pair, over-claims and dropped SYNTHETIC labels are bounced, a recalled decision
   must be named, and a model that keeps failing is replaced by the template.
