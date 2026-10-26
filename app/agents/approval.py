@@ -16,6 +16,19 @@ from typing import Any, Optional
 from app.agents.base import Agent
 
 
+def reset_memory_dir(memory_dir: Path) -> None:
+    """Clear H-MEM state and held drafts, but keep the .gitkeep placeholder the repo tracks."""
+    memory_dir.mkdir(parents=True, exist_ok=True)
+    for p in memory_dir.iterdir():
+        if p.name == ".gitkeep":
+            continue
+        if p.is_dir():
+            import shutil
+            shutil.rmtree(p)
+        else:
+            p.unlink()
+
+
 class ApprovalStore:
     """Small JSON file of drafts and decisions, next to the H-MEM state."""
 

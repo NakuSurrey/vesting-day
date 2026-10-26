@@ -17,7 +17,7 @@ import json
 from typing import Any
 
 from app.agents.base import RunContext
-from app.agents.critic import HUMAN_ONLY_CLAIMS, CriticAgent
+from app.agents.critic import HUMAN_ONLY_CLAIMS, CriticAgent, must_name_claims
 from app.agents.memory import MemoryAgent
 from app.agents.researcher import ResearcherAgent
 from app.agents.resolver import ResolverAgent
@@ -56,6 +56,7 @@ def run(ctx: RunContext, sources: dict[str, Any]) -> dict[str, Any]:
     rows.sort(key=lambda r: -(r["combined_gbp"] or 0))
     presented = [r for r in rows if r["status"] in ("auto", "confirmed")]          # identical names, or a human said so
     from_memory = [r for r in rows if r["decision_id"]]
+    recalled_ids = sorted({r["decision_id"] for r in from_memory})            # human decisions H-MEM changed this answer with
     needs_human = [r for r in rows if r["status"] in ("needs-human", "pending")]
     needs_human.sort(key=lambda r: (_HINT_ORDER.get(r["model_verdict"], 1), -(r["combined_gbp"] or 0)))  # likely-same first
     unlikely = [r for r in rows if r["status"] == "unlikely"]
@@ -99,12 +100,14 @@ def run(ctx: RunContext, sources: dict[str, Any]) -> dict[str, Any]:
         f"Summarise the supplier overlap across {', '.join(councils)} for the finance lead in 120 words. "
         "Use these words exactly: pairs with identical names are 'shared'; pairs awaiting a person are 'awaiting a human decision'; "
         "the match judge's opinions are 'suggestions'. Do not call any pair confirmed, verified or a duplicate unless the evidence says a human confirmed it."
+        + (f" A remembered human decision changed this answer: say so and name the decision(s) ({', '.join(recalled_ids)}), e.g. 'resolved using decision {recalled_ids[0]}'." if recalled_ids else "")
     )
     allowed = numbers_in([shared_spend, len(presented), len(from_memory), len(needs_human), len(split), len(cands), hinted, len(hint_same), len(hint_diff)]
                          + [r["combined_gbp"] for r in top] + [r["a_total_gbp"] for r in top] + [r["b_total_gbp"] for r in top]
                          + [b.get("rows_published") for b in windows] + [b.get("total_gbp") for b in windows]
                          + [b.get("distinct_suppliers") for b in windows])
-    draft, draft_bounces = checked_draft(writer, critic, "briefing", instruction, evidence, template, allowed, HUMAN_ONLY_CLAIMS)
+    claims = HUMAN_ONLY_CLAIMS + must_name_claims(recalled_ids)              # never overclaim; and name any recalled human decision
+    draft, draft_bounces = checked_draft(writer, critic, "briefing", instruction, evidence, template, allowed, claims)
     bounces += draft_bounces
 
     recommendations = [

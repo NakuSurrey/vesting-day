@@ -42,6 +42,23 @@ SYNTHETIC_LABEL_CLAIM: list[Claim] = [
 ]
 
 
+def must_name_claims(decision_ids: Sequence[str]) -> list[Claim]:
+    """Claims that a briefing must NAME each remembered human decision it was built on.
+
+    When H-MEM recalls a human decision (e.g. mem-1) that changed this answer, the memory must be
+    visible in the prose, not only in the trace. Expressed in the same shape as the claims above:
+    if the id is absent from the whole draft, the negative-lookahead pattern matches and the draft
+    is bounced (so the Writer retries with the reason, else the evidence-only template, which names it).
+    """
+    claims: list[Claim] = []
+    for did in decision_ids:
+        claims.append((
+            rf"\A(?!.*\b{re.escape(did)}\b)",
+            f"a remembered human decision ({did}) changed this answer; the briefing must name it, e.g. 'resolved using decision {did}'",
+        ))
+    return claims
+
+
 @dataclass
 class Verdict:
     accepted: bool

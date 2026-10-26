@@ -18,7 +18,7 @@ import pytest
 
 from app.adapters.datalayer import LocalDataLayer
 from app.adapters.nightshift import Completion, ModelClient
-from app.agents.critic import HUMAN_ONLY_CLAIMS, SYNTHETIC_LABEL_CLAIM
+from app.agents.critic import HUMAN_ONLY_CLAIMS, SYNTHETIC_LABEL_CLAIM, must_name_claims
 from app.agents.resolver import JUDGE_SYSTEM
 from app.config import Settings
 from app.orchestrator import Orchestrator
@@ -26,6 +26,8 @@ from app.schemas import RunRequest
 
 ROOT = Path(__file__).resolve().parents[1]
 OVERLAP_Q = "Which suppliers do Woking, Guildford and Waverley share?"
+OVERLAP_GW_Q = "Which suppliers do Guildford and Waverley share?"
+CONFIRM_Q = "Confirm that 'Unit 4 Business Software Ltd' (Waverley) is the same supplier as 'Unit4 Business Software Ltd' (Guildford)"
 POLICY_Q = "Where do the Council Tax Support schemes differ between Woking and Guildford?"
 
 
@@ -185,3 +187,63 @@ def test_policy_note_must_keep_the_synthetic_label(tmp_path: Path) -> None:
     assert "SYNTHETIC" in held["text"]
     events = _trace(orch, "l-03")
     assert any(e["action"] == "critique_draft" and e["status"] == "rejected" and "SYNTHETIC" in e["output_summary"] for e in events)
+
+
+# --- H-MEM: a recalled human decision must be named in the briefing -----------------------
+# The committed live-03 run resolved a pair from memory (mem-1) but the model briefing never
+# named it, so the "memory changed a later answer" proof was missing from the live prose.
+
+@pytest.mark.parametrize("ids, text, hit", [
+    (["mem-1"], "The shared pairs come from identical names and a human decision.", True),      # omits mem-1 -> bounce
+    (["mem-1"], "One pair is resolved using decision mem-1; the rest await a human.", False),
+    (["mem-1"], "One pair is resolved using decision MEM-1; the rest await a human.", False),    # case-insensitive
+    (["mem-1", "mem-2"], "Resolved using decision mem-1 only.", True),                           # mem-2 missing -> bounce
+    (["mem-1", "mem-2"], "Resolved using decisions mem-1 and mem-2.", False),
+    ([], "No remembered decisions were used in this run.", False),                               # nothing to require
+])
+def test_must_name_claims(ids: list[str], text: str, hit: bool) -> None:
+    assert bool(_claims_hit(text, must_name_claims(ids))) is hit
+
+
+def test_recalled_decision_is_named_in_the_briefing(tmp_path: Path) -> None:
+    # one orchestrator so the H-MEM store carries the decision from the confirm run into the overlap run
+    model = FakeNemotron(
+        first_draft="Across Guildford and Waverley, the shared pairs come from identical names, and the remaining candidate pairs are awaiting a human decision; the match judge's opinions are only suggestions.",
+        second_draft="Across Guildford and Waverley, the shared pairs come from identical names or a human decision; one pair is resolved using decision mem-1, and the rest are awaiting a human decision.",
+    )
+    orch = _orch(tmp_path, model, sample=False)
+    # 1) a human confirms a borderline pair -> stored as mem-1 (the confirm flow uses no model)
+    confirm = _run(orch, "c-01", CONFIRM_Q, sample=False)
+    assert confirm.status == "success", getattr(confirm, "error", None)
+    assert "mem-1" in confirm.output.summary
+    # 2) the overlap runs again; the model's first briefing omits mem-1
+    live = _run(orch, "o-01", OVERLAP_GW_Q, sample=False)
+    assert live.status == "success", getattr(live, "error", None)
+
+    # the decision really was recalled from H-MEM this run
+    mem = next(a for a in live.output.artifacts if a["type"] == "memory")
+    assert any(d["memory_id"] == "mem-1" for d in mem["decisions"].values())
+
+    # the Critic bounced the briefing for not naming it, and the retry prompt carried the reason
+    events = _trace(orch, "o-01")
+    rejected = [e for e in events if e["agent_name"] == "Critic" and e["action"] == "critique_draft" and e["status"] == "rejected"]
+    assert rejected and "must name it" in rejected[0]["output_summary"]
+    assert any("rejected by the Critic" in p and "remembered human decision (mem-1)" in p for p in model.draft_prompts)
+
+    # the kept briefing names the recalled decision and still does not overclaim
+    assert live.output.summary == model.second_draft
+    assert "mem-1" in live.output.summary
+    assert not _claims_hit(live.output.summary, HUMAN_ONLY_CLAIMS)
+
+
+def test_recalled_decision_named_even_when_the_model_omits_it(tmp_path: Path) -> None:
+    omits = "Across Guildford and Waverley, the shared pairs come from identical names and the rest are awaiting a human decision."
+    model = FakeNemotron(first_draft=omits, second_draft=omits)   # never names the decision
+    orch = _orch(tmp_path, model, sample=False)
+    _run(orch, "c-02", CONFIRM_Q, sample=False)                    # store mem-1 first, same orchestrator
+    live = _run(orch, "o-02", OVERLAP_GW_Q, sample=False)
+    assert live.status == "success", getattr(live, "error", None)
+    briefing = next(a for a in live.output.artifacts if a["type"] == "generated_text")
+    assert briefing["model"] == "template-fallback" and briefing["mode"] == "fallback"
+    assert "mem-1" in live.output.summary        # the evidence-only template names the recalled decision
+    assert not _claims_hit(live.output.summary, HUMAN_ONLY_CLAIMS)

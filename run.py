@@ -27,11 +27,9 @@ def main() -> int:
 
     if args.reset_memory:
         from app.config import settings
-        import shutil
-        if settings.memory_dir.exists():
-            shutil.rmtree(settings.memory_dir)
-        settings.memory_dir.mkdir(parents=True, exist_ok=True)
-        print(f"memory cleared: {settings.memory_dir}", file=sys.stderr)
+        from app.agents.approval import reset_memory_dir
+        reset_memory_dir(settings.memory_dir)
+        print(f"memory cleared (kept .gitkeep): {settings.memory_dir}", file=sys.stderr)
 
     if args.input or args.query:
         from app.orchestrator import Orchestrator
