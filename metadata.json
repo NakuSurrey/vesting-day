@@ -11,6 +11,8 @@
       "run": "POST /run",
       "health": "GET /health",
       "trace": "GET /trace/{run_id}",
+      "export": "GET /export/{run_id}/{name}.csv (a full action list from that run; also written to logs/exports/<run_id>/)",
+      "evidence": "GET /evidence (recorded live runs committed in logs/, read back, never re-run)",
       "port_env": "PORT",
       "default_port": 8000,
       "bind": "0.0.0.0"

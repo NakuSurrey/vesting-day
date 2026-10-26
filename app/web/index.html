@@ -122,6 +122,26 @@ footer code, .card code { font-family: Consolas, "Courier New", monospace; font-
 .empty { color: var(--muted); font-style: italic; }
 .fade { animation: fadein 260ms ease-out both; }
 @keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
+/* results band: what a finance lead can act on, from a recorded live run */
+.results { max-width: 1600px; margin: 0 auto; padding: 24px 24px 0; }
+.results > div { background: var(--panel); border: 1px solid var(--line-soft); border-top: 4px solid var(--green); padding: 20px 22px 8px; }
+.results h2 { margin-bottom: 4px; }
+.results .src { font-size: 14px; color: var(--muted); margin: 0 0 14px; }
+.finding { display: grid; grid-template-columns: minmax(150px, 220px) minmax(0, 1fr) auto; gap: 6px 22px; align-items: start; padding: 14px 0; border-top: 1px solid var(--line-soft); }
+.finding .fig { font-size: 30px; font-weight: 700; line-height: 1.1; }
+.finding .fig small { display: block; font-size: 14px; font-weight: 400; color: var(--muted); margin-top: 4px; }
+.finding .what { font-weight: 700; }
+.finding .next { margin-top: 4px; color: var(--ink); }
+.finding .next::before { content: "Next: "; font-weight: 700; color: var(--green); }
+.finding .acts { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+@media (max-width: 800px) { .finding { grid-template-columns: minmax(0, 1fr); } .finding .acts { justify-content: flex-start; } }
+a.dl { display: inline-block; font-size: 14px; font-weight: 700; padding: 4px 10px; border: 2px solid var(--blue); color: var(--blue-dark); text-decoration: none; background: var(--panel); }
+a.dl:hover { background: var(--blue-tint); }
+.runs { list-style: none; margin: 0; padding: 0; }
+.runs li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; align-items: center; padding: 10px 0; border-top: 1px solid var(--line-soft); }
+.runs .q { font-weight: 700; }
+.runs .facts { font-size: 13px; color: var(--muted); }
+.replay-note { background: var(--green-tint); border-left: 6px solid var(--green); padding: 10px 14px; margin-bottom: 12px; font-size: 14px; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
@@ -143,6 +163,14 @@ footer code, .card code { font-family: Consolas, "Courier New", monospace; font-
   </div>
 </header>
 
+<section class="results" id="results" hidden aria-labelledby="resultsTitle">
+  <div>
+    <h2 id="resultsTitle">What the agent found in the councils' own published data</h2>
+    <p class="src" id="resultsSrc"></p>
+    <div id="findings"></div>
+  </div>
+</section>
+
 <main>
   <div>
     <section class="card" aria-labelledby="askTitle">
@@ -159,6 +187,12 @@ footer code, .card code { font-family: Consolas, "Courier New", monospace; font-
         <button type="button" class="ghost tiny" id="resetBtn" style="margin-left:auto">Reset demo memory</button>
       </div>
       <div class="status-line" id="status" role="status" aria-live="polite"><span class="dot" aria-hidden="true"></span><span id="statusText"></span></div>
+    </section>
+
+    <section class="card" id="runsCard" hidden aria-labelledby="runsTitle">
+      <h2 id="runsTitle">Recorded live runs</h2>
+      <p class="muted small">Real runs on Zetaris and NVIDIA Nemotron via Meterless Nightshift, committed in <code>logs/</code>. Replay shows the saved answer and its trace step by step; nothing is re-run.</p>
+      <ol class="runs" id="runs"></ol>
     </section>
 
     <section class="card" id="demoCard" hidden aria-labelledby="demoTitle">
@@ -205,6 +239,7 @@ var AGENTS = ["Router", "Planner", "Researcher", "Resolver", "Memory", "Critic",
 var GW_Q = "Which suppliers do Guildford and Waverley share?";
 var CONFIRM_Q = "Confirm that 'Unit 4 Business Software Ltd' (Waverley) is the same supplier as 'Unit4 Business Software Ltd' (Guildford)";
 var busy = false;
+var REPLAY = false;          /* rendering a recorded live run: no action buttons */
 var REDUCED = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 function el(tag, attrs, kids) {
@@ -221,6 +256,8 @@ function el(tag, attrs, kids) {
 function clear(n) { while (n.firstChild) n.removeChild(n.firstChild); return n; }
 function $(id) { return document.getElementById(id); }
 function gbp(v) { var x = Number(v); if (!isFinite(x)) return String(v); return "GBP " + x.toLocaleString("en-GB", { maximumFractionDigits: Math.abs(x) >= 1000 ? 0 : 2 }); }
+function gbpShort(v) { var x = Number(v); if (!isFinite(x)) return String(v); return x >= 1e6 ? "GBP " + (x / 1e6).toFixed(1) + "m" : gbp(x); }
+function dlLink(exp, label) { return exp && exp.url ? el("a", { class: "dl", href: exp.url, download: "", text: (label || "Download all rows") + " (" + exp.rows + ", CSV)" }) : null; }
 function newId(prefix) { return prefix + "-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 6); }
 function setStatus(t, running) { $("statusText").textContent = t || ""; $("status").className = "status-line" + (running ? " running" : ""); }
 function withMemIds(text) {
@@ -277,9 +314,11 @@ async function guarded(fn) {
 }
 
 /* ---------- answer ---------- */
-function renderAnswer(r, q) {
+function renderAnswer(r, q, replay) {
+  REPLAY = !!replay;
   var box = clear($("answer"));
   box.className = REDUCED ? "" : "fade";
+  if (replay) box.appendChild(el("div", { class: "replay-note", text: "Recorded live run " + replay.run_id + (replay.started ? " (" + replay.started.replace("T", " ").replace("Z", " UTC") + ")" : "") + ", replayed from logs/response-" + replay.run_id + ".json. Nothing is re-run, and the action buttons are off." }));
   box.appendChild(el("p", { class: "muted small" }, ["Question: ", el("b", { text: q })]));
   if (r.status !== "success") {
     var e = r.error || {};
@@ -339,7 +378,7 @@ function tableArtifact(a) {
   if (a.synthetic) wrap.appendChild(el("p", { class: "small", text: "These residents are SYNTHETIC test cases, not real people." }));
   if (!rows.length) { wrap.appendChild(el("p", { class: "empty", text: "None." })); return wrap; }
   var cols = columnsFor(rows, a.columns);
-  var human = /needing a human decision/i.test(a.title || "");
+  var human = /needing a human decision/i.test(a.title || "") && !REPLAY;
   var LIMIT = 12;
   var tw = el("div", { class: "tablewrap" });
   var t = el("table");
@@ -353,7 +392,9 @@ function tableArtifact(a) {
     t.appendChild(tr);
   });
   tw.appendChild(t); wrap.appendChild(tw);
-  if (rows.length > LIMIT || count > LIMIT) wrap.appendChild(el("p", { class: "muted small", text: "Showing " + Math.min(LIMIT, rows.length) + " of " + count + ". The full rows are in the JSON response of POST /run." }));
+  var more = (rows.length > LIMIT || count > LIMIT) ? "Showing " + Math.min(LIMIT, rows.length) + " of " + count + ". " : "";
+  var link = dlLink(a.export);
+  if (more || link) wrap.appendChild(el("p", { class: "muted small" }, [more, link]));
   return wrap;
 }
 function renderArtifact(a) {
@@ -426,7 +467,7 @@ function renderArtifact(a) {
     }
     case "draft": {
       var d = a.draft; if (!d) return el("div", {}, [el("h3", { text: a.title || "Draft" }), el("p", { class: "empty", text: "No draft was produced for this run." })]);
-      var pending = d.status === "pending";
+      var pending = d.status === "pending" && !REPLAY;
       return el("div", {}, [el("h3", { text: (a.title || "Draft") + " - " + d.id }), el("div", { class: "draft" }, [
         el("div", {}, [el("b", { text: d.title }), " ", el("span", { class: "tag mode" + (pending ? "" : " live"), text: d.status })]),
         el("pre", { text: d.text }),
@@ -551,6 +592,69 @@ async function memoryDemo() {
   setStatus("Done: the same question gave a different answer because a person's decision was remembered. The trace on the right is step 3.", false);
 }
 
+/* ---------- results band and recorded live runs (read from the committed logs) ---------- */
+var ASK = {
+  contracts: "Which contracts end within six months of vesting day?",
+  suppliers: "Which suppliers do Woking, Guildford and Waverley share?",
+  policy: "Where do the Council Tax Support schemes differ between Woking and Guildford?"
+};
+function finding(fig, sub, what, next, acts) {
+  return el("div", { class: "finding" }, [
+    el("div", { class: "fig" }, [fig, el("small", { text: sub })]),
+    el("div", {}, [el("div", { class: "what" }, [withMemIds(what)]), el("div", { class: "next" }, [withMemIds(next)])]),
+    el("div", { class: "acts" }, acts)
+  ]);
+}
+function askBtn(q) { return el("button", { type: "button", class: "ghost tiny", text: "Ask it now", title: q, onclick: function () { $("q").value = q; guarded(function () { return runQuery(q); }); } }); }
+
+async function loadEvidence() {
+  var ev; try { ev = await api("/evidence"); } catch (e) { return; }
+  var runs = ev.runs || [];
+  if (runs.length) {
+    var ol = clear($("runs"));
+    runs.slice().reverse().forEach(function (r) {
+      ol.appendChild(el("li", {}, [
+        el("div", {}, [
+          el("div", { class: "q", text: r.query || r.run_id }),
+          el("div", { class: "facts", text: r.run_id + " - " + String(r.flow || "").replace(/_/g, " ") + " - " + (r.started || "").slice(0, 10) + " - " + r.trace_events + " steps, " + r.zetaris_queries + " Zetaris queries, " + r.model_calls_with_receipts + " Nemotron calls with signed receipts, " + r.sent_back + " sent back" + (r.plan_source ? ", plan by " + r.plan_source : "") })
+        ]),
+        el("button", { type: "button", class: "warm tiny", text: "Replay", onclick: function () { guarded(function () { return replayRun(r); }); } })
+      ]));
+    });
+    $("runsCard").hidden = false;
+  }
+  var h = ev.headline, src = ev.headline_run, c = ev.critic || {};
+  if (!h && !c.model_drafts) return;
+  var f = clear($("findings"));
+  if (src) $("resultsSrc").textContent = "From the recorded live run " + src.run_id + " (" + (src.started || "").slice(0, 10) + "): \"" + src.query + "\" - " + src.data_layer + "; " + (src.live ? src.model + " via Meterless Nightshift, " + src.model_calls_with_receipts + " signed receipts" : "sample mode, no model") + ". Read from the committed log; no number is typed into this page.";
+  else $("resultsSrc").textContent = "From the recorded live runs committed in logs/. No number is typed into this page.";
+  if (h && h.contracts) f.appendChild(finding(gbpShort(h.contracts.value_gbp), h.contracts.count + " contracts",
+    h.contracts.count + " contracts end within " + h.contracts.window_days + " days of vesting day with no extension date recorded past it; " + h.contracts.shared_suppliers + " of their suppliers are also paid by another council.",
+    "decide novation, extension or planned expiry for each, largest first. The letter for the largest is drafted and held as " + (h.contracts.drafts || []).join(", ") + "; a person approves it, nothing is sent.",
+    [askBtn(ASK.contracts), dlLink(h.contracts.export, "Contract list")]));
+  if (h && h.suppliers) f.appendChild(finding(String(h.suppliers.shared), "supplier pairs shared, " + gbpShort(h.suppliers.spend_gbp),
+    h.suppliers.shared + " supplier pairs are shared across the councils (identical names after normalisation), " + gbp(h.suppliers.spend_gbp) + " combined spend" + ((h.suppliers.recalled || []).length ? "; resolved using remembered human decision " + h.suppliers.recalled.join(", ") : "") + ".",
+    "one contract instead of two or three, biggest spend first. " + h.suppliers.awaiting_human + " similar names wait for a person to decide; each decision is remembered.",
+    [askBtn(ASK.suppliers), dlLink(h.suppliers.export, "Shared suppliers"), dlLink(h.suppliers.queue_export, "Decision queue")]));
+  if (h && h.policy) f.appendChild(finding(h.policy.differ + " of " + h.policy.clauses, "Council Tax Support clauses differ",
+    h.policy.differ + " of " + h.policy.clauses + " Council Tax Support clauses differ between " + (h.policy.councils || []).join(" and ") + "; " + h.policy.synthetic_differ + " of " + h.policy.synthetic_residents + " SYNTHETIC test residents would get a different answer on day one.",
+    "agree one scheme before vesting day. The options note is held as " + (h.policy.drafts || []).join(", ") + ".",
+    [askBtn(ASK.policy)]));
+  if (c.model_drafts) f.appendChild(finding(c.sent_back + " of " + c.model_drafts, "model drafts sent back",
+    "Across the recorded live runs Nemotron wrote " + c.model_drafts + " drafts; the Critic sent " + c.sent_back + " back before anyone saw them" + (c.reasons && c.reasons[0] ? ", e.g. " + c.reasons[0].reason.split(" - ")[0].replace("claim not supported by the evidence: ", "") : "") + ".",
+    "every answer you see passed the Critic, or is the evidence-only template, badged as such.", []));
+  $("results").hidden = false;
+}
+
+async function replayRun(r) {
+  setStatus("Replaying recorded live run " + r.run_id + "...", true);
+  var resp = await api("/evidence/" + encodeURIComponent(r.run_id));
+  renderAnswer(resp, r.query || r.run_id, r);
+  await showTrace(r.run_id, true);
+  setStatus("Replayed " + r.run_id + " from the committed log: " + r.model_calls_with_receipts + " Nemotron calls with signed receipts, " + r.zetaris_queries + " Zetaris queries. Nothing was re-run.", false);
+  REPLAY = false;
+}
+
 /* ---------- wire up ---------- */
 EXAMPLES.forEach(function (q) { $("chips").appendChild(el("button", { type: "button", text: q, onclick: function () { $("q").value = q; guarded(function () { return runQuery(q); }); } })); });
 $("askForm").addEventListener("submit", function (ev) { ev.preventDefault(); var q = $("q").value.trim(); if (q) guarded(function () { return runQuery(q); }); });
@@ -558,6 +662,7 @@ $("demoBtn").addEventListener("click", function () { guarded(memoryDemo); });
 $("resetBtn").addEventListener("click", function () { guarded(async function () { await api("/demo/reset", {}); refreshHealth(); setStatus("Demo memory cleared: no stored decisions, no held drafts.", false); }); });
 drawRoster({});
 refreshHealth();
+loadEvidence();
 </script>
 <noscript><p style="padding:20px">This page needs JavaScript. Without it, use the API: POST /run (see the README).</p></noscript>
 </body>

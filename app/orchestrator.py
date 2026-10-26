@@ -20,6 +20,7 @@ from app.agents.base import RunContext, UnsupportedRequest
 from app.agents.router import RouterAgent
 from app.config import Settings, settings as default_settings
 from app.engines.hmem import HMEM
+from app.exports import export_tables
 from app.flows import approve_draft, confirm_match, contract_cliff, day_one_brief, policy_gap, supplier_overlap
 from app.schemas import AgentInfo, RunError, RunErrorDetail, RunOutput, RunRequest, RunSuccess
 from app.trace import Tracer
@@ -82,6 +83,7 @@ class Orchestrator:
                 "data_layer": ctx.data.name, "model": ctx.model.badge,
                 "note": "SAMPLE_MODE: cached published council data, deterministic template instead of a model" if sample else "live: Zetaris federation + NVIDIA Nemotron via Meterless Nightshift",
             })
+            export_tables(result["artifacts"], self.cfg.logs_dir, req.run_id)   # full action lists as CSV next to the trace
             elapsed = round(time.time() - t0, 2)
             tracer.log("Orchestrator", "finish", route.flow, f"success in {elapsed}s; {len(tracer.events)} trace events", confidence=1.0)
             return RunSuccess(

@@ -1607,7 +1607,12 @@
             "public_body": false
           }
         ],
-        "provenance": "data/sample/spend.csv -> data/raw/<council>/* (provenance_id = council:file:row)"
+        "provenance": "data/sample/spend.csv -> data/raw/<council>/* (provenance_id = council:file:row)",
+        "export": {
+          "file": "logs/exports/example-01/shared-suppliers-presented.csv",
+          "url": "/export/example-01/shared-suppliers-presented.csv",
+          "rows": 228
+        }
       },
       {
         "type": "table",
@@ -2718,7 +2723,12 @@
             ],
             "public_body": true
           }
-        ]
+        ],
+        "export": {
+          "file": "logs/exports/example-01/candidates-needing-a-human-decision-match.csv",
+          "url": "/export/example-01/candidates-needing-a-human-decision-match.csv",
+          "rows": 217
+        }
       },
       {
         "type": "table",
@@ -3274,7 +3284,12 @@
             ],
             "public_body": false
           }
-        ]
+        ],
+        "export": {
+          "file": "logs/exports/example-01/unlikely-pairs-no-distinctive-word-in.csv",
+          "url": "/export/example-01/unlikely-pairs-no-distinctive-word-in.csv",
+          "rows": 444
+        }
       },
       {
         "type": "memory",
@@ -3339,5 +3354,5 @@
   ],
   "trace_id": "trace-example-01",
   "log_file": "logs/trace-example-01.jsonl",
-  "execution_time_seconds": 1.84
+  "execution_time_seconds": 1.59
 }

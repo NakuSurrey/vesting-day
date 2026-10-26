@@ -1878,7 +1878,12 @@
                     "also_paid_by": []
                   }
                 ],
-                "provenance": "data/sample/contracts.csv -> data/raw/<council>/<register> (provenance_id = council:file:row)"
+                "provenance": "data/sample/contracts.csv -> data/raw/<council>/<register> (provenance_id = council:file:row)",
+                "export": {
+                  "file": "logs/exports/example-07/contract-cliff-hard-cliff-contracts-ending-within-180.csv",
+                  "url": "/export/example-07/contract-cliff-hard-cliff-contracts-ending-within-180.csv",
+                  "rows": 173
+                }
               },
               {
                 "type": "table",
@@ -2537,7 +2542,12 @@
                     "value_gbp": 4914.0,
                     "also_paid_by": []
                   }
-                ]
+                ],
+                "export": {
+                  "file": "logs/exports/example-07/contract-cliff-in-window-but-with-an-extension.csv",
+                  "url": "/export/example-07/contract-cliff-in-window-but-with-an-extension.csv",
+                  "rows": 29
+                }
               },
               {
                 "type": "table",
@@ -2592,7 +2602,12 @@
                     "source_file": "guildford/guildford_contracts_2026_q4.xlsx",
                     "source_row": "173"
                   }
-                ]
+                ],
+                "export": {
+                  "file": "logs/exports/example-07/contract-cliff-register-entries-with-no-usable-end.csv",
+                  "url": "/export/example-07/contract-cliff-register-entries-with-no-usable-end.csv",
+                  "rows": 4
+                }
               },
               {
                 "type": "table",
@@ -2619,7 +2634,12 @@
                     "earliest_end": "2025-11-30",
                     "latest_end": "2038-11-13"
                   }
-                ]
+                ],
+                "export": {
+                  "file": "logs/exports/example-07/contract-cliff-register-summary-per-council.csv",
+                  "url": "/export/example-07/contract-cliff-register-summary-per-council.csv",
+                  "rows": 3
+                }
               },
               {
                 "type": "draft",
@@ -2637,7 +2657,7 @@
                   "run_id": "example-07",
                   "id": "draft-3",
                   "status": "pending",
-                  "created_at": "2026-10-26T18:07:49.113730+00:00"
+                  "created_at": "2026-10-26T19:39:15.841371+00:00"
                 }
               },
               {
@@ -4271,7 +4291,12 @@
                     "public_body": false
                   }
                 ],
-                "provenance": "data/sample/spend.csv -> data/raw/<council>/* (provenance_id = council:file:row)"
+                "provenance": "data/sample/spend.csv -> data/raw/<council>/* (provenance_id = council:file:row)",
+                "export": {
+                  "file": "logs/exports/example-07/supplier-overlap-shared-suppliers-presented.csv",
+                  "url": "/export/example-07/supplier-overlap-shared-suppliers-presented.csv",
+                  "rows": 229
+                }
               },
               {
                 "type": "table",
@@ -5382,7 +5407,12 @@
                     ],
                     "public_body": true
                   }
-                ]
+                ],
+                "export": {
+                  "file": "logs/exports/example-07/supplier-overlap-candidates-needing-a-human-decision-match.csv",
+                  "url": "/export/example-07/supplier-overlap-candidates-needing-a-human-decision-match.csv",
+                  "rows": 216
+                }
               },
               {
                 "type": "table",
@@ -5938,7 +5968,12 @@
                     ],
                     "public_body": false
                   }
-                ]
+                ],
+                "export": {
+                  "file": "logs/exports/example-07/supplier-overlap-unlikely-pairs-no-distinctive-word-in.csv",
+                  "url": "/export/example-07/supplier-overlap-unlikely-pairs-no-distinctive-word-in.csv",
+                  "rows": 444
+                }
               },
               {
                 "type": "memory",
@@ -5950,7 +5985,7 @@
                     "content": "Supplier match decision: 'Unit 4 Business Software Ltd' (Waverley) and 'Unit4 Business Software Ltd' (Guildford) are the same organisation. Decided by human.",
                     "confidence": 1.0,
                     "relevance": 0.6344,
-                    "decided_at": 1793038065533
+                    "decided_at": 1793043551973
                   }
                 },
                 "ledger_tail": [
@@ -5958,14 +5993,14 @@
                     "memoryId": "mem-1",
                     "action": "create",
                     "actor": "vesting-day",
-                    "timestamp": 1793038065533,
+                    "timestamp": 1793043551973,
                     "newState": {
                       "id": "mem-1",
                       "content": "Supplier match decision: 'Unit 4 Business Software Ltd' (Waverley) and 'Unit4 Business Software Ltd' (Guildford) are the same organisation. Decided by human.",
                       "type": "factual",
                       "layer": "long_term",
-                      "timestamp": 1793038065533,
-                      "lastAccessed": 1793038065533,
+                      "timestamp": 1793043551973,
+                      "lastAccessed": 1793043551973,
                       "accessCount": 0,
                       "tags": [
                         "decision:supplier-match",
@@ -5978,7 +6013,7 @@
                       "source": "human:approval-gate",
                       "provenance": {
                         "origin": "user_correction",
-                        "learnedAt": 1793038065533,
+                        "learnedAt": 1793043551973,
                         "label": "human decision via ApprovalGate"
                       },
                       "domain": "general",
@@ -6000,7 +6035,7 @@
                     "memoryId": "mem-1",
                     "action": "read",
                     "actor": "vesting-day",
-                    "timestamp": 1793038066643,
+                    "timestamp": 1793043553193,
                     "details": {
                       "query": "supplier match decision Unit4 Business Software Ltd Unit 4 Business Software Ltd"
                     }
@@ -6009,14 +6044,14 @@
                     "memoryId": "mem-2",
                     "action": "create",
                     "actor": "vesting-day",
-                    "timestamp": 1793038068389,
+                    "timestamp": 1793043555150,
                     "newState": {
                       "id": "mem-2",
                       "content": "Draft draft-1 (novation_letter: IKEN 011240 Managed Services for Temporary Agency Resources (Call-Off Contract under the ESPO MSTAR4 Framework Agreement 653F/23 dated 11 April 2023)) was approved by a human.",
                       "type": "factual",
                       "layer": "long_term",
-                      "timestamp": 1793038068389,
-                      "lastAccessed": 1793038068389,
+                      "timestamp": 1793043555150,
+                      "lastAccessed": 1793043555150,
                       "accessCount": 0,
                       "tags": [
                         "decision:draft",
@@ -6027,7 +6062,7 @@
                       "source": "human:approval-gate",
                       "provenance": {
                         "origin": "user_correction",
-                        "learnedAt": 1793038068389,
+                        "learnedAt": 1793043555150,
                         "label": "human approval decision"
                       },
                       "domain": "tech",
@@ -6051,7 +6086,7 @@
                     "memoryId": "mem-1",
                     "action": "read",
                     "actor": "vesting-day",
-                    "timestamp": 1793038070633,
+                    "timestamp": 1793043557306,
                     "details": {
                       "query": "supplier match decision Unit4 Business Software Ltd Unit 4 Business Software Ltd"
                     }
@@ -6060,7 +6095,7 @@
                     "memoryId": "mem-2",
                     "action": "read",
                     "actor": "vesting-day",
-                    "timestamp": 1793038070633,
+                    "timestamp": 1793043557307,
                     "details": {
                       "query": "supplier match decision Unit4 Business Software Ltd Unit 4 Business Software Ltd"
                     }
@@ -6624,7 +6659,12 @@
                     },
                     "differs_between_councils": true
                   }
-                ]
+                ],
+                "export": {
+                  "file": "logs/exports/example-07/policy-gap-day-one-check-synthetic-residents.csv",
+                  "url": "/export/example-07/policy-gap-day-one-check-synthetic-residents.csv",
+                  "rows": 8
+                }
               },
               {
                 "type": "draft",
@@ -6659,7 +6699,7 @@
                   "run_id": "example-07",
                   "id": "draft-4",
                   "status": "pending",
-                  "created_at": "2026-10-26T18:07:50.681625+00:00"
+                  "created_at": "2026-10-26T19:39:17.350843+00:00"
                 }
               }
             ]
@@ -6728,5 +6768,5 @@
   ],
   "trace_id": "trace-example-07",
   "log_file": "logs/trace-example-07.jsonl",
-  "execution_time_seconds": 1.84
+  "execution_time_seconds": 1.83
 }

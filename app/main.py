@@ -4,6 +4,9 @@ GET  /                  -> the web page: ask a question, watch the agents work (
 GET  /health            -> {"status": "ok", "sample_mode": bool, ...}
 POST /run               -> the HackOS run contract (see app/schemas.py)
 GET  /trace/{run_id}    -> the run's trace events (logs/trace-<run_id>.jsonl)
+GET  /export/{run_id}/{name}.csv -> a full action list from that run as CSV (logs/export-<run_id>-<name>.csv)
+GET  /evidence          -> the recorded live runs committed in logs/, with headline results (nothing is re-run)
+GET  /evidence/{run_id} -> one recorded live run's response
 POST /demo/reset        -> clear H-MEM decisions and held drafts (the shared demo memory)
 GET  /api               -> this list as JSON
 
@@ -18,10 +21,12 @@ import threading
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 
 from app.agents.approval import reset_memory_dir
 from app.config import settings
+from app.evidence import evidence_index, live_response
+from app.exports import export_path
 from app.orchestrator import Orchestrator
 from app.schemas import RunRequest
 
@@ -71,6 +76,30 @@ def trace(run_id: str) -> dict:
     return {"run_id": run_id, "trace_file": f"logs/{path.name}", "events": events}
 
 
+@app.get("/export/{run_id}/{name}.csv")
+def export_csv(run_id: str, name: str) -> FileResponse:
+    if not _RUN_ID.fullmatch(run_id):
+        raise HTTPException(status_code=400, detail="run_id may contain only letters, digits, '-' and '_'")
+    path = export_path(get_orchestrator().cfg.logs_dir, run_id, name)
+    if path is None:
+        raise HTTPException(status_code=404, detail=f"no export {name} for run_id {run_id}")
+    return FileResponse(path, media_type="text/csv", filename=f"vesting-day-{run_id}-{name}.csv")
+
+
+@app.get("/evidence")
+def evidence() -> dict:
+    """The recorded live runs (Zetaris + Nemotron via Nightshift) committed in logs/, read back as they are."""
+    return evidence_index(get_orchestrator().cfg.logs_dir)
+
+
+@app.get("/evidence/{run_id}")
+def evidence_run(run_id: str) -> dict:
+    resp = live_response(get_orchestrator().cfg.logs_dir, run_id)
+    if resp is None:
+        raise HTTPException(status_code=404, detail=f"no recorded live run {run_id}")
+    return resp
+
+
 @app.post("/demo/reset")
 def demo_reset() -> dict:
     """Clear stored decisions and held drafts so the memory demo starts from nothing."""
@@ -89,4 +118,5 @@ def page() -> HTMLResponse:
 @app.get("/api")
 def api_index() -> dict:
     return {"service": "vesting-day", "ui": "GET /", "run": "POST /run", "health": "GET /health",
-            "trace": "GET /trace/{run_id}", "reset_demo_memory": "POST /demo/reset", "docs": "/docs"}
+            "trace": "GET /trace/{run_id}", "export": "GET /export/{run_id}/{name}.csv", "evidence": "GET /evidence",
+            "evidence_run": "GET /evidence/{run_id}", "reset_demo_memory": "POST /demo/reset", "docs": "/docs"}

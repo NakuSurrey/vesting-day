@@ -4,6 +4,23 @@
 > **Sponsor technology:** Zetaris (data layer), Meterless H-MEM engine (memory), Meterless Nightshift (primary AI provider), NVIDIA Nemotron.
 > **Run:** `uv sync` then `uv run python run.py`, then open `http://localhost:8000` (or `POST /run`). No credentials needed.
 
+## What a finance lead gets today
+
+From the three councils' own published files, in one run of about 30 seconds live:
+
+| Result | What happens next | The full list |
+|---|---|---|
+| **GBP 22.7m** in **173 contracts** that end within 180 days of vesting day with no extension date recorded past it; 45 of their suppliers are also paid by another of the councils | Decide novation, extension or planned expiry for each, largest first. The letter for the largest (GBP 8.5m, Guildford, ends 13 days after vesting day) is drafted and held for a person; nothing is sent | [`hard-cliff-contracts-ending-within-180.csv`](logs/exports/example-04/hard-cliff-contracts-ending-within-180.csv) |
+| **228 supplier pairs** shared across the councils (identical names after normalisation), **GBP 34.8m** combined spend | One contract instead of two or three, biggest spend first. 217 similar names wait for a person to decide; each decision is remembered and changes the next answer | [`shared-suppliers-presented.csv`](logs/exports/example-01/shared-suppliers-presented.csv), [`candidates-needing-a-human-decision-match.csv`](logs/exports/example-01/candidates-needing-a-human-decision-match.csv) |
+| **4 of 9** Council Tax Support clauses differ between Woking and Guildford; **4 of 8 SYNTHETIC** test residents would get a different answer on day one | Agree one scheme before vesting day. The options note is drafted and held for a person | [`day-one-check-synthetic-residents.csv`](logs/exports/example-05/day-one-check-synthetic-residents.csv) |
+| In the recorded live runs Nemotron wrote **6 drafts**; the Critic sent **2** back before anyone saw them, for calling pairs "confirmed as shared" when no person had confirmed them | Every answer that reaches a person passed the Critic, or is the evidence-only template, badged as such | `logs/trace-live-01.jsonl`, `logs/trace-live-03.jsonl` |
+
+Every number is computed at run time from the councils' published files and every row carries
+its council, file and row. Every run writes its full action lists as CSV in `logs/exports/<run_id>/`,
+and the web page offers each one as a download.
+
+## The problem
+
 An agent for England's merging councils. On 1 April 2027 Woking, Guildford and Waverley
 (with the rest of West Surrey) become one new unitary authority. Their data does not: each
 council publishes its spend on its own cadence and schema, keeps its own contracts register,
@@ -50,7 +67,10 @@ uv run python run.py             # serves the web page, POST /run and GET /healt
 Then open **http://localhost:8000**. The page lets you ask your own question or click an example,
 run a three-step demo of memory changing the answer, confirm or split a supplier pair, approve a
 held draft, and see every agent step from the run's trace beside the answer - with the steps the
-Critic sent back highlighted. It is a thin layer over `POST /run`; nothing on it is pre-written.
+Critic sent back highlighted. Every table has a "Download all rows (CSV)" link. The page opens
+with the results of the newest recorded live run and a list of every live run committed in
+`logs/`, each of which can be replayed step by step (read from the log, nothing re-run, action
+buttons off). It is a thin layer over `POST /run`; nothing on it is pre-written.
 
 Without uv: `python -m venv .venv`, activate it, `pip install -r requirements.txt`, then
 `python run.py`. With Docker: `docker build -t vesting-day . && docker run --rm -p 8000:8000 vesting-day`
@@ -234,7 +254,7 @@ Copy `.env.example` to `.env`, fill in the keys and set `SAMPLE_MODE=false`:
 
 ```bash
 uv sync --all-groups
-uv run pytest -q          # 109 tests
+uv run pytest -q          # 114 tests
 ```
 
 - `tests/test_hmem_conformance.py` - the official H-MEM conformance suite, ported to pytest,
@@ -258,6 +278,10 @@ uv run pytest -q          # 109 tests
   request and labelled, and a brief that says contracts end "on vesting day" or puts a number
   under the wrong check is sent back.
 - `tests/test_config_sample_fallback.py` - a copied `.env.example` runs in SAMPLE_MODE.
+- `tests/test_exports_evidence.py` - every table is written in full as CSV (all 173 contracts,
+  the whole 217-pair human queue) and served by `GET /export`, unsafe names are refused, and
+  `GET /evidence` reads the committed live runs back (receipts, Zetaris queries, Critic
+  send-backs, headline results) without re-running anything.
 - `tests/test_web_ui.py` - the web page is served with nothing loaded from the internet, the
   trace route returns the agents' real steps and rejects bad ids, and the memory demo works
   over HTTP and resets cleanly.

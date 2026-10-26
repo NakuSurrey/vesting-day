@@ -141,10 +141,10 @@ def run(ctx: RunContext, sources: dict[str, Any]) -> dict[str, Any]:
             "Treat the no-end-date entries as a data-quality action for each council before vesting day.",
         ],
         "artifacts": [
-            {"type": "table", "title": f"Hard cliff: contracts ending within {window_days} days of {vesting_day}, no extension date recorded past it", "count": len(hard), "rows": hard[:80],
+            {"type": "table", "title": f"Hard cliff: contracts ending within {window_days} days of {vesting_day}, no extension date recorded past it", "count": len(hard), "rows": hard[:80], "_all_rows": hard,
              "provenance": "data/sample/contracts.csv -> data/raw/<council>/<register> (provenance_id = council:file:row)"},
-            {"type": "table", "title": "In window but with an extension date recorded past vesting day", "count": len(with_option), "rows": with_option[:40]},
-            {"type": "table", "title": "Register entries with no usable end date", "count": len(no_end), "rows": no_end[:40]},
+            {"type": "table", "title": "In window but with an extension date recorded past vesting day", "count": len(with_option), "rows": with_option[:40], "_all_rows": with_option},
+            {"type": "table", "title": "Register entries with no usable end date", "count": len(no_end), "rows": no_end[:40], "_all_rows": no_end},
             {"type": "table", "title": "Register summary per council", "rows": summary_rows},
             {"type": "draft", "title": "Held for approval", "draft": held},
             {"type": "run_stats", "per_council": per_council, "total_hard_cliff_gbp": total_value, "shared_suppliers_on_cliff": shared,

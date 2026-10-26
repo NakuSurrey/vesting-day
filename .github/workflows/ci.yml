@@ -74,6 +74,12 @@ jobs:
           t = json.loads(urllib.request.urlopen("http://127.0.0.1:8000/trace/ci-001", timeout=10).read())
           assert len(t["events"]) > 5, t
           print("web page and trace route ok:", len(t["events"]), "trace events")
+          hard = next(a for a in d["output"]["artifacts"] if a["type"] == "table")
+          csv_text = urllib.request.urlopen("http://127.0.0.1:8000" + hard["export"]["url"], timeout=10).read().decode("utf-8-sig")
+          assert csv_text.count("\n") == hard["count"] + 1, (hard["count"], csv_text.count("\n"))
+          ev = json.loads(urllib.request.urlopen("http://127.0.0.1:8000/evidence", timeout=10).read())
+          assert ev["runs"] and all(r["live"] for r in ev["runs"]), ev
+          print("full contract list as CSV:", hard["count"], "rows; recorded live runs served:", [r["run_id"] for r in ev["runs"]])
           PY
           n=$(docker logs vd 2>&1 | grep -c '"agent_name"' || true); echo "trace lines in container logs: $n"; test "$n" -gt 5
           docker stop vd
