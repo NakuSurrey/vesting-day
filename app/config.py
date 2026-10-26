@@ -21,6 +21,16 @@ def _truthy(v: str | None) -> bool:
     return (v or "").strip().lower() in ("1", "true", "yes", "on")
 
 
+def _secret(name: str) -> str:
+    """A credential from the environment, or "" when it is unset or still the .env.example placeholder.
+
+    A judge who copies .env.example to .env gets values like "your-zetaris-api-key"; those must not
+    switch the app into live mode against services that are not there.
+    """
+    v = (os.getenv(name) or "").strip()
+    return "" if v.lower().startswith("your-") else v
+
+
 @dataclass
 class Settings:
     sample_mode: bool = field(default_factory=lambda: _truthy(os.getenv("SAMPLE_MODE", "false")))
@@ -30,15 +40,15 @@ class Settings:
     # Zetaris (data layer)
     zetaris_rest_url: str = field(default_factory=lambda: os.getenv("ZETARIS_REST_URL", "http://localhost:8888/api/v1.0"))
     zetaris_org_id: str = field(default_factory=lambda: os.getenv("ZETARIS_ORG_ID", "1"))
-    zetaris_api_key: str = field(default_factory=lambda: os.getenv("ZETARIS_API_KEY", ""))
+    zetaris_api_key: str = field(default_factory=lambda: _secret("ZETARIS_API_KEY"))
 
     # Meterless Nightshift (primary AI provider)
     meterless_base_url: str = field(default_factory=lambda: os.getenv("METERLESS_BASE_URL", "http://127.0.0.1:8088/v1"))
-    meterless_runtime_token: str = field(default_factory=lambda: os.getenv("METERLESS_RUNTIME_TOKEN", ""))
+    meterless_runtime_token: str = field(default_factory=lambda: _secret("METERLESS_RUNTIME_TOKEN"))
     meterless_model: str = field(default_factory=lambda: os.getenv("METERLESS_MODEL", "nvidia/nemotron-3.5-lightning-30b-a3b"))
 
     # Optional: Companies House (supplier identity)
-    companies_house_api_key: str = field(default_factory=lambda: os.getenv("COMPANIES_HOUSE_API_KEY", ""))
+    companies_house_api_key: str = field(default_factory=lambda: _secret("COMPANIES_HOUSE_API_KEY"))
 
     # Domain
     vesting_day: str = field(default_factory=lambda: os.getenv("VESTING_DAY", "2027-04-01"))
