@@ -261,7 +261,7 @@ Copy `.env.example` to `.env`, fill in the keys and set `SAMPLE_MODE=false`:
 
 ```bash
 uv sync --all-groups
-uv run pytest -q          # 122 tests
+uv run pytest -q          # 124 tests
 ```
 
 - `tests/test_hmem_conformance.py` - the official H-MEM conformance suite, ported to pytest,

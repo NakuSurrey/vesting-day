@@ -46,8 +46,15 @@ USL = "lightning.metastore.vesting_day.west_surrey"
 SOURCES = {"woking_pg": "Woking", "guildford_pg": "Guildford", "waverley_pg": "Waverley"}
 KINDS = ("explore", "build", "check", "query", "dq")
 ROWS_KEPT = 20
-# Only "X already exists" means a re-run; "is not existing" / "does not exist" is a real failure.
-ALREADY_EXISTS = re.compile(r"already\s+exist", re.I)
+# "already exists" / "is existing" means a re-run found its object; "is not existing",
+# "does not exist" and "not found" are real failures (Zetaris says "parent namespace : metastore
+# is not existing" when a parent is missing).
+EXISTS = re.compile(r"already\s+exist|\bexist", re.I)
+MISSING = re.compile(r"not\s+exist|not\s+found|no\s+such", re.I)
+
+
+def already_exists(error: str) -> bool:
+    return bool(EXISTS.search(error)) and not MISSING.search(error)
 
 
 @dataclass
@@ -167,9 +174,12 @@ def run_steps(steps: list[Step], zetaris: Zetaris, log: Callable[[str], None] = 
                 rec["matches_sample_mode"] = same_answer(got["rows"], want)
         results.append(rec)
         note = f" | matches SAMPLE_MODE: {'yes' if rec.get('matches_sample_mode') else 'NO'}" if "matches_sample_mode" in rec else ""
-        detail = f"{rec.get('row_count', 0)} rows" if rec["status"] == "success" else rec["error"][:160]
+        if rec["status"] == "success":
+            detail = f"{rec.get('row_count', 0)} rows"
+        else:  # show build errors in full (e.g. every mismatched column), others shortened
+            detail = " ".join(rec["error"].replace("\\n", " ").split())[: 700 if st.kind == "build" else 200]
         log(f"[{i}/{len(steps)}] {st.kind} {st.name}: {rec['status']} in {rec['seconds']}s - {detail}{note}")
-        if rec["status"] == "error" and st.kind == "build" and not ALREADY_EXISTS.search(rec["error"]):
+        if rec["status"] == "error" and st.kind == "build" and not already_exists(rec["error"]):
             log("stopping: a build step failed and the steps after it depend on it")
             break
     return results

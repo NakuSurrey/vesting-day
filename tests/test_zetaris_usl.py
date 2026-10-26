@@ -225,3 +225,46 @@ def test_a_missing_parent_namespace_stops_the_run(steps) -> None:
     results = build_usl.run_steps(steps, z, log=lambda s: None, sample=conn)
     assert results[-1]["name"] == "namespace" and results[-1]["status"] == "error"
     assert not any(x["body"]["sql"].startswith("COMPILE") for x in sent)
+
+
+def test_only_an_object_that_already_exists_counts_as_a_rerun() -> None:
+    for msg in ("USL west_surrey already exists", "namespace : vesting_day is existing"):
+        assert build_usl.already_exists(msg), msg
+    for msg in ("parent namespace : metastore is not existing", "namespace not found : vesting_day",
+                "table does not exist", "Schema mismatch for table 'x.spend'"):
+        assert not build_usl.already_exists(msg), msg
+
+
+def _select_items(select_sql: str) -> list[str]:
+    """The comma-separated items between SELECT and FROM, splitting only at top level."""
+    body = select_sql.split("SELECT", 1)[1].rsplit("\nFROM", 1)[0].rsplit(" FROM ", 1)[0]
+    items, depth, quote, cur = [], 0, False, ""
+    for ch in body:
+        if ch == "'":
+            quote = not quote
+        elif not quote and ch == "(":
+            depth += 1
+        elif not quote and ch == ")":
+            depth -= 1
+        if ch == "," and depth == 0 and not quote:
+            items.append(cur.strip())
+            cur = ""
+        else:
+            cur += ch
+    return items + [cur.strip()]
+
+
+def test_every_not_null_column_is_fed_a_value_that_cannot_be_null(steps) -> None:
+    # Zetaris refuses an activation whose column may be null where the DDL says NOT NULL; a CAST
+    # around a COALESCE counts as nullable (the first live run failed on amount_gbp this way).
+    compile_sql = steps[_index(steps, "compile")].sql
+    for table, body in re.findall(r"CREATE TABLE (\w+) \((.*?)\n\)", compile_sql, flags=re.S):
+        not_null = {line.split()[0] for line in body.splitlines() if "NOT NULL" in line}
+        parts = steps[_index(steps, f"activate_{table}")].sql.split(" AS\n", 1)[1].split("\nUNION ALL\n")
+        assert len(parts) == 3
+        for part in parts:
+            for item in _select_items(part):
+                expr, alias = item.rsplit(" AS ", 1)
+                if alias.strip() in not_null:
+                    expr = expr.strip()
+                    assert expr.startswith("COALESCE(") or re.fullmatch(r"'[^']*'", expr), f"{table}.{alias}: {expr}"
