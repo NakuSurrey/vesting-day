@@ -14,7 +14,9 @@ runs across all of them in one statement.
 Participant Setup Guide: `POST /sql-editor/sqls/run`, Bearer key, `X-Org-ID`, a fresh
 `X-Request-ID` per call, body `{queryId, sql, source: "SqlEditor", limit}`, rows in `.data`,
 three retries then a structured `UpstreamTimeout`. `scripts/zetaris/register_sources.sql`
-registers the sources; `scripts/zetaris/schema.sql` and `load_sources.py` build them.
+registers the sources; `scripts/zetaris/schema.sql` and `build_load_sql.py` build them -
+one Postgres database per council next to Zetaris, loaded from the published files, never
+merged, and reachable only on its Docker network.
 `docs/ZETARIS_SETUP.md` is the runbook.
 
 **Test / evidence.** Live traces in `logs/` carry `query_data_layer` events whose

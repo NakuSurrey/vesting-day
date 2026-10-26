@@ -11,32 +11,42 @@ platform bundle, `./preflight.sh` (all PASS), set the admin email and password i
 bundle's `.env`, `docker compose pull`, `docker compose up -d`, `./verify.sh` (9/9).
 Never run `docker compose down -v` (it deletes the data and the encryption keys).
 
-## 2. Start the source database next to Zetaris
+## 2. Start the council databases next to Zetaris
 
-One Postgres container joins the `zetaris_default` network under the host name
-`vd-postgres`, with three schemas (woking, guildford, waverley) - three separate sources
-for Zetaris to federate. From the repo root on the server:
+Each council gets its own Postgres database - `vd_woking`, `vd_guildford`, `vd_waverley` -
+in one small container named `vd-postgres` on the `zetaris_default` Docker network. They
+stand in for each council's own system: loaded from the councils' published files, never
+merged. The container publishes no port, so it can't be reached from the internet - only
+the Zetaris containers on that Docker network can talk to it.
+
+On the server:
 
 ```bash
+(umask 077 && openssl rand -hex 16 > /root/vd_reader.pw)
 docker run -d --name vd-postgres --network zetaris_default --restart unless-stopped \
-  -e POSTGRES_DB=vestingday -e POSTGRES_USER=vd -e POSTGRES_PASSWORD="$VD_PG_PASSWORD" \
-  -p 127.0.0.1:5433:5432 postgres:16-alpine
-export VD_PG_DSN="postgresql://vd:$VD_PG_PASSWORD@127.0.0.1:5433/vestingday"
-docker exec -i vd-postgres psql -U vd -d vestingday < scripts/zetaris/schema.sql
-uv run --group prep python scripts/zetaris/load_sources.py
+  -e POSTGRES_USER=vd -e POSTGRES_PASSWORD="$(openssl rand -hex 24)" postgres:16-alpine
+git clone --depth 1 https://github.com/NakuSurrey/vesting-day /root/vesting-day
+cd /root/vesting-day
+python3 scripts/zetaris/build_load_sql.py \
+  | docker exec -i vd-postgres psql -U vd -d postgres -v reader_pw="$(cat /root/vd_reader.pw)"
 ```
 
-`VD_PG_PASSWORD` is a value you choose in the shell for the session; it is not stored in
-the repo. Expected load: woking spend 9718, guildford 6883, waverley 3246; contracts
-221 / 179 / 101; policy clauses 9 / 9 / 0.
+- `/root/vd_reader.pw` holds the password for `vd_reader`, the read-only login Zetaris
+  uses. Only root can read it, and it never goes in the repo.
+- The `vd` admin password is random and never needed again - the load runs through
+  `docker exec`.
+- Nothing is installed on the server: the load script is plain Python 3.
+- Expected output: vd_woking spend 9718, contracts 221, policy_clause 9; vd_guildford
+  6883 / 179 / 9; vd_waverley 3246 / 101 / 0. Safe to run again.
 
 ## 3. Register the three sources in Zetaris
 
 Open the Zetaris UI (tunnel: `ssh -L 3000:localhost:3000 -L 8888:localhost:8888 root@<server>`
 then http://localhost:3000), sign in as the admin, open the SQL Editor and run the
-statements in `scripts/zetaris/register_sources.sql` one at a time, with the two
-placeholders replaced by the Postgres user and password from step 2. Then the smoke test
-at the bottom of that file should return three rows.
+statements in `scripts/zetaris/register_sources.sql` one at a time, with
+`__VD_READER_PASSWORD__` replaced by the contents of `/root/vd_reader.pw`
+(`cat /root/vd_reader.pw` in the SSH window). Then the smoke test at the bottom of that
+file should return three rows.
 
 ## 4. Create the API key
 

@@ -122,8 +122,10 @@ in `data/sample/residents_synthetic.csv`) is labelled SYNTHETIC wherever it appe
 Copy `.env.example` to `.env` and fill in:
 
 - `ZETARIS_REST_URL`, `ZETARIS_ORG_ID`, `ZETARIS_API_KEY` - a Zetaris instance with the three
-  councils' tables registered (`scripts/zetaris/` has the Lightning SQL; we run Zetaris on a
-  16 GB Hetzner server and reach it over an SSH tunnel so the URL stays `localhost:8888`).
+  councils registered as three separate sources. Each council is its own Postgres database,
+  standing in for that council's own system: loaded from its published files and never
+  merged (`scripts/zetaris/` has the load script and the Lightning SQL). We run Zetaris on a
+  16 GB Hetzner server and reach it over an SSH tunnel so the URL stays `localhost:8888`.
 - `METERLESS_BASE_URL`, `METERLESS_RUNTIME_TOKEN` - from Nightshift's Console on the machine
   running it. The NVIDIA API key is set inside Nightshift's Providers, never in this app.
 - `METERLESS_MODEL` - we pin `nvidia/nemotron-3.5-lightning-30b-a3b` so the NVIDIA model is
