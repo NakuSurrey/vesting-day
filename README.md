@@ -13,7 +13,10 @@ From the three councils' own published files, in one run of about 30 seconds liv
 | **GBP 22.7m** in **173 contracts** that end within 180 days of vesting day with no extension date recorded past it; 45 of their suppliers are also paid by another of the councils | Decide novation, extension or planned expiry for each, largest first. The letter for the largest (GBP 8.5m, Guildford, ends 13 days after vesting day) is drafted and held for a person; nothing is sent | [`hard-cliff-contracts-ending-within-180.csv`](logs/exports/example-04/hard-cliff-contracts-ending-within-180.csv) |
 | **228 supplier pairs** shared across the councils (identical names after normalisation), **GBP 34.8m** combined spend | One contract instead of two or three, biggest spend first. 217 similar names wait for a person to decide; each decision is remembered and changes the next answer | [`shared-suppliers-presented.csv`](logs/exports/example-01/shared-suppliers-presented.csv), [`candidates-needing-a-human-decision-match.csv`](logs/exports/example-01/candidates-needing-a-human-decision-match.csv) |
 | **4 of 9** Council Tax Support clauses differ between Woking and Guildford; **4 of 8 SYNTHETIC** test residents would get a different answer on day one | Agree one scheme before vesting day. The options note is drafted and held for a person | [`day-one-check-synthetic-residents.csv`](logs/exports/example-05/day-one-check-synthetic-residents.csv) |
-| In the recorded live runs Nemotron wrote **6 drafts**; the Critic sent **2** back before anyone saw them, for calling pairs "confirmed as shared" when no person had confirmed them | Every answer that reaches a person passed the Critic, or is the evidence-only template, badged as such | `logs/trace-live-01.jsonl`, `logs/trace-live-03.jsonl` |
+| In the six recorded live runs Nemotron wrote **11 drafts**; the Critic sent **3** back before anyone saw them: twice for calling pairs "confirmed as shared" when no person had confirmed them, and once for a brief that did not name the remembered human decision (mem-1) that had changed its answer | Every answer that reaches a person passed the Critic, or is the evidence-only template, badged as such | `logs/trace-live-01.jsonl`, `logs/trace-live-03.jsonl`, `logs/trace-live-06.jsonl` |
+
+The same day-one results from one real live run (Nemotron chose the plan through Nightshift, every
+query went through Zetaris): `logs/response-live-06.json`, with its full lists in `logs/exports/live-06/`.
 
 Every number is computed at run time from the councils' published files and every row carries
 its council, file and row. Every run writes its full action lists as CSV in `logs/exports/<run_id>/`,
@@ -222,7 +225,7 @@ and the live traces in the table below.
 
 ## Live evidence (Zetaris + Nightshift + Nemotron)
 
-Five live runs are committed in `logs/` (`response-live-0N.json` and `trace-live-0N.jsonl`):
+Six live runs are committed in `logs/` (`response-live-0N.json` and `trace-live-0N.jsonl`):
 
 | Run | What it shows |
 |---|---|
@@ -231,6 +234,7 @@ Five live runs are committed in `logs/` (`response-live-0N.json` and `trace-live
 | live-03 overlap again, Guildford and Waverley | `mem-1` recalled from memory; the live Nemotron briefing says "One pair was resolved using a remembered human decision (mem-1)"; the Critic again rejected a first draft that over-claimed; 14 receipts |
 | live-04 contract cliff | 173 contracts / GBP 22,671,525; the novation letter drafted by Nemotron and held as draft-1 |
 | live-05 Council Tax Support gap | 4 of 9 clauses differ; 4 of 8 SYNTHETIC residents; the options note drafted by Nemotron and held as draft-2 |
+| live-06 day-one brief: "What are the biggest risks on vesting day?" | Nemotron chose the plan (contract cliff -> supplier overlap -> policy gap, receipt `rcpt_req_wu8606u2`); the Planner handed out each check and assessed each result; 7 federated Zetaris queries; `mem-1` recalled, so 229 shared (228 identical names + 1 resolved by the remembered human decision) and 216 awaiting a human; the Critic rejected the first brief for not naming `mem-1` and the retry passed; 18 Nemotron receipts; the full action lists as 8 CSVs in `logs/exports/live-06/` |
 
 ## Live mode (Zetaris + Nightshift)
 
