@@ -130,8 +130,16 @@ class ZetarisDataLayer(DataLayer):
                 if r.status_code >= 400:
                     raise DataLayerError(f"Zetaris rejected the query ({r.status_code}): {r.text[:300]}", False, "QueryError")
                 payload = r.json()
-                rows = payload.get("data") if isinstance(payload, dict) else payload
-                return _normalise_rows(rows or [])
+                rows = _rows_from_payload(payload)
+                total = payload.get("total") if isinstance(payload, dict) else None
+                if isinstance(total, int) and total > len(rows) and len(rows) < limit:
+                    # Zetaris cut the result short of what we asked for - never answer on part of the data.
+                    raise DataLayerError(
+                        f"Zetaris returned {len(rows)} of {total} rows (asked for up to {limit}); refusing to answer on partial data",
+                        recoverable=False,
+                        type_="TruncatedResult",
+                    )
+                return rows
             except httpx.HTTPError as e:
                 last_err = e
         raise DataLayerError(
@@ -141,11 +149,47 @@ class ZetarisDataLayer(DataLayer):
         )
 
 
-def _normalise_rows(rows: Any) -> list[dict[str, Any]]:
-    """Zetaris may return a list of dicts, or {columns:[...], rows:[[...]]}."""
+# Zetaris's REST API sends every value as text. These are the columns the agents use as
+# numbers or dates; converting them here gives live rows the same types as the SAMPLE_MODE
+# SQLite cache. Everything else stays text, so codes like "01234567" keep their leading zero.
+_INT_COLUMNS = {"n_payments", "rows_published", "distinct_suppliers", "contracts", "no_end_date"}
+_FLOAT_COLUMNS = {"amount_gbp", "total_gbp", "annual_value_gbp", "total_value_gbp", "value_num"}
+_DATE_COLUMNS = {
+    "payment_date", "invoice_date", "start_date", "end_date", "max_extension_end",
+    "first_payment", "last_payment", "payment_from", "payment_to", "earliest_end", "latest_end",
+}
+
+
+def _typed(col: str, v: Any) -> Any:
+    if v is None or not isinstance(v, str):
+        return v
+    if v == "":
+        return None
+    try:
+        if col in _INT_COLUMNS:
+            return int(float(v))
+        if col in _FLOAT_COLUMNS:
+            return float(v)
+    except ValueError:
+        return v
+    if col in _DATE_COLUMNS and len(v) > 10 and v[4] == "-" and v[10] in " T":
+        return v[:10]  # "2027-04-14 00:00:00" -> "2027-04-14"
+    return v
+
+
+def _rows_from_payload(payload: Any) -> list[dict[str, Any]]:
+    """Turn a Zetaris answer into a list of {column: value} rows.
+
+    The live API answers {"headers": [...], "data": [[...], ...], "total": n}. Older shapes
+    are still accepted: a bare list, {"data": [...]} of dicts, or {"columns", "rows"}.
+    """
+    if isinstance(payload, dict) and "headers" in payload:
+        cols = [h.get("name") if isinstance(h, dict) else str(h) for h in payload["headers"]]
+        return [{c: _typed(c, v) for c, v in zip(cols, r)} for r in (payload.get("data") or [])]
+    rows = payload.get("data") if isinstance(payload, dict) else payload
     if isinstance(rows, dict) and "columns" in rows and "rows" in rows:
         cols = [c["name"] if isinstance(c, dict) else str(c) for c in rows["columns"]]
-        return [dict(zip(cols, r)) for r in rows["rows"]]
+        return [{c: _typed(c, v) for c, v in zip(cols, r)} for r in rows["rows"]]
     if isinstance(rows, list):
-        return [dict(r) if isinstance(r, dict) else {"value": r} for r in rows]
+        return [{k: _typed(k, v) for k, v in r.items()} if isinstance(r, dict) else {"value": r} for r in rows]
     return []
