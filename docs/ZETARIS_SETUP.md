@@ -76,3 +76,40 @@ python run.py --query "Which suppliers do Woking, Guildford and Waverley share?"
 
 The trace's `query_data_layer` lines should name `zetaris (federated query-in-place ...)`
 and the `run_mode` artifact should say `live`.
+
+## 7. Build the Unified Semantic Layer (USL)
+
+`scripts/zetaris/usl.sql` defines one semantic model, `west_surrey`, in the namespace
+`lightning.metastore.vesting_day`, over the three registered sources:
+
+- `council` (one row per council and the Zetaris source it lives in), `spend`, `contracts` and
+  `policy_clause`, with primary keys and a foreign key from every table to `council`;
+- each table is activated with one SELECT over `woking_pg`, `guildford_pg` and `waverley_pg`, so
+  the councils stay in their own databases and the USL binds them without copying anything;
+- exploratory queries on each source, queries on the activated USL, and two data-quality rules:
+  `contract_has_end_date` and `payment_is_positive`.
+
+On the laptop, with the tunnel open and the Zetaris key in `.env`:
+
+```bash
+uv run python scripts/zetaris/build_usl.py --dry-run   # list the 26 steps, send nothing
+uv run python scripts/zetaris/build_usl.py             # build it and record the result
+```
+
+The runner sends each step to the Zetaris REST API as one request (the COMPILE step holds four
+CREATE TABLE statements, so it cannot be pasted into the SQL Workspace, which splits at `;`). A
+failed build step stops the run; re-running is safe (`IF NOT EXISTS`). For every USL query it
+also runs the same SQL on the SAMPLE_MODE copy of the councils' files and records whether Zetaris
+gave the same answer. Results go to `docs/ZETARIS_USL_EVIDENCE.md` and
+`logs/zetaris-usl-build.jsonl`, written by the runner, never by hand.
+
+To make the agent read through the USL instead of its own UNION over the three sources, add to
+`.env`:
+
+```
+ZETARIS_USL=lightning.metastore.vesting_day.west_surrey
+```
+
+The trace's `query_data_layer` lines then name `zetaris (unified semantic layer ...)`. Leave it
+empty to query the three sources directly. `tests/test_zetaris_usl.py` checks both paths return
+the same rows as SAMPLE_MODE.

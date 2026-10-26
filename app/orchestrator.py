@@ -54,7 +54,8 @@ class Orchestrator:
             if self._local_layer is None:
                 self._local_layer = LocalDataLayer(self.cfg.data_dir)
             return self._local_layer
-        return ZetarisDataLayer(self.cfg.zetaris_rest_url, self.cfg.zetaris_org_id, self.cfg.zetaris_api_key)
+        return ZetarisDataLayer(self.cfg.zetaris_rest_url, self.cfg.zetaris_org_id, self.cfg.zetaris_api_key,
+                                usl=self.cfg.zetaris_usl)
 
     def _model(self, sample: bool):
         if sample:

@@ -11,6 +11,7 @@ to its own table names, so the agent code path is identical in both modes.
 from __future__ import annotations
 
 import csv
+import re
 import sqlite3
 import uuid
 from pathlib import Path
@@ -99,13 +100,23 @@ class ZetarisDataLayer(DataLayer):
     # so one SQL statement from the Researcher is answered by Zetaris querying all three sources in place.
     SOURCES = ("woking_pg", "guildford_pg", "waverley_pg")
 
-    def __init__(self, rest_url: str, org_id: str, api_key: str, sources: tuple[str, ...] = SOURCES, timeout: float = 60.0) -> None:
+    def __init__(self, rest_url: str, org_id: str, api_key: str, sources: tuple[str, ...] = SOURCES, timeout: float = 60.0,
+                 usl: str = "") -> None:
         self.rest_url = rest_url.rstrip("/")
         self.org_id = org_id
         self.api_key = api_key
         self.timeout = timeout
         self.sources = sources
-        self.tables = {t: self._federated(t) for t in ("spend", "contracts", "policy_clause")}
+        self.usl = (usl or "").strip()
+        if self.usl:
+            # Read through the Unified Semantic Layer built by scripts/zetaris/build_usl.py: its tables
+            # carry the same names and columns as the council tables, activated over the three sources.
+            if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)+", self.usl):
+                raise ValueError(f"ZETARIS_USL must be a dotted name such as lightning.metastore.vesting_day.west_surrey, got {self.usl!r}")
+            self.name = f"zetaris (unified semantic layer {self.usl} over {', '.join(sources)})"
+            self.tables = {t: f"{self.usl}.{t} AS {t}" for t in ("spend", "contracts", "policy_clause")}
+        else:
+            self.tables = {t: self._federated(t) for t in ("spend", "contracts", "policy_clause")}
         self._client = httpx.Client(timeout=timeout)
 
     def _federated(self, table: str) -> str:

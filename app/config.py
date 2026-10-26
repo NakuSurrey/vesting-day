@@ -41,6 +41,9 @@ class Settings:
     zetaris_rest_url: str = field(default_factory=lambda: os.getenv("ZETARIS_REST_URL", "http://localhost:8888/api/v1.0"))
     zetaris_org_id: str = field(default_factory=lambda: os.getenv("ZETARIS_ORG_ID", "1"))
     zetaris_api_key: str = field(default_factory=lambda: _secret("ZETARIS_API_KEY"))
+    # Optional: read through the Unified Semantic Layer built by scripts/zetaris/build_usl.py.
+    # Empty = federate the three council sources directly, one UNION per table.
+    zetaris_usl: str = field(default_factory=lambda: _secret("ZETARIS_USL"))
 
     # Meterless Nightshift (primary AI provider)
     meterless_base_url: str = field(default_factory=lambda: os.getenv("METERLESS_BASE_URL", "http://127.0.0.1:8088/v1"))
