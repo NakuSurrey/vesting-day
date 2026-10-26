@@ -1,0 +1,597 @@
+{
+  "run_id": "live-05",
+  "status": "success",
+  "output": {
+    "summary": "Council Tax Support in Woking and Guildford: 4 of 9 compared clauses differ (Maximum backdating, Capital limit, Valuation bands excluded from the scheme, Minimum weekly award). 4 of 8 SYNTHETIC test residents would be treated differently on day one. An options note is drafted and held for approval as draft-2. All clause values cite a page of each council's published scheme.",
+    "recommendations": [
+      "Put the differing clauses to the shadow authority's finance committee as the decisions needed before the 2027/28 scheme is adopted.",
+      "Approve or reject the held note with: POST /run input.query = \"Approve draft draft-2\"",
+      "Residents shown are SYNTHETIC test cases, labelled as such; no real claimant data is used."
+    ],
+    "artifacts": [
+      {
+        "type": "run_mode",
+        "sample_mode": false,
+        "flow": "policy_gap",
+        "router_confidence": 0.99,
+        "data_layer": "zetaris (federated query-in-place over woking_pg, guildford_pg, waverley_pg)",
+        "model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+        "note": "live: Zetaris federation + NVIDIA Nemotron via Meterless Nightshift"
+      },
+      {
+        "type": "clause_grid",
+        "title": "Clause by council (with page citations)",
+        "clauses": [
+          {
+            "policy_family": "council_tax_support",
+            "council": "Guildford",
+            "clause_key": "backdating_weeks",
+            "value_text": "4 (one calendar month, with continuous good cause)",
+            "value_num": 4.0,
+            "unit": "weeks",
+            "source_pdf": "data/raw/guildford/guildford_ctr_scheme_working_age_2026.pdf",
+            "page": "100",
+            "quote": "106 (2) That date is the latest of (a) the first day from which the applicant had continuous good cause; (b) the day one calendar month before the date the application was made"
+          },
+          {
+            "policy_family": "council_tax_support",
+            "council": "Woking",
+            "clause_key": "backdating_weeks",
+            "value_text": "26 (6 months, with continuous good cause)",
+            "value_num": 26.0,
+            "unit": "weeks",
+            "source_pdf": "data/raw/woking/woking_cts_scheme_2026.pdf",
+            "page": "102",
+            "quote": "111 (2) That date is the latest of (a) the first day from which the applicant had continuous good cause; (b) the day 6 months before the date the application was made"
+          },
+          {
+            "policy_family": "council_tax_support",
+            "council": "Guildford",
+            "clause_key": "band_cap",
+            "value_text": "Band D",
+            "value_num": null,
+            "unit": "band",
+            "source_pdf": "data/raw/guildford/guildford_ctr_scheme_working_age_2026.pdf",
+            "page": "51",
+            "quote": "subject to (i) a maximum amount that is equal to the council tax charge of a dwelling in council tax band D"
+          },
+          {
+            "policy_family": "council_tax_support",
+            "council": "Woking",
+            "clause_key": "band_cap",
+            "value_text": "Band D",
+            "value_num": null,
+            "unit": "band",
+            "source_pdf": "data/raw/woking/woking_cts_scheme_2026.pdf",
+            "page": "36",
+            "quote": "28B For classes D and E, the maximum Council Tax reduction will be capped at a maximum liability of Band D"
+          },
+          {
+            "policy_family": "council_tax_support",
+            "council": "Guildford",
+            "clause_key": "capital_limit_gbp",
+            "value_text": "6,000",
+            "value_num": 6000.0,
+            "unit": "GBP",
+            "source_pdf": "data/raw/guildford/guildford_ctr_scheme_working_age_2026.pdf",
+            "page": "49",
+            "quote": "42. Class of person excluded from this scheme: capital limit (1) ... any person whose capital exceeds £6,000"
+          },
+          {
+            "policy_family": "council_tax_support",
+            "council": "Woking",
+            "clause_key": "capital_limit_gbp",
+            "value_text": "10,000",
+            "value_num": 10000.0,
+            "unit": "GBP",
+            "source_pdf": "data/raw/woking/woking_cts_scheme_2026.pdf",
+            "page": "32",
+            "quote": "Class of person excluded from this scheme: capital limit 22. (1) The class of person described in this paragraph consists of any person whose capital exceeds £10,000"
+          },
+          {
+            "policy_family": "council_tax_support",
+            "council": "Guildford",
+            "clause_key": "earnings_disregard_gbp_week",
+            "value_text": "5 (single), 10 (couple), 25 (lone parent)",
+            "value_num": 5.0,
+            "unit": "GBP/week",
+            "source_pdf": "data/raw/guildford/guildford_ctr_scheme_working_age_2026.pdf",
+            "page": "116",
+            "quote": "11. In a case to which none of the paragraphs 4 to 10 applies, £5. (couple £10, lone parent £25 under paragraphs 5 and 8)"
+          },
+          {
+            "policy_family": "council_tax_support",
+            "council": "Woking",
+            "clause_key": "earnings_disregard_gbp_week",
+            "value_text": "5 (single), 10 (couple), 25 (lone parent)",
+            "value_num": 5.0,
+            "unit": "GBP/week",
+            "source_pdf": "data/raw/woking/woking_cts_scheme_2026.pdf",
+            "page": "132",
+            "quote": "8. Except where the applicant or his partner qualifies for a £20 disregard ... (a) £5 shall be disregarded if an applicant who has no partner has earnings; (b) £10 shall be disregarded if an applicant who has a partner has earnings"
+          },
+          {
+            "policy_family": "council_tax_support",
+            "council": "Guildford",
+            "clause_key": "excluded_bands",
+            "value_text": "F, G and H",
+            "value_num": null,
+            "unit": "bands",
+            "source_pdf": "data/raw/guildford/guildford_ctr_scheme_working_age_2026.pdf",
+            "page": "49",
+            "quote": "42A Class of person excluded from this scheme: valuation band F, G and H ... any person whose liability for Council Tax is in respect of a chargeable dwelling which falls within valuation band F, G or H"
+          },
+          {
+            "policy_family": "council_tax_support",
+            "council": "Woking",
+            "clause_key": "excluded_bands",
+            "value_text": "none (bands F-H claim, capped at Band D)",
+            "value_num": null,
+            "unit": "bands",
+            "source_pdf": "data/raw/woking/woking_cts_scheme_2026.pdf",
+            "page": "36",
+            "quote": "No exclusion by valuation band; the reduction for classes D and E is capped at Band D liability (para 28B)"
+          },
+          {
+            "policy_family": "council_tax_support",
+            "council": "Guildford",
+            "clause_key": "max_support_pct",
+            "value_text": "100",
+            "value_num": 100.0,
+            "unit": "% of liability",
+            "source_pdf": "data/raw/guildford/guildford_ctr_scheme_working_age_2026.pdf",
+            "page": "51",
+            "quote": "47 (1) ... the amount of a person's maximum council tax reduction in respect of a day is 100 per cent of the amount A/B"
+          },
+          {
+            "policy_family": "council_tax_support",
+            "council": "Woking",
+            "clause_key": "max_support_pct",
+            "value_text": "100",
+            "value_num": 100.0,
+            "unit": "% of liability",
+            "source_pdf": "data/raw/woking/woking_cts_scheme_2026.pdf",
+            "page": "35",
+            "quote": "28A (1) ... the amount of a person's maximum Council Tax reduction in respect of a day is 100 per cent of the amount A/B"
+          },
+          {
+            "policy_family": "council_tax_support",
+            "council": "Guildford",
+            "clause_key": "min_award_gbp_week",
+            "value_text": "10.00",
+            "value_num": 10.0,
+            "unit": "GBP/week",
+            "source_pdf": "data/raw/guildford/guildford_ctr_scheme_working_age_2026.pdf",
+            "page": "55",
+            "quote": "49A. Minimum amount of reduction under this scheme ... it shall not be awarded where the amount to which a person would otherwise be entitled is less than £10.00 per reduction week"
+          },
+          {
+            "policy_family": "council_tax_support",
+            "council": "Woking",
+            "clause_key": "min_award_gbp_week",
+            "value_text": "5.00",
+            "value_num": 5.0,
+            "unit": "GBP/week",
+            "source_pdf": "data/raw/woking/woking_cts_scheme_2026.pdf",
+            "page": "107",
+            "quote": "118. Where a reduction is payable, it shall not be payable where the amount to which a person would other be entitled is less than £5.00 per reduction week"
+          },
+          {
+            "policy_family": "council_tax_support",
+            "council": "Guildford",
+            "clause_key": "non_dep_deduction_top_gbp_week",
+            "value_text": "15.35",
+            "value_num": 15.35,
+            "unit": "GBP/week",
+            "source_pdf": "data/raw/guildford/guildford_ctr_scheme_working_age_2026.pdf",
+            "page": "52",
+            "quote": "48 (1) (a) in respect of a non-dependant aged 18 or over in remunerative work, £15.35 x 1/7; (b) ... £5.00 x 1/7 (income bands £266 / £463 / £577)"
+          },
+          {
+            "policy_family": "council_tax_support",
+            "council": "Woking",
+            "clause_key": "non_dep_deduction_top_gbp_week",
+            "value_text": "15.35",
+            "value_num": 15.35,
+            "unit": "GBP/week",
+            "source_pdf": "data/raw/woking/woking_cts_scheme_2026.pdf",
+            "page": "37",
+            "quote": "29A (1) (a) in respect of a non-dependant aged 18 or over in remunerative work, £15.35 x 1/7; (b) ... £5.00 x 1/7 (income bands £279 / £485 / £605)"
+          },
+          {
+            "policy_family": "council_tax_support",
+            "council": "Guildford",
+            "clause_key": "second_adult_rebate",
+            "value_text": "not available to working age (Class F not used)",
+            "value_num": 0.0,
+            "unit": "yes/no",
+            "source_pdf": "data/raw/guildford/guildford_ctr_scheme_working_age_2026.pdf",
+            "page": "45",
+            "quote": "Class F - Not used"
+          },
+          {
+            "policy_family": "council_tax_support",
+            "council": "Woking",
+            "clause_key": "second_adult_rebate",
+            "value_text": "not available to working age (pensioners only, Class C)",
+            "value_num": 0.0,
+            "unit": "yes/no",
+            "source_pdf": "data/raw/woking/woking_cts_scheme_2026.pdf",
+            "page": "28",
+            "quote": "Working-age classes are D and E only (page 28); the alternative maximum Council Tax reduction (second adult rebate) is defined for pensioners, Class C, paragraph 15"
+          }
+        ],
+        "differences": [
+          {
+            "clause_key": "backdating_weeks",
+            "label": "Maximum backdating (weeks)",
+            "Woking": {
+              "policy_family": "council_tax_support",
+              "council": "Woking",
+              "clause_key": "backdating_weeks",
+              "value_text": "26 (6 months, with continuous good cause)",
+              "value_num": 26.0,
+              "unit": "weeks",
+              "source_pdf": "data/raw/woking/woking_cts_scheme_2026.pdf",
+              "page": "102",
+              "quote": "111 (2) That date is the latest of (a) the first day from which the applicant had continuous good cause; (b) the day 6 months before the date the application was made"
+            },
+            "Guildford": {
+              "policy_family": "council_tax_support",
+              "council": "Guildford",
+              "clause_key": "backdating_weeks",
+              "value_text": "4 (one calendar month, with continuous good cause)",
+              "value_num": 4.0,
+              "unit": "weeks",
+              "source_pdf": "data/raw/guildford/guildford_ctr_scheme_working_age_2026.pdf",
+              "page": "100",
+              "quote": "106 (2) That date is the latest of (a) the first day from which the applicant had continuous good cause; (b) the day one calendar month before the date the application was made"
+            }
+          },
+          {
+            "clause_key": "capital_limit_gbp",
+            "label": "Capital limit (GBP) above which no support is paid",
+            "Woking": {
+              "policy_family": "council_tax_support",
+              "council": "Woking",
+              "clause_key": "capital_limit_gbp",
+              "value_text": "10,000",
+              "value_num": 10000.0,
+              "unit": "GBP",
+              "source_pdf": "data/raw/woking/woking_cts_scheme_2026.pdf",
+              "page": "32",
+              "quote": "Class of person excluded from this scheme: capital limit 22. (1) The class of person described in this paragraph consists of any person whose capital exceeds £10,000"
+            },
+            "Guildford": {
+              "policy_family": "council_tax_support",
+              "council": "Guildford",
+              "clause_key": "capital_limit_gbp",
+              "value_text": "6,000",
+              "value_num": 6000.0,
+              "unit": "GBP",
+              "source_pdf": "data/raw/guildford/guildford_ctr_scheme_working_age_2026.pdf",
+              "page": "49",
+              "quote": "42. Class of person excluded from this scheme: capital limit (1) ... any person whose capital exceeds £6,000"
+            }
+          },
+          {
+            "clause_key": "excluded_bands",
+            "label": "Valuation bands excluded from the scheme",
+            "Woking": {
+              "policy_family": "council_tax_support",
+              "council": "Woking",
+              "clause_key": "excluded_bands",
+              "value_text": "none (bands F-H claim, capped at Band D)",
+              "value_num": null,
+              "unit": "bands",
+              "source_pdf": "data/raw/woking/woking_cts_scheme_2026.pdf",
+              "page": "36",
+              "quote": "No exclusion by valuation band; the reduction for classes D and E is capped at Band D liability (para 28B)"
+            },
+            "Guildford": {
+              "policy_family": "council_tax_support",
+              "council": "Guildford",
+              "clause_key": "excluded_bands",
+              "value_text": "F, G and H",
+              "value_num": null,
+              "unit": "bands",
+              "source_pdf": "data/raw/guildford/guildford_ctr_scheme_working_age_2026.pdf",
+              "page": "49",
+              "quote": "42A Class of person excluded from this scheme: valuation band F, G and H ... any person whose liability for Council Tax is in respect of a chargeable dwelling which falls within valuation band F, G or H"
+            }
+          },
+          {
+            "clause_key": "min_award_gbp_week",
+            "label": "Minimum weekly award (GBP)",
+            "Woking": {
+              "policy_family": "council_tax_support",
+              "council": "Woking",
+              "clause_key": "min_award_gbp_week",
+              "value_text": "5.00",
+              "value_num": 5.0,
+              "unit": "GBP/week",
+              "source_pdf": "data/raw/woking/woking_cts_scheme_2026.pdf",
+              "page": "107",
+              "quote": "118. Where a reduction is payable, it shall not be payable where the amount to which a person would other be entitled is less than £5.00 per reduction week"
+            },
+            "Guildford": {
+              "policy_family": "council_tax_support",
+              "council": "Guildford",
+              "clause_key": "min_award_gbp_week",
+              "value_text": "10.00",
+              "value_num": 10.0,
+              "unit": "GBP/week",
+              "source_pdf": "data/raw/guildford/guildford_ctr_scheme_working_age_2026.pdf",
+              "page": "55",
+              "quote": "49A. Minimum amount of reduction under this scheme ... it shall not be awarded where the amount to which a person would otherwise be entitled is less than £10.00 per reduction week"
+            }
+          }
+        ],
+        "agreements": [
+          "band_cap",
+          "earnings_disregard_gbp_week",
+          "max_support_pct",
+          "non_dep_deduction_top_gbp_week",
+          "second_adult_rebate"
+        ],
+        "provenance": "data/sample/policy_clauses.csv -> data/raw/<council>/<scheme pdf>#page"
+      },
+      {
+        "type": "table",
+        "title": "Day-one check (SYNTHETIC residents)",
+        "synthetic": true,
+        "rows": [
+          {
+            "resident_id": "SYN-01",
+            "label": "SYNTHETIC",
+            "home_council": "Woking",
+            "band": "B",
+            "capital_gbp": 4500.0,
+            "weekly_liability_gbp": 31.2,
+            "household": "single working age",
+            "treatment": {
+              "Woking": {
+                "eligible": true,
+                "max_weekly_award_gbp": 31.2,
+                "why": []
+              },
+              "Guildford": {
+                "eligible": true,
+                "max_weekly_award_gbp": 31.2,
+                "why": []
+              }
+            },
+            "differs_between_councils": false
+          },
+          {
+            "resident_id": "SYN-02",
+            "label": "SYNTHETIC",
+            "home_council": "Woking",
+            "band": "C",
+            "capital_gbp": 7200.0,
+            "weekly_liability_gbp": 35.6,
+            "household": "couple working age",
+            "treatment": {
+              "Woking": {
+                "eligible": true,
+                "max_weekly_award_gbp": 35.6,
+                "why": []
+              },
+              "Guildford": {
+                "eligible": false,
+                "max_weekly_award_gbp": 0.0,
+                "why": [
+                  "capital above 6000"
+                ]
+              }
+            },
+            "differs_between_councils": true
+          },
+          {
+            "resident_id": "SYN-03",
+            "label": "SYNTHETIC",
+            "home_council": "Guildford",
+            "band": "D",
+            "capital_gbp": 9800.0,
+            "weekly_liability_gbp": 40.1,
+            "household": "lone parent working age",
+            "treatment": {
+              "Woking": {
+                "eligible": true,
+                "max_weekly_award_gbp": 40.1,
+                "why": []
+              },
+              "Guildford": {
+                "eligible": false,
+                "max_weekly_award_gbp": 0.0,
+                "why": [
+                  "capital above 6000"
+                ]
+              }
+            },
+            "differs_between_councils": true
+          },
+          {
+            "resident_id": "SYN-04",
+            "label": "SYNTHETIC",
+            "home_council": "Guildford",
+            "band": "A",
+            "capital_gbp": 12500.0,
+            "weekly_liability_gbp": 26.7,
+            "household": "single working age",
+            "treatment": {
+              "Woking": {
+                "eligible": false,
+                "max_weekly_award_gbp": 0.0,
+                "why": [
+                  "capital above 10000"
+                ]
+              },
+              "Guildford": {
+                "eligible": false,
+                "max_weekly_award_gbp": 0.0,
+                "why": [
+                  "capital above 6000"
+                ]
+              }
+            },
+            "differs_between_councils": false
+          },
+          {
+            "resident_id": "SYN-05",
+            "label": "SYNTHETIC",
+            "home_council": "Woking",
+            "band": "F",
+            "capital_gbp": 5500.0,
+            "weekly_liability_gbp": 57.8,
+            "household": "couple working age",
+            "treatment": {
+              "Woking": {
+                "eligible": true,
+                "max_weekly_award_gbp": 57.8,
+                "why": []
+              },
+              "Guildford": {
+                "eligible": false,
+                "max_weekly_award_gbp": 0.0,
+                "why": [
+                  "band F excluded"
+                ]
+              }
+            },
+            "differs_between_councils": true
+          },
+          {
+            "resident_id": "SYN-06",
+            "label": "SYNTHETIC",
+            "home_council": "Guildford",
+            "band": "E",
+            "capital_gbp": 6000.0,
+            "weekly_liability_gbp": 49.0,
+            "household": "single working age",
+            "treatment": {
+              "Woking": {
+                "eligible": true,
+                "max_weekly_award_gbp": 49.0,
+                "why": []
+              },
+              "Guildford": {
+                "eligible": true,
+                "max_weekly_award_gbp": 49.0,
+                "why": []
+              }
+            },
+            "differs_between_councils": false
+          },
+          {
+            "resident_id": "SYN-07",
+            "label": "SYNTHETIC",
+            "home_council": "Woking",
+            "band": "B",
+            "capital_gbp": 3000.0,
+            "weekly_liability_gbp": 31.2,
+            "household": "single working age low award",
+            "treatment": {
+              "Woking": {
+                "eligible": true,
+                "max_weekly_award_gbp": 31.2,
+                "why": []
+              },
+              "Guildford": {
+                "eligible": true,
+                "max_weekly_award_gbp": 31.2,
+                "why": []
+              }
+            },
+            "differs_between_councils": false
+          },
+          {
+            "resident_id": "SYN-08",
+            "label": "SYNTHETIC",
+            "home_council": "Guildford",
+            "band": "C",
+            "capital_gbp": 10000.0,
+            "weekly_liability_gbp": 35.6,
+            "household": "couple working age",
+            "treatment": {
+              "Woking": {
+                "eligible": true,
+                "max_weekly_award_gbp": 35.6,
+                "why": []
+              },
+              "Guildford": {
+                "eligible": false,
+                "max_weekly_award_gbp": 0.0,
+                "why": [
+                  "capital above 6000"
+                ]
+              }
+            },
+            "differs_between_councils": true
+          }
+        ]
+      },
+      {
+        "type": "draft",
+        "title": "Held for approval",
+        "draft": {
+          "kind": "options_note",
+          "title": "CTS harmonisation: Woking, Guildford",
+          "text": "The Council Tax Support schemes for Woking and Guildford diverge on four key clauses, affecting day-one liability for SYNTHETIC test residents. Maximum backdating differs significantly: Woking permits 26 weeks (6 months with continuous good cause), while Guildford allows only 4 weeks (one calendar month). The capital threshold above which no support is paid is £10,000 in Woking but £6,000 in Guildford. Regarding property valuation, Woking excludes bands F-H (capped at Band D), whereas Guildford includes bands F, G, and H. Minimum weekly awards also vary, with Woking setting the minimum at £5.00 and Guildford at £10.00. Four of the eight SYNTHETIC test residents would receive different treatment under these differing clauses on vesting day.",
+          "model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+          "receipt_id": "rcpt_req_rr3q6hlh",
+          "evidence_ids": [
+            "data/raw/guildford/guildford_ctr_scheme_working_age_2026.pdf#p100",
+            "data/raw/woking/woking_cts_scheme_2026.pdf#p102",
+            "data/raw/guildford/guildford_ctr_scheme_working_age_2026.pdf#p51",
+            "data/raw/woking/woking_cts_scheme_2026.pdf#p36",
+            "data/raw/guildford/guildford_ctr_scheme_working_age_2026.pdf#p49",
+            "data/raw/woking/woking_cts_scheme_2026.pdf#p32",
+            "data/raw/guildford/guildford_ctr_scheme_working_age_2026.pdf#p116",
+            "data/raw/woking/woking_cts_scheme_2026.pdf#p132",
+            "data/raw/guildford/guildford_ctr_scheme_working_age_2026.pdf#p49",
+            "data/raw/woking/woking_cts_scheme_2026.pdf#p36",
+            "data/raw/guildford/guildford_ctr_scheme_working_age_2026.pdf#p51",
+            "data/raw/woking/woking_cts_scheme_2026.pdf#p35",
+            "data/raw/guildford/guildford_ctr_scheme_working_age_2026.pdf#p55",
+            "data/raw/woking/woking_cts_scheme_2026.pdf#p107",
+            "data/raw/guildford/guildford_ctr_scheme_working_age_2026.pdf#p52",
+            "data/raw/woking/woking_cts_scheme_2026.pdf#p37",
+            "data/raw/guildford/guildford_ctr_scheme_working_age_2026.pdf#p45",
+            "data/raw/woking/woking_cts_scheme_2026.pdf#p28"
+          ],
+          "recipient": "",
+          "run_id": "live-05",
+          "id": "draft-2",
+          "status": "pending",
+          "created_at": "2026-10-26T14:32:17.320368+00:00"
+        }
+      }
+    ]
+  },
+  "agents": [
+    {
+      "name": "Router",
+      "role": "Classifies a free-text request into a supported flow, extracts councils and parameters, or returns a structured unsupported error"
+    },
+    {
+      "name": "Researcher",
+      "role": "Runs federated SQL against the data layer (Zetaris live, cached council files in sample mode) and returns rows with provenance"
+    },
+    {
+      "name": "Critic",
+      "role": "Validates provenance and thresholds on every result; rejects and returns work that does not clear the bar (one real bounce when needed)"
+    },
+    {
+      "name": "Writer",
+      "role": "Drafts briefings and letters from the evidence table (NVIDIA Nemotron via Meterless Nightshift; deterministic template in sample mode)"
+    },
+    {
+      "name": "ApprovalGate",
+      "role": "Holds every draft for human approval and records human confirmations of supplier matches; no action is ever taken autonomously"
+    }
+  ],
+  "trace_id": "trace-live-05",
+  "log_file": "logs/trace-live-05.jsonl",
+  "execution_time_seconds": 3.67
+}

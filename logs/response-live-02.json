@@ -1,0 +1,159 @@
+{
+  "run_id": "live-02",
+  "status": "success",
+  "output": {
+    "summary": "Recorded: 'Unit 4 Business Software Ltd' (Waverley) and 'Unit4 Business Software Ltd' (Guildford) are the same organisation. Stored in H-MEM as mem-1 (long_term, confidence 1.0, source human:approval-gate). Every later supplier-overlap answer will resolve this pair using mem-1.",
+    "recommendations": [
+      "Re-run the supplier overlap question to see the pair resolved from memory.",
+      "If this was wrong, send the opposite decision for the same pair; the new decision supersedes mem-1 (the old one is kept and penalised, never deleted)."
+    ],
+    "artifacts": [
+      {
+        "type": "run_mode",
+        "sample_mode": false,
+        "flow": "confirm_match",
+        "router_confidence": 0.9,
+        "data_layer": "zetaris (federated query-in-place over woking_pg, guildford_pg, waverley_pg)",
+        "model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+        "note": "live: Zetaris federation + NVIDIA Nemotron via Meterless Nightshift"
+      },
+      {
+        "type": "decision",
+        "title": "Human decision",
+        "decision": {
+          "memory_id": "mem-1",
+          "pair_key": "Guildford:UNIT4 BUSINESS SOFTWARE <> Waverley:UNIT 4 BUSINESS SOFTWARE",
+          "verdict": "same",
+          "content": "Supplier match decision: 'Unit 4 Business Software Ltd' (Waverley) and 'Unit4 Business Software Ltd' (Guildford) are the same organisation. Decided by human."
+        },
+        "verdict": "same"
+      },
+      {
+        "type": "evidence",
+        "title": "Published rows behind each name",
+        "a": {
+          "council": "Waverley",
+          "name": "Unit 4 Business Software Ltd",
+          "rows": [
+            {
+              "provenance_id": "wav:waverley_over500_q1q2_2026_27.csv:257",
+              "payment_date": null,
+              "accounting_period": "2026-01",
+              "amount_gbp": 51971.97,
+              "service_area": "Package Software",
+              "expense_type": "Equipment repair/maint Contract",
+              "source_file": "waverley/waverley_over500_q1q2_2026_27.csv",
+              "source_row": "257"
+            },
+            {
+              "provenance_id": "wav:waverley_over500_q1q2_2026_27.csv:1960",
+              "payment_date": null,
+              "accounting_period": "2026-04",
+              "amount_gbp": 5241.67,
+              "service_area": "Package Software",
+              "expense_type": "Equipment repair/maint Contract",
+              "source_file": "waverley/waverley_over500_q1q2_2026_27.csv",
+              "source_row": "1960"
+            },
+            {
+              "provenance_id": "wav:waverley_over500_q1q2_2026_27.csv:542",
+              "payment_date": null,
+              "accounting_period": "2026-01",
+              "amount_gbp": 1887.0,
+              "service_area": "Package Software",
+              "expense_type": "Equipment repair/maint Contract",
+              "source_file": "waverley/waverley_over500_q1q2_2026_27.csv",
+              "source_row": "542"
+            }
+          ]
+        },
+        "b": {
+          "council": "Guildford",
+          "name": "Unit4 Business Software Ltd",
+          "rows": [
+            {
+              "provenance_id": "gui:guildford_2026_Q1.xlsx:136",
+              "payment_date": "2026-04-16",
+              "accounting_period": "2026-01",
+              "amount_gbp": 3146.5,
+              "service_area": "Finance",
+              "expense_type": "ICT Support & Maintenance",
+              "source_file": "guildford/guildford_2026_Q1.xlsx",
+              "source_row": "136"
+            }
+          ]
+        }
+      },
+      {
+        "type": "memory",
+        "title": "H-MEM ledger entries for this decision",
+        "ledger_tail": [
+          {
+            "memoryId": "mem-1",
+            "action": "create",
+            "actor": "vesting-day",
+            "timestamp": 1793025101719,
+            "newState": {
+              "id": "mem-1",
+              "content": "Supplier match decision: 'Unit 4 Business Software Ltd' (Waverley) and 'Unit4 Business Software Ltd' (Guildford) are the same organisation. Decided by human.",
+              "type": "factual",
+              "layer": "long_term",
+              "timestamp": 1793025101719,
+              "lastAccessed": 1793025101719,
+              "accessCount": 0,
+              "tags": [
+                "decision:supplier-match",
+                "pair:Guildford:UNIT4 BUSINESS SOFTWARE <> Waverley:UNIT 4 BUSINESS SOFTWARE",
+                "verdict:same",
+                "council:Waverley",
+                "council:Guildford"
+              ],
+              "confidence": 1.0,
+              "source": "human:approval-gate",
+              "provenance": {
+                "origin": "user_correction",
+                "learnedAt": 1793025101719,
+                "label": "human decision via ApprovalGate"
+              },
+              "domain": "general",
+              "namespace": "general/facts",
+              "entities": [
+                "supplier",
+                "unit",
+                "business",
+                "software",
+                "ltd",
+                "waverley",
+                "guildford",
+                "decided"
+              ],
+              "relatedTo": []
+            }
+          }
+        ],
+        "memory_dir": "C:\\Users\\na02153\\vesting-day\\data\\memory"
+      }
+    ]
+  },
+  "agents": [
+    {
+      "name": "Router",
+      "role": "Classifies a free-text request into a supported flow, extracts councils and parameters, or returns a structured unsupported error"
+    },
+    {
+      "name": "Researcher",
+      "role": "Runs federated SQL against the data layer (Zetaris live, cached council files in sample mode) and returns rows with provenance"
+    },
+    {
+      "name": "ApprovalGate",
+      "role": "Holds every draft for human approval and records human confirmations of supplier matches; no action is ever taken autonomously"
+    },
+    {
+      "name": "Memory",
+      "role": "Meterless H-MEM: recalls earlier human decisions (supplier matches, approvals) and stores new ones with provenance"
+    }
+  ],
+  "trace_id": "trace-live-02",
+  "log_file": "logs/trace-live-02.jsonl",
+  "execution_time_seconds": 1.82
+}
