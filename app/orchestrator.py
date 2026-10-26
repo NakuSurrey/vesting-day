@@ -20,11 +20,12 @@ from app.agents.base import RunContext, UnsupportedRequest
 from app.agents.router import RouterAgent
 from app.config import Settings, settings as default_settings
 from app.engines.hmem import HMEM
-from app.flows import approve_draft, confirm_match, contract_cliff, policy_gap, supplier_overlap
+from app.flows import approve_draft, confirm_match, contract_cliff, day_one_brief, policy_gap, supplier_overlap
 from app.schemas import AgentInfo, RunError, RunErrorDetail, RunOutput, RunRequest, RunSuccess
 from app.trace import Tracer
 
 FLOW_RUNNERS = {
+    "day_one_brief": day_one_brief.run,
     "supplier_overlap": supplier_overlap.run,
     "confirm_match": confirm_match.run,
     "contract_cliff": contract_cliff.run,

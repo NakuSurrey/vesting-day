@@ -16,6 +16,15 @@ from app.agents.base import Agent, UnsupportedRequest
 COUNCILS = ("Woking", "Guildford", "Waverley")
 
 FLOWS: dict[str, dict[str, Any]] = {
+    # first on purpose: when a broad question ties with a specific flow, the Planner takes it
+    "day_one_brief": {
+        "description": "A broad question answered by planning: the Planner chooses which checks to run (contracts, suppliers, Council Tax Support), delegates them, assesses the results and writes one prioritised brief",
+        "phrases": ["risk", "risks", "brief", "briefing", "summarise", "summarize", "summary", "overview", "priorities", "priority",
+                    "prioritise", "prioritize", "biggest", "most urgent", "what should", "where should", "where do i start", "where to start",
+                    "everything", "readiness", "ready for", "prepare for", "day-one brief", "day one brief", "merger", "integration",
+                    "transition", "what happens", "what changes", "what matters", "worry", "exposure", "state of play", "big picture"],
+        "example": "What are the biggest risks on vesting day?",
+    },
     "supplier_overlap": {
         "description": "Which suppliers two or three of the councils share, with spend, and which matches still need a human",
         "phrases": ["supplier", "suppliers", "vendor", "vendors", "overlap", "share", "shared", "common", "duplicate",
@@ -130,7 +139,7 @@ class RouterAgent(Agent):
 
     @staticmethod
     def _target(flow: str) -> str:
-        return {"supplier_overlap": "Researcher", "contract_cliff": "Researcher", "policy_gap": "Researcher",
+        return {"day_one_brief": "Planner", "supplier_overlap": "Researcher", "contract_cliff": "Researcher", "policy_gap": "Researcher",
                 "confirm_match": "ApprovalGate", "approve_draft": "ApprovalGate"}.get(flow, "Researcher")
 
     @staticmethod

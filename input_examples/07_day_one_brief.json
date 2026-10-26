@@ -1,0 +1,5 @@
+{
+  "run_id": "example-07",
+  "input": { "query": "What are the biggest risks on vesting day?" },
+  "options": { "sample_mode": true }
+}

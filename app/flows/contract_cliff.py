@@ -35,6 +35,18 @@ def run(ctx: RunContext, sources: dict[str, Any]) -> dict[str, Any]:
 
     summary_rows = researcher.contracts_summary(councils)
     cliff = researcher.contracts_near(councils, vesting_day, window_days)
+    # an empty window is not an answer: the Critic asks the Researcher to widen it (doubling, up to a year,
+    # at most three times). The window the question asked for stays the headline; the widened one is labelled.
+    asked_window, widened_to, attempts = window_days, None, 0
+    while not cliff and window_days < 365 and attempts < 3:
+        wider = min(window_days * 2, 365)
+        critic.trace("critique_coverage", f"0 contracts within {window_days} days of {vesting_day} for {', '.join(councils)}",
+                     f"an empty window is not an answer; asking the Researcher to widen to {wider} days", target_agent="Researcher",
+                     status="needs_revision", confidence=1.0, asked_window_days=asked_window, widen_to=wider)
+        attempts += 1
+        window_days = wider
+        cliff = researcher.contracts_near(councils, vesting_day, window_days, retry=attempts)
+        widened_to = window_days
     no_end = researcher.contracts_without_end_date(councils)
 
     verdict = critic.review_rows(cliff)
@@ -75,7 +87,8 @@ def run(ctx: RunContext, sources: dict[str, Any]) -> dict[str, Any]:
     target = hard[0] if hard else None
 
     evidence = [
-        f"vesting day {vesting_day}; window plus or minus {window_days} days",
+        f"vesting day {vesting_day}; window plus or minus {window_days} days"
+        + (f" (the question asked for {asked_window} days; no contract ended in that window, so the Researcher widened it)" if widened_to else ""),
         f"{len(hard)} contracts end in the window with no extension date recorded past vesting day (the registers often leave the extension field blank, so an unrecorded option may still exist), total stated value {gbp(total_value)}",
     ] + [f"{c}: {v['contracts']} contracts, {gbp(v['value_gbp'])}" for c, v in per_council.items()] + [
         f"{len(with_option)} further contracts in the window have an extension date recorded past vesting day",
@@ -102,7 +115,7 @@ def run(ctx: RunContext, sources: dict[str, Any]) -> dict[str, Any]:
             f"This letter is a draft prepared from the published contracts register "
             f"(entry {target['provenance_id']}) and requires human approval before it is sent."
         )
-        allowed = numbers_in([vesting_day, target["end_date"], target["value_gbp"], abs(target["days_from_vesting_day"]), target["contract_ref"], target["provenance_id"], window_days, total_value, len(hard), len(with_option), len(no_end)]
+        allowed = numbers_in([vesting_day, target["end_date"], target["value_gbp"], abs(target["days_from_vesting_day"]), target["contract_ref"], target["provenance_id"], window_days, asked_window, total_value, len(hard), len(with_option), len(no_end)]
                              + [v["contracts"] for v in per_council.values()] + [v["value_gbp"] for v in per_council.values()])
         draft, _ = checked_draft(writer, critic, "novation letter",
                                  "Write a short letter to the supplier of the largest contract ending near vesting day, asking them to confirm novation, extension or expiry. "
@@ -112,7 +125,8 @@ def run(ctx: RunContext, sources: dict[str, Any]) -> dict[str, Any]:
         draft_text = draft["text"]
 
     summary = (
-        f"Contract cliff around vesting day {vesting_day} (plus or minus {window_days} days) for {', '.join(councils)}: "
+        (f"No contract ends within {asked_window} days of vesting day {vesting_day} for {', '.join(councils)}; the window was widened to {widened_to} days to find the nearest. " if widened_to else "")
+        + f"Contract cliff around vesting day {vesting_day} (plus or minus {window_days} days) for {', '.join(councils)}: "
         f"{len(hard)} contracts end with no extension date recorded past vesting day, stated value {gbp(total_value)} "
         f"({'; '.join(f'{c} {v['contracts']} / {gbp(v['value_gbp'])}' for c, v in per_council.items())}). "
         f"{len(with_option)} more have an extension date recorded past vesting day; {len(no_end)} register entries have no usable end date. "
@@ -133,6 +147,7 @@ def run(ctx: RunContext, sources: dict[str, Any]) -> dict[str, Any]:
             {"type": "table", "title": "Register entries with no usable end date", "count": len(no_end), "rows": no_end[:40]},
             {"type": "table", "title": "Register summary per council", "rows": summary_rows},
             {"type": "draft", "title": "Held for approval", "draft": held},
-            {"type": "run_stats", "per_council": per_council, "total_hard_cliff_gbp": total_value, "shared_suppliers_on_cliff": shared},
+            {"type": "run_stats", "per_council": per_council, "total_hard_cliff_gbp": total_value, "shared_suppliers_on_cliff": shared,
+             "asked_window_days": asked_window, "window_days": window_days, "widened_to": widened_to},
         ],
     }

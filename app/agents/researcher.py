@@ -21,14 +21,15 @@ class ResearcherAgent(Agent):
     name = "Researcher"
     role = "Runs federated SQL against the data layer (Zetaris live, cached council files in sample mode) and returns rows with provenance"
 
-    def _run(self, question: str, sql: str, limit: int = 5000) -> list[dict[str, Any]]:
+    def _run(self, question: str, sql: str, limit: int = 5000, retry: int = 0) -> list[dict[str, Any]]:
         rows = self.ctx.data.run_sql(sql, limit=limit)
         self.trace(
             "query_data_layer",
             f"{question} | SQL: {' '.join(sql.split())[:220]}",
-            f"{len(rows)} rows from {self.ctx.data.name}",
+            f"{len(rows)} rows from {self.ctx.data.name}" + (" (widened query after an empty result)" if retry else ""),
             target_agent=None,
             confidence=1.0,
+            retry_count=retry,
             data_layer=self.ctx.data.name,
         )
         return rows
@@ -70,7 +71,7 @@ class ResearcherAgent(Agent):
 
     # --- contracts --------------------------------------------------------
 
-    def contracts_near(self, councils: list[str], vesting_day: str, window_days: int) -> list[dict[str, Any]]:
+    def contracts_near(self, councils: list[str], vesting_day: str, window_days: int, retry: int = 0) -> list[dict[str, Any]]:
         vd = date.fromisoformat(vesting_day)
         lo, hi = (vd - timedelta(days=window_days)).isoformat(), (vd + timedelta(days=window_days)).isoformat()
         sql = f"""
@@ -81,7 +82,7 @@ class ResearcherAgent(Agent):
               AND end_date IS NOT NULL AND end_date >= '{lo}' AND end_date <= '{hi}'
             ORDER BY end_date, council
         """
-        return self._run(f"contracts ending within {window_days} days of {vesting_day}", sql)
+        return self._run(f"contracts ending within {window_days} days of {vesting_day}", sql, retry=retry)
 
     def contracts_without_end_date(self, councils: list[str]) -> list[dict[str, Any]]:
         sql = f"""

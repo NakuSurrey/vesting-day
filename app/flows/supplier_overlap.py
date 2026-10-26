@@ -130,7 +130,7 @@ def run(ctx: RunContext, sources: dict[str, Any]) -> dict[str, Any]:
             {"type": "table", "title": "Unlikely pairs (no distinctive word in common; kept for audit)", "count": len(unlikely), "rows": unlikely[:20]},
             {"type": "memory", "title": "Decisions recalled from H-MEM", "decisions": decisions, "ledger_tail": memory.ledger_tail(6)},
             {"type": "generated_text", "title": "Briefing", "text": draft["text"], "model": draft["model"], "receipt_id": draft.get("receipt_id"), "mode": draft["mode"]},
-            {"type": "run_stats", "candidates": len(cands), "presented": len(presented), "needs_human": len(needs_human), "unlikely": len(unlikely),
+            {"type": "run_stats", "candidates": len(cands), "presented": len(presented), "needs_human": len(needs_human), "unlikely": len(unlikely), "shared_spend_gbp": shared_spend,
              "judge_hints": {"same": len(hint_same), "different": len(hint_diff), "reviewed": hinted}, "critic_bounces": bounces, "councils": councils},
         ],
     }

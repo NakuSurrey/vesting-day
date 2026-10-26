@@ -85,7 +85,13 @@ def _flow(orch: Orchestrator, run_id: str, q: str) -> str:
     ("What happens on day one to a resident with 8000 pounds of savings?", "policy_gap"),
     ("Is 'Unit 4 Business Software Ltd' (Waverley) the same company as 'Unit4 Business Software Ltd' (Guildford)? Confirm.", "confirm_match"),
     ("What is the weather in Woking?", "unsupported"),
-    ("Summarise the merger risks", "unsupported"),
+    ("Summarise the merger risks", "day_one_brief"),
+    ("What are the biggest risks on vesting day?", "day_one_brief"),
+    ("Give me a day-one brief for the merger", "day_one_brief"),
+    ("What should the finance lead do first?", "day_one_brief"),
+    ("What happens on vesting day?", "day_one_brief"),
+    ("Which contracts are at risk around vesting day?", "contract_cliff"),
+    ("Tell me a joke about councils", "unsupported"),
 ])
 def test_judge_phrasings_route(tmp_path: Path, q: str, flow: str) -> None:
     assert _flow(_orch(tmp_path), "rq", q) == flow
