@@ -42,26 +42,30 @@ set `SAMPLE_MODE=false`. Leave `METERLESS_MODEL=nvidia/nemotron-3.5-lightning-30
 ## 5. Run the three flows live
 
 ```powershell
-uv run python run.py --reset-memory --run-id live-01 --query "Which suppliers do Woking, Guildford and Waverley share?"
-uv run python run.py --run-id live-02 --query "Confirm that 'Unit 4 Business Software Ltd' (Waverley) is the same supplier as 'Unit4 Business Software Ltd' (Guildford)"
-uv run python run.py --run-id live-03 --query "Which suppliers do Guildford and Waverley share?"
-uv run python run.py --run-id live-04 --query "Which contracts end within six months of vesting day?"
-uv run python run.py --run-id live-05 --query "Where do the Council Tax Support schemes differ between Woking and Guildford?"
+uv run python run.py --reset-memory --run-id live-01 --query "Which suppliers do Woking, Guildford and Waverley share?" --out logs/response-live-01.json
+uv run python run.py --run-id live-02 --query "Confirm that 'Unit 4 Business Software Ltd' (Waverley) is the same supplier as 'Unit4 Business Software Ltd' (Guildford)" --out logs/response-live-02.json
+uv run python run.py --run-id live-03 --query "Which suppliers do Guildford and Waverley share?" --out logs/response-live-03.json
+uv run python run.py --run-id live-04 --query "Which contracts end within six months of vesting day?" --out logs/response-live-04.json
+uv run python run.py --run-id live-05 --query "Where do the Council Tax Support schemes differ between Woking and Guildford?" --out logs/response-live-05.json
 ```
 
-Each prints the JSON response; the trace is in `logs\trace-live-0N.jsonl`. Check a trace
+`--out` writes each response to `logs\response-live-0N.json` as UTF-8 (a stderr line shows the
+status and the summary head); the trace is written to `logs\trace-live-0N.jsonl`. Check a trace
 line from the Writer shows `"model": "nvidia/nemotron-3.5-lightning-30b-a3b"` and a
-`receipt_id`, and a Researcher line names `zetaris`.
+`receipt_id`, a Researcher line names `zetaris`, and the live-03 summary names the recalled
+decision (`resolved using decision mem-1`).
 
 ## 6. Commit the live traces
 
 ```powershell
-git add logs
+git add logs/response-live-0*.json logs/trace-live-0*.jsonl
 git commit -m "Add live traces: Zetaris federation and Nemotron via Nightshift"
 git push
 ```
 
-Only `logs/*.jsonl` are added; `.env` is ignored by git and must never be committed.
+Only the `logs/response-live-0N.json` and `logs/trace-live-0N.jsonl` files are added; `.env` is
+ignored by git and must never be committed. To re-commit a single run, add just its two files,
+e.g. `git add logs/response-live-03.json logs/trace-live-03.jsonl`.
 
 ## 7. Server at the end
 

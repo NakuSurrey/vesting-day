@@ -23,6 +23,7 @@ def main() -> int:
     parser.add_argument("--run-id", help="run id (default: generated)")
     parser.add_argument("--sample", action="store_true", help="force sample mode for this run")
     parser.add_argument("--reset-memory", action="store_true", help="clear H-MEM state and held drafts before running")
+    parser.add_argument("--out", help="also write the JSON response to this file as UTF-8 (for the committed live logs)")
     args = parser.parse_args()
 
     if args.reset_memory:
@@ -44,7 +45,15 @@ def main() -> int:
         if args.sample:
             body.setdefault("options", {})["sample_mode"] = True
         result = Orchestrator().run(RunRequest(**body))
-        print(json.dumps(result.model_dump(), indent=2, ensure_ascii=False))
+        payload = json.dumps(result.model_dump(), indent=2, ensure_ascii=False)
+        if args.out:
+            from pathlib import Path
+            Path(args.out).parent.mkdir(parents=True, exist_ok=True)
+            Path(args.out).write_text(payload + "\n", encoding="utf-8")
+            summary = getattr(getattr(result, "output", None), "summary", "") or ""
+            print(f"response written (utf-8): {args.out} | status={result.status}\n{summary[:300]}", file=sys.stderr)
+        else:
+            print(payload)
         return 0 if result.status == "success" else 1
 
     import uvicorn
