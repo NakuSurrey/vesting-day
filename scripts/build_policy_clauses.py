@@ -29,10 +29,10 @@ PDFS = {
 # (council, clause_key, value_text, value_num, unit, page, anchor text that must appear on that page, quote)
 CLAUSES = [
     # capital limit (working age exclusion class)
-    ("Woking", "capital_limit_gbp", "10,000", 10000, "GBP", 32, "capital exceeds £10,000",
-     "Class of person excluded from this scheme: capital limit 22. (1) The class of person described in this paragraph consists of any person whose capital exceeds £10,000"),
-    ("Guildford", "capital_limit_gbp", "6,000", 6000, "GBP", 49, "capital exceeds £6,000",
-     "42. Class of person excluded from this scheme: capital limit (1) ... any person whose capital exceeds £6,000"),
+    ("Woking", "capital_limit_gbp", "10,000", 10000, "GBP", 32, "capital exceeds \u00a310,000",
+     "Class of person excluded from this scheme: capital limit 22. (1) The class of person described in this paragraph consists of any person whose capital exceeds \u00a310,000"),
+    ("Guildford", "capital_limit_gbp", "6,000", 6000, "GBP", 49, "capital exceeds \u00a36,000",
+     "42. Class of person excluded from this scheme: capital limit (1) ... any person whose capital exceeds \u00a36,000"),
     # band cap
     ("Woking", "band_cap", "Band D", None, "band", 36, "capped at a maximum liability of Band D",
      "28B For classes D and E, the maximum Council Tax reduction will be capped at a maximum liability of Band D"),
@@ -49,20 +49,20 @@ CLAUSES = [
     ("Guildford", "max_support_pct", "100", 100, "% of liability", 51, "100 per cent of the amount A/B",
      "47 (1) ... the amount of a person's maximum council tax reduction in respect of a day is 100 per cent of the amount A/B"),
     # minimum award
-    ("Woking", "min_award_gbp_week", "5.00", 5.0, "GBP/week", 107, "less than £5.00 per reduction week",
-     "118. Where a reduction is payable, it shall not be payable where the amount to which a person would other be entitled is less than £5.00 per reduction week"),
-    ("Guildford", "min_award_gbp_week", "10.00", 10.0, "GBP/week", 55, "less than £10.00 per reduction week",
-     "49A. Minimum amount of reduction under this scheme ... it shall not be awarded where the amount to which a person would otherwise be entitled is less than £10.00 per reduction week"),
+    ("Woking", "min_award_gbp_week", "5.00", 5.0, "GBP/week", 107, "less than \u00a35.00 per reduction week",
+     "118. Where a reduction is payable, it shall not be payable where the amount to which a person would other be entitled is less than \u00a35.00 per reduction week"),
+    ("Guildford", "min_award_gbp_week", "10.00", 10.0, "GBP/week", 55, "less than \u00a310.00 per reduction week",
+     "49A. Minimum amount of reduction under this scheme ... it shall not be awarded where the amount to which a person would otherwise be entitled is less than \u00a310.00 per reduction week"),
     # standard earnings disregard, single claimant
-    ("Woking", "earnings_disregard_gbp_week", "5 (single), 10 (couple), 25 (lone parent)", 5.0, "GBP/week", 132, "£5 shall be disregarded if an applicant who has no partner has earnings",
-     "8. Except where the applicant or his partner qualifies for a £20 disregard ... (a) £5 shall be disregarded if an applicant who has no partner has earnings; (b) £10 shall be disregarded if an applicant who has a partner has earnings"),
-    ("Guildford", "earnings_disregard_gbp_week", "5 (single), 10 (couple), 25 (lone parent)", 5.0, "GBP/week", 116, "paragraphs 4 to 10 applies, £5",
-     "11. In a case to which none of the paragraphs 4 to 10 applies, £5. (couple £10, lone parent £25 under paragraphs 5 and 8)"),
+    ("Woking", "earnings_disregard_gbp_week", "5 (single), 10 (couple), 25 (lone parent)", 5.0, "GBP/week", 132, "\u00a35 shall be disregarded if an applicant who has no partner has earnings",
+     "8. Except where the applicant or his partner qualifies for a \u00a320 disregard ... (a) \u00a35 shall be disregarded if an applicant who has no partner has earnings; (b) \u00a310 shall be disregarded if an applicant who has a partner has earnings"),
+    ("Guildford", "earnings_disregard_gbp_week", "5 (single), 10 (couple), 25 (lone parent)", 5.0, "GBP/week", 116, "paragraphs 4 to 10 applies, \u00a35",
+     "11. In a case to which none of the paragraphs 4 to 10 applies, \u00a35. (couple \u00a310, lone parent \u00a325 under paragraphs 5 and 8)"),
     # highest non-dependant deduction
-    ("Woking", "non_dep_deduction_top_gbp_week", "15.35", 15.35, "GBP/week", 37, "£15.35 x 1/7",
-     "29A (1) (a) in respect of a non-dependant aged 18 or over in remunerative work, £15.35 x 1/7; (b) ... £5.00 x 1/7 (income bands £279 / £485 / £605)"),
-    ("Guildford", "non_dep_deduction_top_gbp_week", "15.35", 15.35, "GBP/week", 52, "£15.35 x 1/7",
-     "48 (1) (a) in respect of a non-dependant aged 18 or over in remunerative work, £15.35 x 1/7; (b) ... £5.00 x 1/7 (income bands £266 / £463 / £577)"),
+    ("Woking", "non_dep_deduction_top_gbp_week", "15.35", 15.35, "GBP/week", 37, "\u00a315.35 x 1/7",
+     "29A (1) (a) in respect of a non-dependant aged 18 or over in remunerative work, \u00a315.35 x 1/7; (b) ... \u00a35.00 x 1/7 (income bands \u00a3279 / \u00a3485 / \u00a3605)"),
+    ("Guildford", "non_dep_deduction_top_gbp_week", "15.35", 15.35, "GBP/week", 52, "\u00a315.35 x 1/7",
+     "48 (1) (a) in respect of a non-dependant aged 18 or over in remunerative work, \u00a315.35 x 1/7; (b) ... \u00a35.00 x 1/7 (income bands \u00a3266 / \u00a3463 / \u00a3577)"),
     # backdating
     ("Woking", "backdating_weeks", "26 (6 months, with continuous good cause)", 26, "weeks", 102, "6 months before the date the application was made",
      "111 (2) That date is the latest of (a) the first day from which the applicant had continuous good cause; (b) the day 6 months before the date the application was made"),
@@ -85,7 +85,7 @@ def main() -> None:
     problems = 0
     for council, key, text, num, unit, page, anchor, quote in CLAUSES:
         page_text = " ".join((readers[council].pages[page - 1].extract_text() or "").split())
-        norm = lambda s: re.sub(r"\s+", " ", s.replace("’", "'")).strip()
+        norm = lambda s: re.sub(r"\s+", " ", s.replace("\u2019", "'")).strip()
         if norm(anchor) not in norm(page_text):
             problems += 1
             print(f"NOT FOUND on page {page} of {council}: {anchor!r}", file=sys.stderr)

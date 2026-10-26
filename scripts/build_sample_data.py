@@ -70,7 +70,7 @@ def parse_date(s: object) -> str:
 def parse_amount(s: object) -> str:
     if s is None:
         return ""
-    txt = str(s).strip().replace("£", "").replace("�", "").replace(",", "")
+    txt = str(s).strip().replace("\u00a3", "").replace("\ufffd", "").replace(",", "")
     if txt.startswith("(") and txt.endswith(")"):
         txt = "-" + txt[1:-1]
     try:
