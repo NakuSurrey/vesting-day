@@ -2,9 +2,9 @@
   "run_id": "live-03",
   "status": "success",
   "output": {
-    "summary": "Across Guildford and Waverley, 92 supplier pairs share identical names after normalisation. A further 110 candidate pairs have similar names and await a human decision before being called the same supplier; the match judge model has reviewed 12 of these and suggests 4 are the same organisation and 8 are different, but these remain suggestions awaiting a human decision and do not count as shared. Combined spend on the 92 shared pairs totals GBP 14,971,881. The top shared suppliers are Surrey County Council (GBP 4,435,329 combined), PiLON Limited (GBP 1,362,420 combined), Zurich Insurance (GBP 1,197,787 combined), Thames Water Utilities (GBP 655,874 combined) and Vivid Resourcing (GBP 547,630 combined).",
+    "summary": "Across Guildford and Waverley, 92 supplier pairs are shared because the same name appears in both councils' payment files after normalisation. A further 110 candidate pairs have similar names and require a human decision before being called the same supplier; the match judge model has reviewed 12 of these and suggests 3 are the same organisation and 9 are different, but these are suggestions awaiting a human decision and do not count as shared. One pair was resolved using a remembered human decision (mem-1). The combined spend on the 92 shared pairs totals GBP 14,971,881. The top five shared suppliers are: Surrey County Council (GBP 4,435,329 combined), PiLON Limited (GBP 1,362,420 combined), Zurich Insurance Plc (GBP 1,197,787 combined), Thames Water Utilities Ltd (GBP 655,874 combined), and Vivid Resourcing Limited (GBP 547,630 combined).",
     "recommendations": [
-      "Confirm or split the 3 most likely pairs first (match judge suggestion, then size): 'South West Surrey Domestic Abuse Outreach Service' (Guildford) vs 'South West Surrey Domestic Abuse Services' (Waverley) - combined GBP 53,774, similarity 0.8889, judge suggests SAME; 'Brodie Plant Goddard' (Guildford) vs 'BPG (Brodie Plant Goddard)' (Waverley) - combined GBP 11,307, similarity 0.9091, judge suggests SAME; 'Thames Water Utilities Ltd (Swindon)' (Guildford) vs 'Thames Water  Utilities Ltd' (Waverley) - combined GBP 11,207, similarity 0.8462, judge suggests SAME",
+      "Confirm or split the 3 most likely pairs first (match judge suggestion, then size): 'Brodie Plant Goddard' (Guildford) vs 'BPG (Brodie Plant Goddard)' (Waverley) - combined GBP 11,307, similarity 0.9091, judge suggests SAME; 'Thames Water Utilities Ltd (Swindon)' (Guildford) vs 'Thames Water  Utilities Ltd' (Waverley) - combined GBP 11,207, similarity 0.8462, judge suggests SAME; 'Sutcliffe Play Limited (non-CIS)' (Guildford) vs 'Sutcliffe Play Ltd' (Waverley) - combined GBP 5,858, similarity 0.875, judge suggests SAME",
       "Start supplier consolidation with the largest shared commercial suppliers (public bodies excluded): PiLON Limited (GBP 1,362,420); Zurich Insurance Plc (GBP 1,197,787); Thames Water Utilities Ltd (GBP 655,874); Vivid Resourcing Limited (GBP 547,630); The Oyster Partnership Ltd (GBP 538,135)",
       "To record a decision: POST /run with input.query = \"Confirm that '<name A>' (<council>) is the same supplier as '<name B>' (<council>)\" - the Memory agent will apply it to every later answer."
     ],
@@ -1597,37 +1597,9 @@
         "type": "table",
         "title": "Candidates needing a human decision (match judge suggestions first; a suggestion is not a confirmation)",
         "count": 110,
-        "judge_suggests_same": 4,
-        "judge_suggests_different": 8,
+        "judge_suggests_same": 3,
+        "judge_suggests_different": 9,
         "rows": [
-          {
-            "pair": "Guildford:SOUTH WEST SURREY DOMESTIC ABUSE OUTREACH SERVICE <> Waverley:SOUTH WEST SURREY DOMESTIC ABUSE SERVICES",
-            "a_council": "Guildford",
-            "a_name": "South West Surrey Domestic Abuse Outreach Service",
-            "a_total_gbp": 14258.0,
-            "a_payments": 1,
-            "a_provenance": "gui:guildford_2026_Q2.xlsx:2640",
-            "a_source": "guildford/guildford_2026_Q2.xlsx",
-            "b_council": "Waverley",
-            "b_name": "South West Surrey Domestic Abuse Services",
-            "b_total_gbp": 39516.0,
-            "b_payments": 2,
-            "b_provenance": "wav:waverley_over500_q1q2_2026_27.csv:2801",
-            "b_source": "waverley/waverley_over500_q1q2_2026_27.csv",
-            "combined_gbp": 53774.0,
-            "similarity": 0.8889,
-            "method": "fuzzy-band",
-            "score": 0.89,
-            "status": "needs-human",
-            "model_verdict": "SAME",
-            "decision_id": null,
-            "companies_house": null,
-            "notes": [
-              "match judge suggests SAME (nvidia/nemotron-3.5-lightning-30b-a3b, receipt rcpt_req_me9yg6vd); a human still decides",
-              "below confirmation bar; needs a human decision"
-            ],
-            "public_body": false
-          },
           {
             "pair": "Guildford:BRODIE PLANT GODDARD <> Waverley:BPG BRODIE PLANT GODDARD",
             "a_council": "Guildford",
@@ -1651,7 +1623,7 @@
             "decision_id": null,
             "companies_house": null,
             "notes": [
-              "match judge suggests SAME (nvidia/nemotron-3.5-lightning-30b-a3b, receipt rcpt_req_nwa3mgk8); a human still decides",
+              "match judge suggests SAME (nvidia/nemotron-3.5-lightning-30b-a3b, receipt rcpt_req_9ly98gjb); a human still decides",
               "below confirmation bar; needs a human decision"
             ],
             "public_body": false
@@ -1679,7 +1651,7 @@
             "decision_id": null,
             "companies_house": null,
             "notes": [
-              "match judge suggests SAME (nvidia/nemotron-3.5-lightning-30b-a3b, receipt rcpt_req_9aghoh3u); a human still decides",
+              "match judge suggests SAME (nvidia/nemotron-3.5-lightning-30b-a3b, receipt rcpt_req_m0yve46f); a human still decides",
               "below confirmation bar; needs a human decision"
             ],
             "public_body": false
@@ -1707,7 +1679,7 @@
             "decision_id": null,
             "companies_house": null,
             "notes": [
-              "match judge suggests SAME (nvidia/nemotron-3.5-lightning-30b-a3b, receipt rcpt_req_w3ylzet6); a human still decides",
+              "match judge suggests SAME (nvidia/nemotron-3.5-lightning-30b-a3b, receipt rcpt_req_o4ie5ozd); a human still decides",
               "below confirmation bar; needs a human decision"
             ],
             "public_body": false
@@ -2711,6 +2683,34 @@
               "below confirmation bar; needs a human decision"
             ],
             "public_body": true
+          },
+          {
+            "pair": "Guildford:PIRBRIGHT PARISH COUNCIL <> Waverley:WONERSH PARISH COUNCIL",
+            "a_council": "Guildford",
+            "a_name": "Pirbright Parish Council",
+            "a_total_gbp": 95820.0,
+            "a_payments": 2,
+            "a_provenance": "gui:guildford_2026_Q1.xlsx:96",
+            "a_source": "guildford/guildford_2026_Q1.xlsx",
+            "b_council": "Waverley",
+            "b_name": "Wonersh Parish Council",
+            "b_total_gbp": 1097.6,
+            "b_payments": 1,
+            "b_provenance": "wav:waverley_over500_q1q2_2026_27.csv:2065",
+            "b_source": "waverley/waverley_over500_q1q2_2026_27.csv",
+            "combined_gbp": 96917.6,
+            "similarity": 0.7391,
+            "method": "fuzzy-band",
+            "score": 0.74,
+            "status": "needs-human",
+            "model_verdict": null,
+            "decision_id": null,
+            "companies_house": null,
+            "notes": [
+              "public body, not a consolidation target",
+              "below confirmation bar; needs a human decision"
+            ],
+            "public_body": true
           }
         ]
       },
@@ -3281,7 +3281,7 @@
             "content": "Supplier match decision: 'Unit 4 Business Software Ltd' (Waverley) and 'Unit4 Business Software Ltd' (Guildford) are the same organisation. Decided by human.",
             "confidence": 1.0,
             "relevance": 0.6344,
-            "decided_at": 1793025101719
+            "decided_at": 1793031196558
           }
         },
         "ledger_tail": [
@@ -3289,14 +3289,14 @@
             "memoryId": "mem-1",
             "action": "create",
             "actor": "vesting-day",
-            "timestamp": 1793025101719,
+            "timestamp": 1793031196558,
             "newState": {
               "id": "mem-1",
               "content": "Supplier match decision: 'Unit 4 Business Software Ltd' (Waverley) and 'Unit4 Business Software Ltd' (Guildford) are the same organisation. Decided by human.",
               "type": "factual",
               "layer": "long_term",
-              "timestamp": 1793025101719,
-              "lastAccessed": 1793025101719,
+              "timestamp": 1793031196558,
+              "lastAccessed": 1793031196558,
               "accessCount": 0,
               "tags": [
                 "decision:supplier-match",
@@ -3309,7 +3309,7 @@
               "source": "human:approval-gate",
               "provenance": {
                 "origin": "user_correction",
-                "learnedAt": 1793025101719,
+                "learnedAt": 1793031196558,
                 "label": "human decision via ApprovalGate"
               },
               "domain": "general",
@@ -3331,7 +3331,7 @@
             "memoryId": "mem-1",
             "action": "read",
             "actor": "vesting-day",
-            "timestamp": 1793025106190,
+            "timestamp": 1793031201084,
             "details": {
               "query": "supplier match decision Unit4 Business Software Ltd Unit 4 Business Software Ltd"
             }
@@ -3341,9 +3341,9 @@
       {
         "type": "generated_text",
         "title": "Briefing",
-        "text": "Across Guildford and Waverley, 92 supplier pairs share identical names after normalisation. A further 110 candidate pairs have similar names and await a human decision before being called the same supplier; the match judge model has reviewed 12 of these and suggests 4 are the same organisation and 8 are different, but these remain suggestions awaiting a human decision and do not count as shared. Combined spend on the 92 shared pairs totals GBP 14,971,881. The top shared suppliers are Surrey County Council (GBP 4,435,329 combined), PiLON Limited (GBP 1,362,420 combined), Zurich Insurance (GBP 1,197,787 combined), Thames Water Utilities (GBP 655,874 combined) and Vivid Resourcing (GBP 547,630 combined).",
+        "text": "Across Guildford and Waverley, 92 supplier pairs are shared because the same name appears in both councils' payment files after normalisation. A further 110 candidate pairs have similar names and require a human decision before being called the same supplier; the match judge model has reviewed 12 of these and suggests 3 are the same organisation and 9 are different, but these are suggestions awaiting a human decision and do not count as shared. One pair was resolved using a remembered human decision (mem-1). The combined spend on the 92 shared pairs totals GBP 14,971,881. The top five shared suppliers are: Surrey County Council (GBP 4,435,329 combined), PiLON Limited (GBP 1,362,420 combined), Zurich Insurance Plc (GBP 1,197,787 combined), Thames Water Utilities Ltd (GBP 655,874 combined), and Vivid Resourcing Limited (GBP 547,630 combined).",
         "model": "nvidia/nemotron-3.5-lightning-30b-a3b",
-        "receipt_id": "rcpt_req_17f48g1f",
+        "receipt_id": "rcpt_req_0knpd14c",
         "mode": "live"
       },
       {
@@ -3353,8 +3353,8 @@
         "needs_human": 110,
         "unlikely": 174,
         "judge_hints": {
-          "same": 4,
-          "different": 8,
+          "same": 3,
+          "different": 9,
           "reviewed": 12
         },
         "critic_bounces": 2,
@@ -3393,5 +3393,5 @@
   ],
   "trace_id": "trace-live-03",
   "log_file": "logs/trace-live-03.jsonl",
-  "execution_time_seconds": 17.2
+  "execution_time_seconds": 15.79
 }
