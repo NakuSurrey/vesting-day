@@ -44,7 +44,7 @@ JSONL_OUT = ROOT / "logs" / "zetaris-usl-build.jsonl"
 MD_OUT = ROOT / "docs" / "ZETARIS_USL_EVIDENCE.md"
 USL = "lightning.metastore.vesting_day.west_surrey"
 SOURCES = {"woking_pg": "Woking", "guildford_pg": "Guildford", "waverley_pg": "Waverley"}
-KINDS = ("explore", "build", "check", "query", "dq")
+KINDS = ("explore", "build", "check", "query", "repro", "dq")
 ROWS_KEPT = 20
 # "already exists" / "is existing" means a re-run found its object; "is not existing",
 # "does not exist" and "not found" are real failures (Zetaris says "parent namespace : metastore
@@ -99,8 +99,13 @@ def sample_connection(data_dir: Path = ROOT / "data" / "sample") -> sqlite3.Conn
 
 
 def sample_answer(conn: sqlite3.Connection, sql: str) -> list[dict[str, Any]]:
-    """Run a USL query on the sample tables: the USL tables carry the same names and columns."""
-    cur = conn.execute(sql.replace(USL + ".", ""))
+    """Run a USL (or single-source) query on the sample tables: the USL tables carry the same names
+    and columns, and "woking_pg.contracts" is the sample's contracts rows for Woking."""
+    sql = sql.replace(USL + ".", "")
+    for src, council in SOURCES.items():
+        sql = re.sub(rf"\b{src}\.(spend|contracts|policy_clause)\b",
+                     lambda m: f"(SELECT * FROM {m.group(1)} WHERE council = '{council}')", sql)
+    cur = conn.execute(sql)
     cols = [d[0] for d in cur.description]
     return [dict(zip(cols, r)) for r in cur.fetchall()]
 
@@ -165,21 +170,33 @@ def run_steps(steps: list[Step], zetaris: Zetaris, log: Callable[[str], None] = 
             got = {"http_status": None, "error": f"{type(e).__name__}: {e}"[:800]}
         rec["seconds"] = round(time.monotonic() - t0, 2)
         rec.update(got)
-        rec["status"] = "error" if "error" in got else "success"
+        if "error" not in got:
+            rec["status"] = "success"
+        elif st.kind in ("build", "dq") and already_exists(got["error"]):
+            rec["status"] = "already exists"  # a re-run found the object an earlier run made
+        else:
+            rec["status"] = "error"
         if rec["status"] == "success":
             rec["row_count"] = len(got.get("rows", []))
-            if st.kind == "query" and sample is not None:
+            if st.kind in ("query", "repro") and sample is not None:
                 want = sample_answer(sample, st.sql)
                 rec["sample_mode_rows"] = want
                 rec["matches_sample_mode"] = same_answer(got["rows"], want)
+                if st.kind == "repro":
+                    rec["issue_reproduced"] = not rec["matches_sample_mode"]
         results.append(rec)
-        note = f" | matches SAMPLE_MODE: {'yes' if rec.get('matches_sample_mode') else 'NO'}" if "matches_sample_mode" in rec else ""
+        if "issue_reproduced" in rec:
+            note = f" | issue reproduced: {'yes' if rec['issue_reproduced'] else 'no'}"
+        elif "matches_sample_mode" in rec:
+            note = f" | matches SAMPLE_MODE: {'yes' if rec['matches_sample_mode'] else 'NO'}"
+        else:
+            note = ""
         if rec["status"] == "success":
             detail = f"{rec.get('row_count', 0)} rows"
         else:  # show build errors in full (e.g. every mismatched column), others shortened
             detail = " ".join(rec["error"].replace("\\n", " ").split())[: 700 if st.kind == "build" else 200]
         log(f"[{i}/{len(steps)}] {st.kind} {st.name}: {rec['status']} in {rec['seconds']}s - {detail}{note}")
-        if rec["status"] == "error" and st.kind == "build" and not already_exists(rec["error"]):
+        if rec["status"] == "error" and st.kind == "build":
             log("stopping: a build step failed and the steps after it depend on it")
             break
     return results
@@ -212,7 +229,8 @@ def write_evidence(results: list[dict[str, Any]], started: str, jsonl: Path = JS
             keep["rows"] = (r.get("rows") or [])[:ROWS_KEPT]
             f.write(json.dumps({"run_started": started, **keep}, default=str) + "\n")
 
-    ok = sum(1 for r in results if r["status"] == "success")
+    existed = sum(1 for r in results if r["status"] == "already exists")
+    ok = sum(1 for r in results if r["status"] == "success") + existed
     lines = [
         "# Zetaris Unified Semantic Layer - live build evidence",
         "",
@@ -220,13 +238,19 @@ def write_evidence(results: list[dict[str, Any]], started: str, jsonl: Path = JS
         "Every result below is what Zetaris returned; nothing here is typed in by hand. The SQL of",
         "every step is in `scripts/zetaris/usl.sql`; the raw record is `logs/zetaris-usl-build.jsonl`.",
         "",
-        f"{ok} of {len(results)} steps succeeded.",
+        f"{ok} of {len(results)} steps succeeded"
+        + (f" ({existed} found the object an earlier run had already made)." if existed else "."),
+        "",
+        "Steps of kind `repro` reproduce a Zetaris behaviour we found: for them a different answer from",
+        "the SAMPLE_MODE data is the expected result, and the table says whether it was reproduced.",
         "",
         "| # | Kind | Step | Status | Seconds | Rows | Same answer as SAMPLE_MODE |",
         "|---|---|---|---|---|---|---|",
     ]
     for r in results:
         match = {True: "yes", False: "no"}.get(r.get("matches_sample_mode"), "-")
+        if "issue_reproduced" in r:
+            match = "no - issue reproduced" if r["issue_reproduced"] else "yes - issue not reproduced"
         lines.append(f"| {r['step']} | {r['kind']} | {r['name']} | {r['status']} | {r['seconds']} | {r.get('row_count', '-')} | {match} |")
     lines.append("")
     for r in results:
@@ -234,9 +258,16 @@ def write_evidence(results: list[dict[str, Any]], started: str, jsonl: Path = JS
         if r["status"] == "error":
             lines += [f"**Error** (HTTP {r.get('http_status')}):", "", "```", r["error"], "```", ""]
             continue
+        if r["status"] == "already exists":
+            lines += ["Already made by an earlier run; Zetaris said:", "", "```", r["error"], "```", ""]
+            continue
         lines.append(_table(r.get("rows") or []))
         if "matches_sample_mode" in r:
             verdict = "the same answer" if r["matches_sample_mode"] else "a DIFFERENT answer"
+            if r["kind"] == "repro":
+                lines += ["Reproduces a Zetaris behaviour (see `docs/ZETARIS_USL.md`): the correct answer for this",
+                          "SQL, from the SAMPLE_MODE data, is below; Zetaris gave "
+                          + ("a different one, so the behaviour is reproduced." if r["issue_reproduced"] else "the same one, so it was not reproduced here."), ""]
             lines += [f"The agent's SAMPLE_MODE data gives {verdict}:", "", _table(r["sample_mode_rows"])]
     md.parent.mkdir(parents=True, exist_ok=True)
     md.write_text("\n".join(lines), encoding="utf-8", newline="\n")

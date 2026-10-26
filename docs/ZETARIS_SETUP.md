@@ -92,7 +92,7 @@ and the `run_mode` artifact should say `live`.
 On the laptop, with the tunnel open and the Zetaris key in `.env`:
 
 ```bash
-uv run python scripts/zetaris/build_usl.py --dry-run   # list the 27 steps, send nothing
+uv run python scripts/zetaris/build_usl.py --dry-run   # list the 29 steps, send nothing
 uv run python scripts/zetaris/build_usl.py             # build it and record the result
 ```
 

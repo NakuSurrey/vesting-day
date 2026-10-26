@@ -215,6 +215,20 @@ def test_runner_stops_when_a_build_step_fails_but_not_on_a_rerun(steps) -> None:
     z = build_usl.Zetaris("http://zetaris.test/api/v1.0", "1", "k", client=httpx.Client(transport=httpx.MockTransport(handler)))
     results = build_usl.run_steps(steps, z, log=lambda s: None, sample=conn)
     assert len(results) == len(steps)
+    assert next(r for r in results if r["name"] == "compile")["status"] == "already exists"
+
+
+def test_a_rule_registered_by_an_earlier_run_is_not_an_error(steps, tmp_path: Path) -> None:
+    handler, sent, conn = _runner_fake(steps, fail_on="register_contract_has_end_date",
+                                       fail_text="DQ rule contract_has_end_date already exists")
+    z = build_usl.Zetaris("http://zetaris.test/api/v1.0", "1", "k", client=httpx.Client(transport=httpx.MockTransport(handler)))
+    results = build_usl.run_steps(steps, z, log=lambda s: None, sample=conn)
+    assert len(results) == len(steps) and not any(r["status"] == "error" for r in results)
+    md = tmp_path / "E.md"
+    build_usl.write_evidence(results, "2026-10-26T23:00:00Z", jsonl=tmp_path / "e.jsonl", md=md)
+    text = md.read_text(encoding="utf-8")
+    assert f"{len(steps)} of {len(steps)} steps succeeded (1 found the object an earlier run had already made)." in text
+    assert "Already made by an earlier run" in text
 
 
 def test_a_missing_parent_namespace_stops_the_run(steps) -> None:
@@ -225,6 +239,48 @@ def test_a_missing_parent_namespace_stops_the_run(steps) -> None:
     results = build_usl.run_steps(steps, z, log=lambda s: None, sample=conn)
     assert results[-1]["name"] == "namespace" and results[-1]["status"] == "error"
     assert not any(x["body"]["sql"].startswith("COMPILE") for x in sent)
+
+
+def test_the_cliff_query_avoids_or_and_the_repro_steps_show_the_correct_answer(steps) -> None:
+    # On our Zetaris "A AND B AND (C OR D)" over the USL gave the answer of "A AND B AND C OR D"
+    # (Woking 115 instead of 59). The USL query must not depend on that, and the two repro steps
+    # must ask the same question, so a different live answer can only mean the behaviour.
+    cliff = steps[_index(steps, "usl_contract_cliff")].sql
+    assert " OR " not in cliff.split("WHERE", 1)[1].split("GROUP BY", 1)[0]
+    conn = build_usl.sample_connection(SAMPLE)
+    correct = {r["council"]: (r["hard_cliff_contracts"], round(r["stated_value_gbp"], 2)) for r in build_usl.sample_answer(conn, cliff)}
+    usl_repro = steps[_index(steps, "usl_or_inside_brackets")]
+    src_repro = steps[_index(steps, "source_or_inside_brackets")]
+    assert usl_repro.kind == src_repro.kind == "repro"
+    assert "(c.max_extension_end IS NULL OR c.max_extension_end <= '2027-04-01')" in usl_repro.sql
+    assert {r["council"]: (r["hard_cliff_contracts"], round(r["stated_value_gbp"], 2)) for r in build_usl.sample_answer(conn, usl_repro.sql)} == correct
+    (woking,) = build_usl.sample_answer(conn, src_repro.sql)
+    assert (woking["hard_cliff_contracts"], round(woking["stated_value_gbp"], 2)) == correct["Woking"]
+
+
+def test_a_repro_step_that_differs_is_reported_as_reproduced_not_as_a_failure(steps) -> None:
+    conn = build_usl.sample_connection(SAMPLE)
+    wrong = {"council": "Woking", "hard_cliff_contracts": "115", "stated_value_gbp": "19717533.31"}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        sql = json.loads(request.content)["sql"]
+        if sql == steps[_index(steps, "usl_or_inside_brackets")].sql:
+            rows = [wrong]
+        elif sql.startswith("SELECT") and USL in sql:
+            rows = [{k: str(v) for k, v in r.items()} for r in build_usl.sample_answer(conn, sql)]
+        else:
+            rows = [{"result": "registered"}]
+        cols = list(rows[0].keys())
+        return httpx.Response(200, json={"headers": cols, "data": [[r[c] for c in cols] for r in rows], "total": len(rows)})
+
+    z = build_usl.Zetaris("http://zetaris.test/api/v1.0", "1", "k", client=httpx.Client(transport=httpx.MockTransport(handler)))
+    lines: list[str] = []
+    results = build_usl.run_steps(steps, z, log=lines.append, sample=conn)
+    assert len(results) == len(steps) and all(r["status"] == "success" for r in results)
+    rec = next(r for r in results if r["name"] == "usl_or_inside_brackets")
+    assert rec["issue_reproduced"] is True
+    assert any("usl_or_inside_brackets" in line and "issue reproduced: yes" in line for line in lines)
+    assert next(r for r in results if r["name"] == "usl_contract_cliff")["matches_sample_mode"] is True
 
 
 def test_only_an_object_that_already_exists_counts_as_a_rerun() -> None:

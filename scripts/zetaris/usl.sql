@@ -13,6 +13,7 @@
 -- Each block starts with a line:  -- @step <kind> <name>
 --   explore = exploratory query on one source   build = namespace, compile, activate
 --   check   = inspect the deployed model         query = query the activated USL
+--   repro   = reproduce a Zetaris behaviour we found (a different answer is the expected result)
 --   dq      = data-quality rules and their results
 
 -- @step explore woking_spend_profile
@@ -293,13 +294,16 @@ ORDER BY s.council
 
 -- @step query usl_contract_cliff
 -- 180 days either side of vesting day (2027-04-01); no extension date recorded past it.
--- The agent's contract-cliff flow applies the same rule.
+-- The agent's contract-cliff flow applies the same rule. Written with CASE, not
+-- "AND (x IS NULL OR x <= ...)": see the two repro steps below.
 SELECT c.council, k.zetaris_source, COUNT(*) AS hard_cliff_contracts,
        ROUND(SUM(COALESCE(NULLIF(c.total_value_gbp, 0), c.annual_value_gbp, 0)), 2) AS stated_value_gbp
 FROM lightning.metastore.vesting_day.west_surrey.contracts c
 JOIN lightning.metastore.vesting_day.west_surrey.council k ON c.council = k.council
 WHERE c.end_date >= '2026-10-03' AND c.end_date <= '2027-09-28'
-  AND (c.max_extension_end IS NULL OR c.max_extension_end <= '2027-04-01')
+  AND CASE WHEN c.max_extension_end IS NULL THEN 1
+           WHEN c.max_extension_end <= '2027-04-01' THEN 1
+           ELSE 0 END = 1
 GROUP BY c.council, k.zetaris_source
 ORDER BY c.council
 
@@ -320,6 +324,27 @@ GROUP BY UPPER(TRIM(supplier_raw))
 HAVING COUNT(DISTINCT council) >= 2
 ORDER BY combined_spend_gbp DESC, supplier_name
 LIMIT 10
+
+-- @step repro usl_or_inside_brackets
+-- The same contract-cliff rule written with OR inside brackets. On our Zetaris (26 Oct 2026)
+-- this returned Woking 115 / GBP 19,717,533.31 instead of 59 / GBP 8,086,068.60 - exactly the
+-- answer of "A AND B AND C OR D", as if the brackets were dropped. The USL rows themselves are
+-- identical to the source (221 rows, 86 in the window, 27 with an extension past vesting day).
+SELECT c.council, COUNT(*) AS hard_cliff_contracts,
+       ROUND(SUM(COALESCE(NULLIF(c.total_value_gbp, 0), c.annual_value_gbp, 0)), 2) AS stated_value_gbp
+FROM lightning.metastore.vesting_day.west_surrey.contracts c
+WHERE c.end_date >= '2026-10-03' AND c.end_date <= '2027-09-28'
+  AND (c.max_extension_end IS NULL OR c.max_extension_end <= '2027-04-01')
+GROUP BY c.council
+ORDER BY c.council
+
+-- @step repro source_or_inside_brackets
+-- The same OR form on one registered source directly, without the USL: does it happen there too?
+SELECT COUNT(*) AS hard_cliff_contracts,
+       ROUND(SUM(COALESCE(NULLIF(total_value_gbp, 0), annual_value_gbp, 0)), 2) AS stated_value_gbp
+FROM woking_pg.contracts
+WHERE end_date >= '2026-10-03' AND end_date <= '2027-09-28'
+  AND (max_extension_end IS NULL OR max_extension_end <= '2027-04-01')
 
 -- @step dq register_contract_has_end_date
 REGISTER DQ contract_has_end_date TABLE lightning.metastore.vesting_day.west_surrey.contracts AS
