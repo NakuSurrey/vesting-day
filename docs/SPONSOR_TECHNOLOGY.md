@@ -1,93 +1,135 @@
 # Sponsor Technology Explanation - VESTING DAY
 
-How each sponsor technology is used, where it lives in the code, and the test that shows it working.
+Track: Solving Fragmented Intelligence. How each sponsor technology is used, where it lives in
+the code, and the test or trace that shows it working. If you removed any of them, the agent
+would stop doing its job: without Zetaris it has no data, without H-MEM a human decision is
+forgotten by the next answer, without Nightshift and Nemotron there is no live drafting or
+match suggestion.
 
 ## Zetaris - the data layer
 
 **What it does here.** Three councils publish their spend, contracts and Council Tax Support
 schemes on different cadences, in different shapes, with different lags. Zetaris lets the
-agent query all three as one, in place, without a migration: the three sources are
-registered as `woking_pg`, `guildford_pg` and `waverley_pg` and the Researcher agent's SQL
-runs across all of them in one statement.
+agent query all three as one, in place, without a migration: each council is its own
+Postgres database (standing in for that council's own system, loaded from its published
+files and never merged), registered in Zetaris as `woking_pg`, `guildford_pg` and
+`waverley_pg`. The Researcher agent's SQL runs across all three in one federated statement.
+A federated count through Zetaris matched the published files to the penny (Woking 9,718
+payments / GBP 64,974,729.21; Guildford 6,883 / GBP 48,624,787.75; Waverley 3,246 /
+GBP 28,275,155.15).
 
-**Where.** `app/adapters/datalayer.py` (`ZetarisDataLayer`) speaks the REST contract from the
-Participant Setup Guide: `POST /sql-editor/sqls/run`, Bearer key, `X-Org-ID`, a fresh
-`X-Request-ID` per call, body `{queryId, sql, source: "SqlEditor", limit}`, rows in `.data`,
-three retries then a structured `UpstreamTimeout`. `scripts/zetaris/register_sources.sql`
-registers the sources; `scripts/zetaris/schema.sql` and `build_load_sql.py` build them -
-one Postgres database per council next to Zetaris, loaded from the published files, never
-merged, and reachable only on its Docker network.
-`docs/ZETARIS_SETUP.md` is the runbook.
+**How it is integrated.** `app/adapters/datalayer.py` (`ZetarisDataLayer`) speaks the REST
+contract from the Participant Setup Guide: `POST /sql-editor/sqls/run`, Bearer key,
+`X-Org-ID`, a fresh `X-Request-ID` per call, body `{queryId, sql, source: "SqlEditor", limit}`.
+It reads the live answer shape (`{"headers": [...], "data": [[...]], "total": n}`, every value
+as text), coerces exactly the number and date columns the agents use so live rows match
+SAMPLE_MODE rows, refuses a truncated answer, and retries three times before returning a
+structured `UpstreamTimeout`. `scripts/zetaris/build_load_sql.py` builds the three databases
+with a read-only `vd_reader` login; `scripts/zetaris/register_sources.sql` registers them
+(`CREATE DATASOURCE` + `REGISTER DATASOURCE TABLES`). The databases sit on Zetaris's private
+Docker network with no port open to the internet. `docs/ZETARIS_SETUP.md` is the runbook.
 
-**Test / evidence.** Live traces in `logs/` carry `query_data_layer` events whose
-`data_layer` names Zetaris. In SAMPLE_MODE the same Researcher code runs the same SQL over a
-local SQLite cache of the published files (`LocalDataLayer`), which `tests/test_run_sample_mode.py`
-exercises end to end - so the agent path is identical in both modes and only the adapter changes.
+**Test / evidence.**
+- Live traces `logs/trace-live-0N.jsonl`: every `query_data_layer` event names
+  `zetaris (federated query-in-place over woking_pg, guildford_pg, waverley_pg)`.
+- `tests/test_datalayer_zetaris.py`: a fake Zetaris in the real answer shape, backed by three
+  separate sources; every Researcher query returns exactly the rows SAMPLE_MODE returns, and
+  a partial answer is refused. Proven to fail on the adapter before the fix.
 
-## Meterless Engine: H-MEM - the memory
+## Meterless - the H-MEM engine (memory) and Nightshift (primary AI provider)
 
-**What it does here.** H-MEM is the project's decision memory. When a person confirms that
-two supplier records are the same organisation, the Memory agent stores it as a long-term,
-human-sourced memory with provenance. The next overlap question recalls it through the
-engine's ranked retrieval and the Resolver resolves that pair "using decision mem-N". The
-engine visibly changes a later answer, and every read and write lands in its append-only
-trust ledger.
+### H-MEM engine - decision memory
 
-**Where.** `app/engines/hmem/` is our Python port of the Meterless reference (ten modules:
-types, embeddings, store, ledger, retrieval, mining, conflicts, sleep, dreaming, facade).
+**What it does here.** When a person confirms that two supplier records are the same
+organisation, the Memory agent stores it as a long-term, human-sourced memory with
+provenance. The next overlap question recalls it through the engine's ranked retrieval, the
+Resolver resolves that pair "using decision mem-N", and the Critic will not let the briefing
+leave without naming that decision. The engine visibly changes a later answer, and every read
+and write lands in its append-only trust ledger.
+
+**How it is integrated.** `app/engines/hmem/` is our Python port of the Meterless reference
+(types, embeddings, store, ledger, retrieval, mining, conflicts, sleep, dreaming, facade).
 `app/agents/memory.py` is the agent that uses it; `app/flows/confirm_match.py` writes
 decisions; `app/flows/supplier_overlap.py` recalls them. State persists in
 `data/memory/state.json` and `data/memory/ledger.jsonl`.
 
 **Test / evidence.**
-- `tests/test_hmem_conformance.py` - the official conformance runner ported to pytest,
-  against the unmodified upstream vectors (`third_party/hmem/vectors.json`): **13/13**
-  (record validation, feedback deltas, ranking order, sleep guardrails, conflict gate,
-  ledger audit, dream boundary).
-- `tests/test_hmem_golden.py` - bit-exact parity with the TypeScript reference on fixed
-  scenarios (embeddings, cosine, ranking, scores, reinjection text, conflict resolution).
-- `tests/test_run_sample_mode.py::test_memory_changes_a_later_answer` - the product feature:
-  overlap, confirm, overlap again; the pair becomes `confirmed` with `decision_id`, the
-  summary says "resolved from remembered human decisions (mem-1)", and the engine ledger
-  shows `create` then `read`.
-Run: `uv run pytest -q`.
+- `tests/test_hmem_conformance.py` - the official conformance runner ported to pytest, against
+  the unmodified upstream vectors (`third_party/hmem/vectors.json`): **13/13**.
+- `tests/test_hmem_golden.py` - bit-exact parity with the TypeScript reference (embeddings,
+  cosine, ranking, scores, reinjection text, conflict resolution).
+- `tests/test_run_sample_mode.py::test_memory_changes_a_later_answer` - overlap, confirm,
+  overlap again: the pair is resolved with `decision_id` `mem-1`, and the ledger shows
+  `create` then `read`.
+- `tests/test_live_judge_hints.py` - a live briefing that leaves out a recalled decision is
+  bounced by the Critic; the retry or the template names it.
+- Live: `logs/response-live-02.json` stores `mem-1`; `logs/response-live-03.json` is a live
+  Nemotron briefing that says "One pair was resolved using a remembered human decision (mem-1)".
 
-## Meterless Nightshift - the primary AI provider
+### Nightshift - the primary AI provider
 
-**What it does here.** All model calls go through Nightshift's OpenAI-compatible endpoint
-on the builder's machine (`METERLESS_BASE_URL`, Bearer `METERLESS_RUNTIME_TOKEN`, headers
-`meterless-app` and `meterless-scope: user`). The NVIDIA API key is configured inside
-Nightshift's Providers, never in this app. Each response's signed Meterless compute receipt
-(`receipt_id`, `winning_route.model`, provider) is kept and written to the trace.
+**What it does here.** Every model call goes through Nightshift's OpenAI-compatible endpoint
+on the builder's machine (`METERLESS_BASE_URL`, Bearer `METERLESS_RUNTIME_TOKEN`). The NVIDIA
+API key is configured inside Nightshift's Providers, never in this app. Each response's signed
+Meterless compute receipt (`receipt_id`, model, provider) is kept and written to the trace.
 
-**Where.** `app/adapters/nightshift.py` (`NightshiftClient`). Two rules it enforces for
-Nemotron thinking models: `reasoning_effort: "none"` and `max_tokens >= 256`, otherwise the
+**How it is integrated.** `app/adapters/nightshift.py` (`NightshiftClient`). Two rules it
+enforces for Nemotron: `reasoning_effort: "none"` and `max_tokens >= 256`, otherwise the
 model spends its budget on hidden reasoning and returns no text.
 
-**Test / evidence.** Live traces: every `draft` and `judge_matches` event carries `model`
-and `receipt_id`. In SAMPLE_MODE the Writer uses `TemplateModel`, badged
-`sample-mode/template`, so no output is ever mistaken for a model's.
+**Test / evidence.** Live traces: every `draft` and `judge_matches` event carries the model and
+a `receipt_id` (14 receipts in each live supplier-overlap run). In SAMPLE_MODE the Writer uses
+`TemplateModel`, badged `sample-mode/template`, so no output is ever mistaken for a model's.
 
-## NVIDIA Nemotron
+## NVIDIA - Nemotron
 
-**What it does here.** `nvidia/nemotron-3.5-lightning-30b-a3b`, through Nightshift, powers
-two working features: the Writer (briefings, a novation letter, an options note, all bound
-to the evidence table and checked by the Critic) and the Resolver's match judge for supplier
-pairs in the uncertain band. The model is pinned by name rather than `meterless/auto`, so
-the Nemotron model is named on every request in the trace.
+**Where it contributes.** `nvidia/nemotron-3.5-lightning-30b-a3b`, through Nightshift, powers
+two working features:
+- the Writer: the supplier briefing, the novation letter and the Council Tax Support options
+  note, each written from the evidence table only and checked by the Critic before the
+  ApprovalGate holds it;
+- the Resolver's match judge for supplier pairs in the uncertain band: it suggests SAME or
+  DIFFERENT, and that suggestion orders the human review queue. It never confirms a pair -
+  only a person does.
 
-**Where.** `app/agents/writer.py`, `app/agents/resolver.py` (`judge_band`), `METERLESS_MODEL`
-in `.env.example`.
+The model is pinned by name (`METERLESS_MODEL`), so the Nemotron model is named on every
+request in the trace. Code: `app/agents/writer.py`, `app/agents/resolver.py` (`judge_band`).
 
 **Limitation, stated plainly.** Only the Lightning lane is used. During the event the
-Super-class endpoints were retired, excluded or end-of-life for this account, so Lightning
-does both the matching judgement and the drafting.
+Super-class endpoints were retired, excluded or end-of-life for this account, so Lightning does
+both the matching suggestions and the drafting.
+
+## Cursor - development
+
+Cursor was not used. The event made Cursor optional on 22 Oct 2026 and allowed any AI coding
+tool; this project was built with Claude Code. Every change was reviewed, tested and committed
+by the author, and the commit history is the record of the build.
+
+## What was unique
+
+- **Memory that changes the answer, and has to say so.** A human decision stored in H-MEM
+  changes the next answer, and the Critic rejects any briefing that relied on a remembered
+  decision without naming it. The live briefing says "resolved using a remembered human
+  decision (mem-1)" - the memory is visible to the reader, not only in the trace.
+- **The model advises, a human decides, the Critic enforces.** Nemotron's match opinion is a
+  suggestion that orders the human queue; it can never move a pair to "confirmed". When the
+  live model wrote "confirmed as shared" anyway, the Critic rejected the draft with the exact
+  reason, the retry fixed it, and the trace records both. A model that keeps over-claiming is
+  replaced by the evidence-only template.
+- **Federation, not migration, with the live path proven equal to the offline path.** Three
+  council databases are never merged; Zetaris queries them in place behind a read-only login
+  with no open port. A test replays Zetaris's real answer shape and proves every live query
+  returns exactly what SAMPLE_MODE returns, so the judge-runnable path and the live path are
+  the same agent.
+- **Every number is accountable.** Each figure carries a `council:file:row` provenance id, each
+  generated sentence carries its model badge and Meterless receipt, and SYNTHETIC test
+  residents are labelled wherever they appear.
 
 ## What is claimed and what is not
 
 - Claimed: Zetaris as the data layer; the H-MEM engine, ported and conformance-tested, in a
   working feature; Nightshift as the primary provider; Nemotron Lightning through it.
 - Not claimed: the other Meterless engines (World Model, Markovian, Scout Intent) are not
-  used. The Router is a deterministic classifier, not Scout Intent.
+  used. The Router is a deterministic classifier, not Scout Intent. Cursor was not used.
 - Third party: `third_party/hmem/vectors.json` (Apache-2.0, Meterless) is the only copied
   artefact; `app/engines/hmem` is our own port of the reference.

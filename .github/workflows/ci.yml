@@ -17,6 +17,12 @@ jobs:
       - run: uv sync --all-groups
       - name: Unit, conformance and SAMPLE_MODE end-to-end tests
         run: uv run pytest -q
+      - name: requirements.txt (the pip route) matches uv.lock
+        run: |
+          set -e
+          uv export --frozen --no-dev --no-group prep --no-hashes --no-emit-project -o /tmp/req.txt
+          diff <(grep -E '^[A-Za-z0-9]' /tmp/req.txt) <(grep -E '^[A-Za-z0-9]' requirements.txt)
+          echo "requirements.txt is in sync with uv.lock"
       - name: Secrets scan (committed files must carry no keys)
         run: |
           set -e
@@ -30,6 +36,19 @@ jobs:
           uv run python run.py --input input_examples/01_supplier_overlap.json > /tmp/out.json
           python3 -c "import json; d=json.load(open('/tmp/out.json')); assert d['status']=='success', d; print('ok', d['execution_time_seconds'], 's')"
           test -f logs/trace-example-01.jsonl
+      - name: Judges' self-test - copy .env.example to .env, ask NEW questions with no options
+        run: |
+          set -e
+          cp .env.example .env
+          uv run python run.py --run-id judge-new-1 --query "Which Guildford contracts end within a year of vesting day?" > /tmp/j1.json
+          uv run python run.py --run-id judge-new-2 --query "Which companies are paid by all three councils?" > /tmp/j2.json
+          python3 -c "
+          import json
+          j1 = json.load(open('/tmp/j1.json')); j2 = json.load(open('/tmp/j2.json'))
+          assert j1['status'] == 'success' and j2['status'] == 'success', (j1.get('error'), j2.get('error'))
+          assert 'plus or minus 365 days' in j1['output']['summary'], j1['output']['summary'][:200]
+          print('ok: a copied .env.example runs in SAMPLE_MODE and answers questions not in the examples')"
+          rm -f .env
 
   docker:
     runs-on: ubuntu-latest

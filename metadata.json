@@ -20,7 +20,7 @@
     { "name": "Researcher", "role": "Runs federated SQL against the data layer (Zetaris live; cached council files in sample mode)" },
     { "name": "Resolver", "role": "Normalises supplier names, scores cross-council matches, applies remembered decisions and Companies House identity" },
     { "name": "Memory", "role": "Meterless H-MEM: recalls and stores human decisions with provenance" },
-    { "name": "Critic", "role": "Validates provenance and thresholds; rejects and returns work below the bar" },
+    { "name": "Critic", "role": "Validates provenance, thresholds and claims: no number outside the evidence, no pair called confirmed without a human decision, SYNTHETIC residents labelled, a recalled human decision named; rejects and returns work that fails" },
     { "name": "Writer", "role": "Drafts briefings and letters from the evidence table (NVIDIA Nemotron via Meterless Nightshift)" },
     { "name": "ApprovalGate", "role": "Holds drafts for human approval and records human confirmations; no autonomous action" }
   ],
@@ -28,8 +28,10 @@
     "zetaris": "data layer: the three councils' spend, contracts and policy tables are registered in Zetaris and queried in place over its REST API (app/adapters/datalayer.py)",
     "meterless_engine": "H-MEM, implemented as a Python port of the reference (app/engines/hmem), conformance 13/13 on the upstream vectors (tests/test_hmem_conformance.py), bit-exact against the TypeScript reference (tests/test_hmem_golden.py), used by the Memory agent",
     "meterless_nightshift": "primary AI provider: app/adapters/nightshift.py speaks Nightshift's OpenAI-compatible endpoint with the runtime token; every response's signed compute receipt is kept",
-    "nvidia": "nvidia/nemotron-3.5-lightning-30b-a3b through Nightshift for the Writer and the match judge; the model name is logged per request"
+    "nvidia": "nvidia/nemotron-3.5-lightning-30b-a3b through Nightshift for the Writer and the match judge (a suggestion for the human queue, never a decision); the model name and receipt are logged per request"
   },
+  "development_tools": "Built with Claude Code (an AI coding tool the event allows; Cursor was made optional on 22 Oct 2026). Cursor was not used. Every change was reviewed and committed by the author.",
+  "pre_existing_components": "None. The first commit is 2026-10-24; all code was written during the build window. Third party: the Meterless H-MEM reference conformance vectors (Apache-2.0, third_party/hmem) and the councils' published open data (data/raw/MANIFEST.md).",
   "traces": "logs/trace-<run_id>.jsonl, one JSON object per agent action, written by the agents as they run",
   "inputs": "input_examples/*.json (run 01, 02, 03 in order to see memory change the answer)",
   "data_period": "the newest six months each council has published (Woking Nov 2025-Apr 2026 monthly; Guildford and Waverley Apr-Sep 2026); every answer carries a per-council period badge",
@@ -38,6 +40,7 @@
     "Supplier identity below the exact/Companies-House bar is never asserted; it is queued for a human",
     "Only the Lightning Nemotron lane is used (the Super-class endpoints were unavailable to this account during the event)",
     "Waverley's Council Tax Support scheme is not yet in the clause table; the policy flow covers Woking and Guildford",
-    "Drafts are held, never sent"
+    "Drafts are held, never sent",
+    "The Router answers the supported question types (supplier overlap, contract cliff with any time window, Council Tax Support gap, confirm a match, approve a draft); anything else gets a structured unsupported error that lists them"
   ]
 }
