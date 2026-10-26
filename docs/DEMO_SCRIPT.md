@@ -11,8 +11,7 @@ and outputs may not.
    the token and the NVIDIA key never appear on screen.
 3. `.env` is never opened on screen. Clear terminal history that could show a key. Terminal
    font 16+, width 120. Browser zoom 110-125%.
-4. Use run ids `video-0N` (below) so the committed `logs/*-live-0N.*` files are not touched;
-   do not `git add` the `trace-video-*` files.
+4. The page writes traces as `logs/trace-web-*.jsonl`; do not `git add` them.
 
 ## 0:00-0:20  Problem (title slide)
 
@@ -32,36 +31,33 @@ real published data; the eight test residents are synthetic and labelled so."
 
 ## 0:40-1:15  Agents and collaboration (architecture slide)
 
-"Seven agents, and it is not a chain. The Researcher queries Zetaris. The Resolver scores every
-supplier pair, and Nemotron only suggests matches - a person decides. The Critic sends work
-back: pairs below the bar go back to the Resolver, and a briefing that over-claims or leaves
-out a remembered decision goes back to the Writer with the reason. Memory is the Meterless
-H-MEM engine. Nothing leaves without the approval gate, and every step is in the trace."
+"Eight agents, and it is not a chain. For a broad question the Planner decides which checks to
+run - in live mode Nemotron proposes the plan and the code validates it - delegates them, and
+revises a step that cannot run as asked. The Researcher queries Zetaris. The Resolver scores
+every supplier pair, and Nemotron only suggests matches - a person decides. The Critic sends
+work back: pairs below the bar, and briefings that over-claim or leave out a remembered
+decision. Memory is the Meterless H-MEM engine. Nothing leaves without the approval gate."
 
-## 1:15-2:20  Live run (terminal)
+## 1:15-2:20  Live run (the web page at http://localhost:8000, live mode)
 
-```
-uv run python run.py --reset-memory --run-id video-01 --query "Which suppliers do Woking, Guildford and Waverley share?"
-```
-Point at: the Researcher line naming `zetaris (federated query-in-place over woking_pg,
-guildford_pg, waverley_pg)`; the Critic line `rejected 217 pairs below the confirmation bar`;
-the summary: 228 shared, 217 awaiting a human decision, GBP 34.8m.
+Start the server before recording (`uv run python run.py`) with the tunnel open and `.env` live,
+and click "Reset demo memory" once off camera.
 
-"The Unit4 pair is in the 217 - similar names, so it waits for a person. I confirm it."
-```
-uv run python run.py --run-id video-02 --query "Confirm that 'Unit 4 Business Software Ltd' (Waverley) is the same supplier as 'Unit4 Business Software Ltd' (Guildford)"
-```
-Point at: "Stored in H-MEM as mem-1 (long_term, confidence 1.0, source human:approval-gate)".
-```
-uv run python run.py --run-id video-03 --query "Which suppliers do Guildford and Waverley share?"
-```
-Point at: Memory `1 pairs resolved from memory: mem-1`; and if it happens, a Critic
-`critique_draft ... rejected` line followed by the Writer's retry. Read the summary sentence
-that names mem-1. Say: "91 pairs by identical name, 1 because I decided it - recalled from
-memory, and the briefing says so."
-If this run's model happens not to bounce, show the committed `logs/trace-live-03.jsonl`
-Critic rejection instead ("here is the Critic catching 'confirmed as shared' in a recorded
-live run").
+1. In the question box: `Confirm that 'Unit 4 Business Software Ltd' (Waverley) is the same
+   supplier as 'Unit4 Business Software Ltd' (Guildford)` - "A person confirms one supplier
+   pair. It is stored in H-MEM as mem-1."
+2. Click the example "What are the biggest risks on vesting day?" and talk over the agent steps
+   as they appear on the right: "The Planner asked Nemotron which checks this needs - there is
+   the plan with its receipt. It delegates: contracts, suppliers, Council Tax Support. The
+   Researcher queries all three councils through Zetaris. Memory recalls mem-1, the decision I
+   just made. The Critic rejects 217 pairs below the bar, and here it rejects Nemotron's first
+   draft for over-claiming - the retry passes. Two actions are drafted and held for approval."
+3. Read the brief's headline numbers: 173 contracts / GBP 22.7m, 229 pairs shared with mem-1
+   named, 4 of 9 clauses. Point at "held for approval, nothing sent".
+
+If the live model happens not to bounce this time, say so and point at the committed
+`logs/trace-live-03.jsonl` rejection instead: "here is the Critic catching 'confirmed as shared'
+in a recorded live run."
 
 ## 2:20-2:45  Sponsor technology (trace + Nightshift)
 
@@ -72,14 +68,11 @@ merged. Every model call goes through Meterless Nightshift to NVIDIA Nemotron, w
 receipt per call. Memory is our port of the Meterless H-MEM engine - 13 of 13 on the official
 conformance tests. We built it with Claude Code."
 
-## 2:45-3:15  Output and impact (terminal + slides)
+## 2:45-3:15  Output and impact (the page, then slides)
 
-```
-uv run python run.py --run-id video-04 --query "Which contracts end within six months of vesting day?"
-```
-"173 contracts worth 22.7 million end around vesting day with no extension date recorded past
-it. The largest, 8.5 million of temporary staff at Guildford, ends 13 days after vesting day.
-A novation letter is drafted and held - not sent."
+Scroll to the contracts step in the brief: "173 contracts worth 22.7 million end around vesting
+day with no extension date recorded past it. The largest, 8.5 million of temporary staff at
+Guildford, ends 13 days after vesting day. A novation letter is drafted and held - not sent."
 Then the policy slide: "4 of 9 Council Tax Support clauses differ - capital limit 10,000 versus
 6,000 - and 4 of 8 synthetic test residents get a different answer on day one. That is the
 decision the new council has to make before its first bills."
@@ -87,7 +80,7 @@ Close: "Clone it and run it with no credentials. Repo on screen."
 
 ## Checks before submitting the video
 
-- 1-4 minutes; names the track and the user; shows a real run, the Critic sending work back,
-  Zetaris and Nightshift calls in the trace, and the final output.
+- 1-4 minutes; names the track and the user; shows a real run, the Planner choosing steps, the
+  Critic sending work back, Zetaris and Nightshift calls in the trace, memory named, and the final output.
 - No token, key or password visible anywhere. Every number spoken matches the screen.
 - Hosted link opens in a private browser window and plays with audio; keep a backup copy.

@@ -84,7 +84,12 @@ a `receipt_id` (14 receipts in each live supplier-overlap run). In SAMPLE_MODE t
 ## NVIDIA - Nemotron
 
 **Where it contributes.** `nvidia/nemotron-3.5-lightning-30b-a3b`, through Nightshift, powers
-two working features:
+three working features:
+- the Planner: for a broad question ("What are the biggest risks on vesting day?") Nemotron
+  proposes the plan as JSON - which of the three checks to run, in what order, with what contract
+  window - and the code validates it against the checks that exist. Unknown steps are dropped, an
+  unusable plan is replaced by the rule-based one, and the trace records which happened, with the
+  receipt;
 - the Writer: the supplier briefing, the novation letter and the Council Tax Support options
   note, each written from the evidence table only and checked by the Critic before the
   ApprovalGate holds it;
@@ -93,7 +98,8 @@ two working features:
   only a person does.
 
 The model is pinned by name (`METERLESS_MODEL`), so the Nemotron model is named on every
-request in the trace. Code: `app/agents/writer.py`, `app/agents/resolver.py` (`judge_band`).
+request in the trace. Code: `app/agents/planner.py`, `app/agents/writer.py`,
+`app/agents/resolver.py` (`judge_band`).
 
 **Limitation, stated plainly.** Only the Lightning lane is used. During the event the
 Super-class endpoints were retired, excluded or end-of-life for this account, so Lightning does
@@ -107,6 +113,10 @@ by the author, and the commit history is the record of the build.
 
 ## What was unique
 
+- **The model decides the plan; the code keeps it safe.** For a broad question Nemotron chooses
+  the checks, and the Planner validates, delegates, assesses and revises - every decision is a
+  trace line with the model and receipt. In SAMPLE_MODE a rule-based planner, badged as such, does
+  the same job, so judges see the same control flow without credentials.
 - **Memory that changes the answer, and has to say so.** A human decision stored in H-MEM
   changes the next answer, and the Critic rejects any briefing that relied on a remembered
   decision without naming it. The live briefing says "resolved using a remembered human

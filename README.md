@@ -2,7 +2,7 @@
 
 > **Track:** Solving Fragmented Intelligence (Open Agent Hackathon 2026, Track 1). Solo entry.
 > **Sponsor technology:** Zetaris (data layer), Meterless H-MEM engine (memory), Meterless Nightshift (primary AI provider), NVIDIA Nemotron.
-> **Run:** `uv sync` then `uv run python run.py`, then `POST /run` on port 8000. No credentials needed.
+> **Run:** `uv sync` then `uv run python run.py`, then open `http://localhost:8000` (or `POST /run`). No credentials needed.
 
 An agent for England's merging councils. On 1 April 2027 Woking, Guildford and Waverley
 (with the rest of West Surrey) become one new unitary authority. Their data does not: each
@@ -27,6 +27,7 @@ file and row it came from.
 | Which suppliers do Woking, Guildford and Waverley share? | 228 supplier pairs shared (identical names after normalisation) across the councils' newest published windows, GBP 34.8m combined; 217 similar-name pairs awaiting a human decision. The match judge model only orders that queue; it never confirms a pair. Every row carries a provenance id |
 | Confirm that 'A' (Waverley) is the same supplier as 'B' (Guildford) | A human decision stored in Meterless H-MEM as `mem-1`. The next overlap answer is resolved "using decision mem-1" - the memory changes a later answer |
 | Which contracts end within six months of vesting day? (any window: "within a year", "three months", "90 days") | 173 contracts worth GBP 22.7m with no extension date recorded past 1 April 2027 (29 more have a recorded extension; 45 of the cliff suppliers are also paid by another council). The largest, GBP 8.5m at Guildford, ends 13 days after vesting day. One novation letter drafted and held for approval |
+| What are the biggest risks on vesting day? (any broad question) | The Planner decides which checks the question needs - in live mode NVIDIA Nemotron proposes the plan and the code validates it - delegates them to the specialist agents, assesses each result, revises steps that cannot run as asked, and returns one prioritised day-one brief with every action held for approval |
 | Where do the Council Tax Support schemes differ? | 4 of 9 clauses differ (capital limit GBP 10,000 vs 6,000; minimum award GBP 5 vs 10; backdating 6 months vs 1 month; Guildford excludes bands F-H), each citing a page of the published scheme. 4 of 8 SYNTHETIC test residents would be treated differently on day one |
 
 Per-council spend in each newest window: Woking 9,718 payments / GBP 64,974,729.21;
@@ -43,8 +44,13 @@ Ask your own question - the Router reads the flow, the councils and the time win
 git clone https://github.com/NakuSurrey/vesting-day
 cd vesting-day
 uv sync                          # Python 3.12; https://docs.astral.sh/uv/
-uv run python run.py             # serves POST /run and GET /health on 0.0.0.0:8000
+uv run python run.py             # serves the web page, POST /run and GET /health on 0.0.0.0:8000
 ```
+
+Then open **http://localhost:8000**. The page lets you ask your own question or click an example,
+run a three-step demo of memory changing the answer, confirm or split a supplier pair, approve a
+held draft, and see every agent step from the run's trace beside the answer - with the steps the
+Critic sent back highlighted. It is a thin layer over `POST /run`; nothing on it is pre-written.
 
 Without uv: `python -m venv .venv`, activate it, `pip install -r requirements.txt`, then
 `python run.py`. With Docker: `docker build -t vesting-day . && docker run --rm -p 8000:8000 vesting-day`
@@ -68,6 +74,7 @@ Or without the server:
 ```bash
 uv run python run.py --input input_examples/01_supplier_overlap.json
 uv run python run.py --query "Which companies are paid by all three councils?"
+uv run python run.py --query "What are the biggest risks on vesting day?"      # the Planner chooses and runs the checks
 ```
 
 Run the examples in order to watch memory change the answer:
@@ -82,19 +89,25 @@ Each run writes `logs/trace-<run_id>.jsonl` - one line per agent action: who act
 received and produced, which agent it handed to, the model and receipt, the retry count and
 the status - and echoes the same lines to the terminal. The response follows the HackOS
 contract (`run_id`, `status`, `output`, `agents`, `trace_id`, `log_file`,
-`execution_time_seconds`); `--out FILE` also writes it as UTF-8. Six example inputs are in
+`execution_time_seconds`); `--out FILE` also writes it as UTF-8. Seven example inputs are in
 `input_examples/` with their real outputs in `output_examples/`.
 
 ## How it works
 
-Seven agents, each a distinct code path in `app/agents/`. It is not a chain: the Critic sends
-work back, the Resolver relabels, the Writer retries with the Critic's reasons, Memory changes
-what the Resolver concludes, and nothing leaves without the ApprovalGate.
+Eight agents, each a distinct code path in `app/agents/`. It is not a chain: the Planner decides
+which checks a broad question needs and revises its plan, the Critic sends work back, the Resolver
+relabels, the Researcher widens an empty query on request, the Writer retries with the Critic's
+reasons, Memory changes what the Resolver concludes, and nothing leaves without the ApprovalGate.
 
 ```mermaid
 flowchart TD
     Q[POST /run or run.py: free-text question] --> R[Router: flow, councils, time window - or a structured 'unsupported']
-    R --> RS[Researcher: one SQL statement across the three councils]
+    R -- "broad question" --> P[Planner: which checks? Nemotron proposes the plan, code validates it; rules in sample mode]
+    P -- "delegates each check" --> RS
+    P -- "assesses the result, revises a step that cannot run as asked" --> P
+    R -- "specific question" --> RS[Researcher: one SQL statement across the three councils]
+    C0{Critic: empty window?} -- "widen and re-query" --> RS
+    RS --> C0
     RS --> Z[(Zetaris: woking_pg, guildford_pg, waverley_pg - queried in place)]
     RS --> S[(SAMPLE_MODE: the same SQL over cached published files)]
     RS --> RV[Resolver: normalise names, score every cross-council pair]
@@ -113,14 +126,22 @@ flowchart TD
     A --> M
 ```
 
-- **Router** classifies free text into a flow (supplier overlap, confirm a match, contract
-  cliff, policy gap, approve a draft), reads the councils and the time window ("within a
-  year", "three months", "90 days"), or returns a structured `UnsupportedRequest` that lists
-  what it can answer.
+- **Router** classifies free text into a flow (a broad question for the Planner, supplier overlap,
+  confirm a match, contract cliff, policy gap, approve a draft), reads the councils and the time
+  window ("within a year", "three months", "90 days"), or returns a structured
+  `UnsupportedRequest` that lists what it can answer.
+- **Planner** takes a broad question ("What are the biggest risks on vesting day?") and decides
+  which checks it needs. In live mode NVIDIA Nemotron proposes the plan as JSON and the code
+  validates it against the checks that exist - unknown steps are dropped, an unusable plan is
+  replaced by the rule-based one and the trace says so. It delegates each check to the specialist
+  agents, assesses what came back, revises a step that cannot run as asked (one council named for
+  a two-council check), skips a step that fails and names it in the brief, then hands the Writer
+  one evidence table for a prioritised day-one brief.
 - **Researcher** runs SQL against the data layer. Live: Zetaris REST, query-in-place over the
   three councils' registered sources. Sample: the same SQL over SQLite loaded from the cached
   files. The agent code is identical; only the adapter differs, and a test proves live rows
-  equal sample rows.
+  equal sample rows. When a contract window comes back empty the Critic asks it to widen the
+  window (doubling, up to a year); the window the question asked for stays the headline.
 - **Resolver** normalises supplier names, scores every cross-council pair (exact 0.95;
   fuzzy >= 0.92; 0.70-0.92 is the judge band), applies the decisions Memory recalled, asks
   Companies House when a key is present, and in live mode asks Nemotron for a suggestion on
@@ -143,6 +164,26 @@ Every displayed number carries a provenance id (`council:file:row`) back to the 
 file; every generated text carries its model badge; synthetic data (the eight test residents
 in `data/sample/residents_synthetic.csv`) is labelled SYNTHETIC wherever it appears.
 
+## Why this is an agent system, not a pipeline
+
+The judging guides list the behaviours that separate agents from a chain. Each one is a line
+in `logs/trace-<run_id>.jsonl` that a judge can open:
+
+| Behaviour | Where it happens | Trace line to look for |
+|---|---|---|
+| The model decides which steps to take | Planner, live mode | `Planner plan` with `model: nvidia/nemotron-3.5-lightning-30b-a3b`, a `receipt_id` and `source: model` |
+| Dynamic delegation | Planner -> specialist agents | `Planner delegate -> Researcher`, one per chosen check; a question about suppliers alone gets one step, a broad one gets three |
+| Plan revision | Planner | `Planner revise_plan` (`needs_revision`): one council named for a two-council check, or Waverley named for the clause table |
+| Critique loop | Critic -> Resolver, Critic -> Writer | `Critic critique_matches rejected ... returning to Resolver`; `Critic critique_draft rejected ... returning to Writer` with the exact reason |
+| Retry that changes the work | Resolver, Writer, Researcher | `Resolver relabel` (`retry_count: 1`); `Writer draft` with `retry_count: 1` carrying the Critic's reasons; `Researcher query_data_layer` with `retry_count` after `Critic critique_coverage` widened an empty window |
+| Role authority | Critic, ApprovalGate | a draft rejected twice is replaced by the evidence-only template (`Writer draft fallback`); every drafted action is `hold_for_approval ... pending; nothing sent` |
+| Shared memory that changes an answer | Memory -> Resolver -> Writer | `Memory recall ... resolved from memory: mem-1`, and the Critic will not pass a briefing that leaves that decision unnamed |
+| Escalation | Critic, Planner, Writer | similar names go to the human queue, never asserted; a failed check is skipped and named (`Planner assess ... could not run`); a model error falls back to the template |
+
+Example runs that show all of this: `output_examples/07_day_one_brief.json` with
+`logs/trace-example-07.jsonl` (planning, delegation, memory recall, a Critic bounce, two held drafts),
+and the live traces in the table below.
+
 ## Failure handling
 
 | Failure | Behaviour |
@@ -151,6 +192,8 @@ in `data/sample/residents_synthetic.csv`) is labelled SYNTHETIC wherever it appe
 | Zetaris returns fewer rows than it says exist | Refused as `TruncatedResult`: no answer on partial data |
 | Model error or timeout | The Writer falls back to the evidence-only template, badged `template-fallback`, and the trace says why |
 | Model over-claims twice | The Critic rejects both drafts; the evidence-only template ships instead |
+| A contract window with nothing in it | The Critic asks the Researcher to widen it (doubling, up to a year); the answer names both windows |
+| One check fails inside a day-one brief | The Planner skips it, continues with the others, and the brief says which check was not available; if every check fails the run returns the structured error |
 | Question outside the supported flows | Structured `UnsupportedRequest` listing the questions it can answer |
 | Malformed request body | HTTP 422 with the validation message |
 | No `.env`, or placeholder keys | SAMPLE_MODE: real agent logic on the cached published files |
@@ -189,7 +232,7 @@ Copy `.env.example` to `.env`, fill in the keys and set `SAMPLE_MODE=false`:
 
 ```bash
 uv sync --all-groups
-uv run pytest -q          # 83 tests
+uv run pytest -q          # 106 tests
 ```
 
 - `tests/test_hmem_conformance.py` - the official H-MEM conformance suite, ported to pytest,
@@ -206,7 +249,15 @@ uv run pytest -q          # 83 tests
   must be named, and a model that keeps failing is replaced by the template.
 - `tests/test_router_window.py` - judges' own phrasings route to the right flow and the time
   window comes from their words.
+- `tests/test_planner.py` - a valid model plan is used (with its receipt in the trace), an invalid
+  one is rejected for the rule-based plan and the trace says so, unknown checks are dropped, a
+  step that cannot run as asked is revised, a failed step is skipped and named, every step
+  failing returns a structured error, and an empty contract window is widened on the Critic's
+  request and labelled.
 - `tests/test_config_sample_fallback.py` - a copied `.env.example` runs in SAMPLE_MODE.
+- `tests/test_web_ui.py` - the web page is served with nothing loaded from the internet, the
+  trace route returns the agents' real steps and rejects bad ids, and the memory demo works
+  over HTTP and resets cleanly.
 
 CI (`.github/workflows/ci.yml`) runs all of them, a secrets scan, a fresh-clone run, the
 judges' self-test (copy `.env.example`, ask questions that are not in the examples), and the
@@ -240,8 +291,11 @@ open data terms.
 - "No extension date recorded" means the register leaves that field blank; an unrecorded
   extension option may still exist.
 - The policy flow covers Woking and Guildford; Waverley's scheme is not yet in the clause table.
-- The Router answers the supported question types; anything else gets a structured error.
-  Months are counted as 30 days.
+- The Router answers the supported question types, and broad questions go to the Planner, which
+  can only choose from the three checks that exist; anything else gets a structured error. Months
+  are counted as 30 days.
+- In SAMPLE_MODE the plan comes from rules, badged `sample-mode/planner-rules`; only live mode has
+  the model propose it.
 - Drafts are held, never sent. Approval records intent only.
 
 ## Sponsor technology

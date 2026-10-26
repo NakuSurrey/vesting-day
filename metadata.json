@@ -3,10 +3,18 @@
   "version": "0.1.0",
   "track": "Track 1 - Solving Fragmented Intelligence",
   "team": "VESTING DAY (solo)",
-  "description": "An agent for England's merging councils (West Surrey, vesting day 1 April 2027). It federates three councils' published spend, contracts and Council Tax Support policy in place, resolves which suppliers they share, remembers every human decision with the Meterless H-MEM engine so later answers change, finds the contract cliff and the policy gaps residents hit on day one, and drafts the first actions under a human approval gate.",
+  "description": "An agent for England's merging councils (West Surrey, vesting day 1 April 2027). It federates three councils' published spend, contracts and Council Tax Support policy in place through Zetaris, plans which checks a broad question needs (NVIDIA Nemotron proposes the plan in live mode and the code validates it), resolves which suppliers they share, remembers every human decision with the Meterless H-MEM engine so later answers change, finds the contract cliff and the policy gaps residents hit on day one, and drafts the first actions under a human approval gate.",
   "entry_point": {
     "command": "python run.py",
-    "http": { "run": "POST /run", "health": "GET /health", "port_env": "PORT", "default_port": 8000, "bind": "0.0.0.0" },
+    "http": {
+      "ui": "GET /",
+      "run": "POST /run",
+      "health": "GET /health",
+      "trace": "GET /trace/{run_id}",
+      "port_env": "PORT",
+      "default_port": 8000,
+      "bind": "0.0.0.0"
+    },
     "cli": "python run.py --input input_examples/01_supplier_overlap.json"
   },
   "sample_mode": {
@@ -16,24 +24,49 @@
     "model": "deterministic template badged sample-mode/template; all numbers computed at run time"
   },
   "agents": [
-    { "name": "Router", "role": "Classifies a free-text request into a supported flow or returns a structured unsupported error" },
-    { "name": "Researcher", "role": "Runs federated SQL against the data layer (Zetaris live; cached council files in sample mode)" },
-    { "name": "Resolver", "role": "Normalises supplier names, scores cross-council matches, applies remembered decisions and Companies House identity" },
-    { "name": "Memory", "role": "Meterless H-MEM: recalls and stores human decisions with provenance" },
-    { "name": "Critic", "role": "Validates provenance, thresholds and claims: no number outside the evidence, no pair called confirmed without a human decision, SYNTHETIC residents labelled, a recalled human decision named; rejects and returns work that fails" },
-    { "name": "Writer", "role": "Drafts briefings and letters from the evidence table (NVIDIA Nemotron via Meterless Nightshift)" },
-    { "name": "ApprovalGate", "role": "Holds drafts for human approval and records human confirmations; no autonomous action" }
+    {
+      "name": "Router",
+      "role": "Classifies a free-text request into a supported flow (broad questions go to the Planner), reads councils and time windows, or returns a structured unsupported error"
+    },
+    {
+      "name": "Planner",
+      "role": "Decides which checks a broad question needs (NVIDIA Nemotron proposes the plan in live mode; rules in sample mode), delegates them, assesses each result, revises steps that cannot run as asked, skips and names a failed step"
+    },
+    {
+      "name": "Researcher",
+      "role": "Runs federated SQL against the data layer (Zetaris live; cached council files in sample mode); widens an empty contract window when the Critic asks"
+    },
+    {
+      "name": "Resolver",
+      "role": "Normalises supplier names, scores cross-council matches, applies remembered decisions and Companies House identity"
+    },
+    {
+      "name": "Memory",
+      "role": "Meterless H-MEM: recalls and stores human decisions with provenance"
+    },
+    {
+      "name": "Critic",
+      "role": "Validates provenance, thresholds and claims: no number outside the evidence, no pair called confirmed without a human decision, SYNTHETIC residents labelled, a recalled human decision named; rejects and returns work that fails"
+    },
+    {
+      "name": "Writer",
+      "role": "Drafts briefings and letters from the evidence table (NVIDIA Nemotron via Meterless Nightshift)"
+    },
+    {
+      "name": "ApprovalGate",
+      "role": "Holds drafts for human approval and records human confirmations; no autonomous action"
+    }
   ],
   "sponsor_technology": {
     "zetaris": "data layer: the three councils' spend, contracts and policy tables are registered in Zetaris and queried in place over its REST API (app/adapters/datalayer.py)",
     "meterless_engine": "H-MEM, implemented as a Python port of the reference (app/engines/hmem), conformance 13/13 on the upstream vectors (tests/test_hmem_conformance.py), bit-exact against the TypeScript reference (tests/test_hmem_golden.py), used by the Memory agent",
     "meterless_nightshift": "primary AI provider: app/adapters/nightshift.py speaks Nightshift's OpenAI-compatible endpoint with the runtime token; every response's signed compute receipt is kept",
-    "nvidia": "nvidia/nemotron-3.5-lightning-30b-a3b through Nightshift for the Writer and the match judge (a suggestion for the human queue, never a decision); the model name and receipt are logged per request"
+    "nvidia": "nvidia/nemotron-3.5-lightning-30b-a3b through Nightshift: proposes the Planner's plan as JSON (validated by code), writes the briefings, letters and options note, and suggests SAME/DIFFERENT for uncertain supplier pairs (a suggestion for the human queue, never a decision); the model name and receipt are logged per request"
   },
   "development_tools": "Built with Claude Code (an AI coding tool the event allows; Cursor was made optional on 22 Oct 2026). Cursor was not used. Every change was reviewed and committed by the author.",
   "pre_existing_components": "None. The first commit is 2026-10-24; all code was written during the build window. Third party: the Meterless H-MEM reference conformance vectors (Apache-2.0, third_party/hmem) and the councils' published open data (data/raw/MANIFEST.md).",
   "traces": "logs/trace-<run_id>.jsonl, one JSON object per agent action, written by the agents as they run",
-  "inputs": "input_examples/*.json (run 01, 02, 03 in order to see memory change the answer)",
+  "inputs": "input_examples/*.json (run 01, 02, 03 in order to see memory change the answer; 07 is a broad question the Planner breaks into checks)",
   "data_period": "the newest six months each council has published (Woking Nov 2025-Apr 2026 monthly; Guildford and Waverley Apr-Sep 2026); every answer carries a per-council period badge",
   "synthetic_data": "data/sample/residents_synthetic.csv only, labelled SYNTHETIC in every output",
   "limitations": [
