@@ -36,7 +36,7 @@ Python port, 13/13 on the official conformance vectors - `uv run pytest` on scre
 ## 2:05 - 2:40  Moment 3: Nightshift + Nemotron (terminal + Nightshift console)
 Run the contract cliff. Show the trace line from the Writer: `"model":
 "nvidia/nemotron-3.5-lightning-30b-a3b"`, `receipt_id`. Show the Nightshift window with the
-NVIDIA provider connected. Read the numbers: 173 contracts, GBP 22.7m, no extension option
+NVIDIA provider connected. Read the numbers: 173 contracts, GBP 22.7m, no extension date recorded past vesting day
 past vesting day; the largest, GBP 8.5m, ends 13 days after vesting day. Show the drafted
 novation letter held as draft-1, status pending - "not sent".
 

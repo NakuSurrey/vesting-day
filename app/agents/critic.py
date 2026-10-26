@@ -3,21 +3,43 @@
 Three real checks, each of which can bounce:
 - matches: a pair may only be presented as a match if it is confirmed by a human,
   exact, or above the high threshold with Companies House agreement; everything
-  else goes back to the Resolver to be relabelled "needs-human"
+  else goes back to the Resolver to be relabelled "needs-human". The match judge
+  model's opinion never counts: it is a hint for the human, not a pass.
 - rows: every row the Writer will cite must carry a provenance id
-- drafts: every number in a draft must appear in the evidence it was built from
+- drafts: every number in a draft must appear in the evidence it was built from,
+  and the draft must not claim more than the evidence says (for example calling
+  a pair "confirmed" when no human confirmed it, or dropping the SYNTHETIC label)
 """
 
 from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Sequence
 
 from app.agents.base import Agent
 from app.matching import Candidate
 
 _NUM = re.compile(r"(?<![\w.])\d[\d,]*(?:\.\d+)?(?![\w])")
+
+Claim = tuple[str, str]   # (regex that must NOT match the draft, why)
+
+# A pair is only ever "shared" (identical names) or "confirmed" by a human. A draft must not
+# promote pairs to confirmed, verified or duplicate on its own.
+HUMAN_ONLY_CLAIMS: list[Claim] = [
+    (r"\bpairs?\s+(?:are|were|is|was|have\s+been|has\s+been)\s+(?:now\s+|already\s+)?(?:confirmed|verified|validated|duplicates?|duplicated)\b",
+     "only a human can confirm a pair; say 'shared' for identical names and 'awaiting a human decision' for the rest"),
+    (r"\b(?:confirmed|verified|validated)\s+(?:as\s+)?(?:shared|duplicates?|the\s+same|matches|supplier\s+pairs|pairs)\b",
+     "only a human can confirm a pair; say 'shared' for identical names and 'awaiting a human decision' for the rest"),
+    (r"\b(?:confirmed|verified|validated)\s+(?:duplicate|shared)\s+suppliers?\b",
+     "only a human can confirm a pair; say 'shared' for identical names and 'awaiting a human decision' for the rest"),
+]
+
+# Residents in the day-one check are made up. Any mention of them must carry the label.
+SYNTHETIC_LABEL_CLAIM: list[Claim] = [
+    (r"\A(?=.*\b(?:residents?|claimants?|households?|families|people|cases)\b)(?!.*\b(?:synthetic|made[- ]up)\b)",
+     "the residents are SYNTHETIC test cases; every mention of them must say so"),
+]
 
 
 @dataclass
@@ -33,17 +55,20 @@ class CriticAgent(Agent):
 
     def review_matches(self, cands: list[Candidate]) -> Verdict:
         bounced: set[str] = set()
+        judged = 0
         for c in cands:
-            if c.status in ("confirmed", "split", "judged-different", "needs-human", "unlikely"):
+            if c.status in ("confirmed", "split", "needs-human", "unlikely"):
                 continue
-            ok = c.method == "exact" or (c.method == "fuzzy-high" and c.companies_house) or c.status == "judged-same"
+            ok = c.method == "exact" or (c.method == "fuzzy-high" and c.companies_house)
             if not ok:
                 bounced.add(c.key)
+                judged += bool(c.model_verdict)
         if bounced:
+            hint = f" ({judged} of them carry a match-judge opinion, which is a hint for the human, not a confirmation)" if judged else ""
             self.trace(
                 "critique_matches",
                 f"{len(cands)} candidate pairs",
-                f"rejected {len(bounced)} pairs below the confirmation bar (fuzzy without Companies House, or in the judge band); returning to Resolver",
+                f"rejected {len(bounced)} pairs below the confirmation bar (fuzzy without Companies House, or in the judge band){hint}; returning to Resolver",
                 target_agent="Resolver", confidence=1.0, status="rejected",
             )
             return Verdict(False, ["pairs below threshold must not be presented as matches"], bounced)
@@ -58,14 +83,26 @@ class CriticAgent(Agent):
         self.trace("critique_rows", f"{len(rows)} rows", "every row carries a provenance id", target_agent="Writer", confidence=1.0)
         return Verdict(True)
 
-    def review_draft(self, draft: str, evidence_numbers: set[str]) -> Verdict:
+    def review_draft(self, draft: str, evidence_numbers: set[str], claims: Sequence[Claim] = ()) -> Verdict:
         found = {m.group(0).replace(",", "") for m in _NUM.finditer(draft)}
         allowed = {n.replace(",", "") for n in evidence_numbers}
         unknown = sorted(n for n in found if n not in allowed and not _is_trivial(n))
+        reasons: list[str] = []
         if unknown:
-            self.trace("critique_draft", f"draft with {len(found)} numbers", f"{len(unknown)} numbers not in the evidence: {unknown[:6]}; returning to Writer", target_agent="Writer", status="rejected", confidence=1.0)
-            return Verdict(False, [f"numbers not in evidence: {unknown[:6]}"], set(unknown))
-        self.trace("critique_draft", f"draft with {len(found)} numbers", "every number traces to the evidence table", target_agent="ApprovalGate", confidence=1.0)
+            reasons.append(f"numbers not in evidence: {unknown[:6]}")
+        flat = " ".join(draft.split())
+        for pattern, why in claims:
+            m = re.search(pattern, flat, flags=re.IGNORECASE | re.DOTALL)
+            if m:
+                quoted = m.group(0).strip() or flat[:60]
+                reasons.append(f"claim not supported by the evidence: '{quoted[:80]}' - {why}")
+        if reasons:
+            self.trace("critique_draft", f"draft with {len(found)} numbers", "; ".join(reasons)[:400] + "; returning to Writer",
+                       target_agent="Writer", status="rejected", confidence=1.0)
+            return Verdict(False, reasons, set(unknown))
+        self.trace("critique_draft", f"draft with {len(found)} numbers",
+                   "every number traces to the evidence table" + ("; no claim goes beyond the evidence" if claims else ""),
+                   target_agent="ApprovalGate", confidence=1.0)
         return Verdict(True)
 
 

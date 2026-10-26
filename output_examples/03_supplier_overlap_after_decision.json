@@ -2,9 +2,9 @@
   "run_id": "example-03",
   "status": "success",
   "output": {
-    "summary": "Supplier overlap across Guildford, Waverley.\nWindows: Guildford Apr - Sep 2026 (FY2026/27 Q1-Q2) - quarterly (financial-year quarters), by payment date: 6883 rows, GBP 48,624,788, 2026-04-02 to 2026-09-29; Waverley Apr - Sep 2026 (FY2026/27 periods 1-6) - half-yearly, by accounting period (payment date not published): 3246 rows, GBP 28,275,155, periods 2026-01 to 2026-06.\n92 supplier pairs are shared with confidence; 1 of them are resolved from remembered human decisions (mem-1). 110 candidate pairs still need a human to confirm or split, and 0 pairs are recorded as different organisations.\nCombined published spend across the shared pairs is GBP 14,971,881.\nLargest shared suppliers: Surrey County Council / Surrey County Council (GBP 4,435,329, auto); PiLON Limited / Pilon Limited (GBP 1,362,420, auto); Zurich Insurance Plc / Zurich Insurance Company (GBP 1,197,787, auto); Thames Water Utilities Ltd / Thames Water  Utilities Ltd (GBP 655,874, auto); Vivid Resourcing Limited / Vivid Resourcing Limited (GBP 547,630, auto).\nNumbers come from the councils' own published payment files; each row carries a provenance id.",
+    "summary": "Supplier overlap across Guildford, Waverley.\nWindows: Guildford Apr - Sep 2026 (FY2026/27 Q1-Q2) - quarterly (financial-year quarters), by payment date: 6883 rows, GBP 48,624,788, 2026-04-02 to 2026-09-29; Waverley Apr - Sep 2026 (FY2026/27 periods 1-6) - half-yearly, by accounting period (payment date not published): 3246 rows, GBP 28,275,155, periods 2026-01 to 2026-06.\n92 supplier pairs are shared (identical names after normalisation, or confirmed by a human); 1 of them are resolved from remembered human decisions (mem-1). 110 candidate pairs still need a human to confirm or split, and 0 pairs are recorded as different organisations by a human decision.\nCombined published spend across the shared pairs is GBP 14,971,881.\nLargest shared suppliers: Surrey County Council / Surrey County Council (GBP 4,435,329, auto); PiLON Limited / Pilon Limited (GBP 1,362,420, auto); Zurich Insurance Plc / Zurich Insurance Company (GBP 1,197,787, auto); Thames Water Utilities Ltd / Thames Water  Utilities Ltd (GBP 655,874, auto); Vivid Resourcing Limited / Vivid Resourcing Limited (GBP 547,630, auto).\nNumbers come from the councils' own published payment files; each row carries a provenance id.",
     "recommendations": [
-      "Confirm or split the 3 largest unconfirmed pairs: 'Vail Williams Llp' (Guildford) vs 'Ian Williams Limited' (Waverley) - combined GBP 3,496,578, similarity 0.8; 'Worplesdon Parish Council' (Guildford) vs 'Cranleigh Parish Council' (Waverley) - combined GBP 494,579, similarity 0.7347; 'Worplesdon Parish Council' (Guildford) vs 'Wonersh Parish Council' (Waverley) - combined GBP 490,848, similarity 0.8085",
+      "Confirm or split the 3 most likely pairs first (match judge suggestion, then size): 'Vail Williams Llp' (Guildford) vs 'Ian Williams Limited' (Waverley) - combined GBP 3,496,578, similarity 0.8; 'Worplesdon Parish Council' (Guildford) vs 'Cranleigh Parish Council' (Waverley) - combined GBP 494,579, similarity 0.7347; 'Worplesdon Parish Council' (Guildford) vs 'Wonersh Parish Council' (Waverley) - combined GBP 490,848, similarity 0.8085",
       "Start supplier consolidation with the largest shared commercial suppliers (public bodies excluded): PiLON Limited (GBP 1,362,420); Zurich Insurance Plc (GBP 1,197,787); Thames Water Utilities Ltd (GBP 655,874); Vivid Resourcing Limited (GBP 547,630); The Oyster Partnership Ltd (GBP 538,135)",
       "To record a decision: POST /run with input.query = \"Confirm that '<name A>' (<council>) is the same supplier as '<name B>' (<council>)\" - the Memory agent will apply it to every later answer."
     ],
@@ -75,6 +75,7 @@
           "method",
           "score",
           "status",
+          "model_verdict",
           "decision_id",
           "companies_house",
           "notes",
@@ -100,6 +101,7 @@
             "method": "exact",
             "score": 0.95,
             "status": "auto",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [
@@ -126,6 +128,7 @@
             "method": "exact",
             "score": 0.95,
             "status": "auto",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [],
@@ -150,6 +153,7 @@
             "method": "exact",
             "score": 0.95,
             "status": "auto",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [],
@@ -174,6 +178,7 @@
             "method": "exact",
             "score": 0.95,
             "status": "auto",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [],
@@ -198,6 +203,7 @@
             "method": "exact",
             "score": 0.95,
             "status": "auto",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [],
@@ -222,6 +228,7 @@
             "method": "exact",
             "score": 0.95,
             "status": "auto",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [],
@@ -246,6 +253,7 @@
             "method": "exact",
             "score": 0.95,
             "status": "auto",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [],
@@ -270,6 +278,7 @@
             "method": "exact",
             "score": 0.95,
             "status": "auto",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [],
@@ -294,6 +303,7 @@
             "method": "exact",
             "score": 0.95,
             "status": "auto",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [],
@@ -318,6 +328,7 @@
             "method": "exact",
             "score": 0.95,
             "status": "auto",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [],
@@ -342,6 +353,7 @@
             "method": "exact",
             "score": 0.95,
             "status": "auto",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [],
@@ -366,6 +378,7 @@
             "method": "exact",
             "score": 0.95,
             "status": "auto",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [],
@@ -390,6 +403,7 @@
             "method": "exact",
             "score": 0.95,
             "status": "auto",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [],
@@ -414,6 +428,7 @@
             "method": "exact",
             "score": 0.95,
             "status": "auto",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [],
@@ -438,6 +453,7 @@
             "method": "exact",
             "score": 0.95,
             "status": "auto",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [],
@@ -462,6 +478,7 @@
             "method": "exact",
             "score": 0.95,
             "status": "auto",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [],
@@ -486,6 +503,7 @@
             "method": "exact",
             "score": 0.95,
             "status": "auto",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [],
@@ -510,6 +528,7 @@
             "method": "exact",
             "score": 0.95,
             "status": "auto",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [],
@@ -534,6 +553,7 @@
             "method": "exact",
             "score": 0.95,
             "status": "auto",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [],
@@ -558,6 +578,7 @@
             "method": "exact",
             "score": 0.95,
             "status": "auto",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [],
@@ -582,6 +603,7 @@
             "method": "exact",
             "score": 0.95,
             "status": "auto",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [],
@@ -606,6 +628,7 @@
             "method": "exact",
             "score": 0.95,
             "status": "auto",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [],
@@ -630,6 +653,7 @@
             "method": "exact",
             "score": 0.95,
             "status": "auto",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [],
@@ -654,6 +678,7 @@
             "method": "exact",
             "score": 0.95,
             "status": "auto",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [],
@@ -678,6 +703,7 @@
             "method": "exact",
             "score": 0.95,
             "status": "auto",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [],
@@ -702,6 +728,7 @@
             "method": "exact",
             "score": 0.95,
             "status": "auto",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [],
@@ -726,6 +753,7 @@
             "method": "exact",
             "score": 0.95,
             "status": "auto",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [],
@@ -750,6 +778,7 @@
             "method": "exact",
             "score": 0.95,
             "status": "auto",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [],
@@ -774,6 +803,7 @@
             "method": "exact",
             "score": 0.95,
             "status": "auto",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [],
@@ -798,6 +828,7 @@
             "method": "exact",
             "score": 0.95,
             "status": "auto",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [],
@@ -822,6 +853,7 @@
             "method": "exact",
             "score": 0.95,
             "status": "auto",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [],
@@ -846,6 +878,7 @@
             "method": "exact",
             "score": 0.95,
             "status": "auto",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [],
@@ -870,6 +903,7 @@
             "method": "exact",
             "score": 0.95,
             "status": "auto",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [],
@@ -894,6 +928,7 @@
             "method": "exact",
             "score": 0.95,
             "status": "auto",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [],
@@ -918,6 +953,7 @@
             "method": "fuzzy-high",
             "score": 0.8,
             "status": "confirmed",
+            "model_verdict": null,
             "decision_id": "mem-1",
             "companies_house": null,
             "notes": [
@@ -944,6 +980,7 @@
             "method": "exact",
             "score": 0.95,
             "status": "auto",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [],
@@ -968,6 +1005,7 @@
             "method": "exact",
             "score": 0.95,
             "status": "auto",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [],
@@ -992,6 +1030,7 @@
             "method": "exact",
             "score": 0.95,
             "status": "auto",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [],
@@ -1016,6 +1055,7 @@
             "method": "exact",
             "score": 0.95,
             "status": "auto",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [],
@@ -1040,6 +1080,7 @@
             "method": "exact",
             "score": 0.95,
             "status": "auto",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [],
@@ -1064,6 +1105,7 @@
             "method": "exact",
             "score": 0.95,
             "status": "auto",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [],
@@ -1088,6 +1130,7 @@
             "method": "exact",
             "score": 0.95,
             "status": "auto",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [],
@@ -1112,6 +1155,7 @@
             "method": "exact",
             "score": 0.95,
             "status": "auto",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [],
@@ -1136,6 +1180,7 @@
             "method": "exact",
             "score": 0.95,
             "status": "auto",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [],
@@ -1160,6 +1205,7 @@
             "method": "exact",
             "score": 0.95,
             "status": "auto",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [],
@@ -1184,6 +1230,7 @@
             "method": "exact",
             "score": 0.95,
             "status": "auto",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [],
@@ -1208,6 +1255,7 @@
             "method": "exact",
             "score": 0.95,
             "status": "auto",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [
@@ -1234,6 +1282,7 @@
             "method": "exact",
             "score": 0.95,
             "status": "auto",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [],
@@ -1258,6 +1307,7 @@
             "method": "exact",
             "score": 0.95,
             "status": "auto",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [],
@@ -1282,6 +1332,7 @@
             "method": "exact",
             "score": 0.95,
             "status": "auto",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [],
@@ -1306,6 +1357,7 @@
             "method": "exact",
             "score": 0.95,
             "status": "auto",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [],
@@ -1330,6 +1382,7 @@
             "method": "exact",
             "score": 0.95,
             "status": "auto",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [],
@@ -1354,6 +1407,7 @@
             "method": "exact",
             "score": 0.95,
             "status": "auto",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [
@@ -1380,6 +1434,7 @@
             "method": "exact",
             "score": 0.95,
             "status": "auto",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [],
@@ -1404,6 +1459,7 @@
             "method": "exact",
             "score": 0.95,
             "status": "auto",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [],
@@ -1428,6 +1484,7 @@
             "method": "exact",
             "score": 0.95,
             "status": "auto",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [],
@@ -1452,6 +1509,7 @@
             "method": "exact",
             "score": 0.95,
             "status": "auto",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [],
@@ -1476,6 +1534,7 @@
             "method": "exact",
             "score": 0.95,
             "status": "auto",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [],
@@ -1500,6 +1559,7 @@
             "method": "exact",
             "score": 0.95,
             "status": "auto",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [],
@@ -1524,6 +1584,7 @@
             "method": "exact",
             "score": 0.95,
             "status": "auto",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [],
@@ -1534,8 +1595,10 @@
       },
       {
         "type": "table",
-        "title": "Candidates needing a human decision",
+        "title": "Candidates needing a human decision (match judge suggestions first; a suggestion is not a confirmation)",
         "count": 110,
+        "judge_suggests_same": 0,
+        "judge_suggests_different": 0,
         "rows": [
           {
             "pair": "Guildford:VAIL WILLIAMS <> Waverley:IAN WILLIAMS",
@@ -1556,6 +1619,7 @@
             "method": "fuzzy-band",
             "score": 0.8,
             "status": "needs-human",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [
@@ -1582,6 +1646,7 @@
             "method": "fuzzy-band",
             "score": 0.73,
             "status": "needs-human",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [
@@ -1609,6 +1674,7 @@
             "method": "fuzzy-band",
             "score": 0.81,
             "status": "needs-human",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [
@@ -1636,6 +1702,7 @@
             "method": "fuzzy-band",
             "score": 0.77,
             "status": "needs-human",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [
@@ -1663,6 +1730,7 @@
             "method": "fuzzy-band",
             "score": 0.76,
             "status": "needs-human",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [
@@ -1689,6 +1757,7 @@
             "method": "fuzzy-band",
             "score": 0.73,
             "status": "needs-human",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [
@@ -1715,6 +1784,7 @@
             "method": "fuzzy-band",
             "score": 0.76,
             "status": "needs-human",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [
@@ -1741,6 +1811,7 @@
             "method": "fuzzy-band",
             "score": 0.73,
             "status": "needs-human",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [
@@ -1768,6 +1839,7 @@
             "method": "fuzzy-band",
             "score": 0.81,
             "status": "needs-human",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [
@@ -1795,6 +1867,7 @@
             "method": "fuzzy-band",
             "score": 0.76,
             "status": "needs-human",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [
@@ -1822,6 +1895,7 @@
             "method": "fuzzy-band",
             "score": 0.78,
             "status": "needs-human",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [
@@ -1848,6 +1922,7 @@
             "method": "fuzzy-band",
             "score": 0.75,
             "status": "needs-human",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [
@@ -1874,6 +1949,7 @@
             "method": "fuzzy-band",
             "score": 0.71,
             "status": "needs-human",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [
@@ -1901,6 +1977,7 @@
             "method": "fuzzy-band",
             "score": 0.73,
             "status": "needs-human",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [
@@ -1928,6 +2005,7 @@
             "method": "fuzzy-band",
             "score": 0.78,
             "status": "needs-human",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [
@@ -1955,6 +2033,7 @@
             "method": "fuzzy-band",
             "score": 0.77,
             "status": "needs-human",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [
@@ -1982,6 +2061,7 @@
             "method": "fuzzy-band",
             "score": 0.76,
             "status": "needs-human",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [
@@ -2009,6 +2089,7 @@
             "method": "fuzzy-band",
             "score": 0.8,
             "status": "needs-human",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [
@@ -2036,6 +2117,7 @@
             "method": "fuzzy-band",
             "score": 0.74,
             "status": "needs-human",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [
@@ -2063,6 +2145,7 @@
             "method": "fuzzy-band",
             "score": 0.79,
             "status": "needs-human",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [
@@ -2090,6 +2173,7 @@
             "method": "fuzzy-band",
             "score": 0.78,
             "status": "needs-human",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [
@@ -2117,6 +2201,7 @@
             "method": "fuzzy-band",
             "score": 0.78,
             "status": "needs-human",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [
@@ -2144,6 +2229,7 @@
             "method": "fuzzy-band",
             "score": 0.74,
             "status": "needs-human",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [
@@ -2171,6 +2257,7 @@
             "method": "fuzzy-band",
             "score": 0.74,
             "status": "needs-human",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [
@@ -2198,6 +2285,7 @@
             "method": "fuzzy-band",
             "score": 0.71,
             "status": "needs-human",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [
@@ -2225,6 +2313,7 @@
             "method": "fuzzy-band",
             "score": 0.78,
             "status": "needs-human",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [
@@ -2252,6 +2341,7 @@
             "method": "fuzzy-band",
             "score": 0.78,
             "status": "needs-human",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [
@@ -2279,6 +2369,7 @@
             "method": "fuzzy-band",
             "score": 0.76,
             "status": "needs-human",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [
@@ -2306,6 +2397,7 @@
             "method": "fuzzy-band",
             "score": 0.76,
             "status": "needs-human",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [
@@ -2333,6 +2425,7 @@
             "method": "fuzzy-band",
             "score": 0.78,
             "status": "needs-human",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [
@@ -2360,6 +2453,7 @@
             "method": "fuzzy-band",
             "score": 0.82,
             "status": "needs-human",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [
@@ -2387,6 +2481,7 @@
             "method": "fuzzy-band",
             "score": 0.77,
             "status": "needs-human",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [
@@ -2414,6 +2509,7 @@
             "method": "fuzzy-band",
             "score": 0.72,
             "status": "needs-human",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [
@@ -2440,6 +2536,7 @@
             "method": "fuzzy-band",
             "score": 0.8,
             "status": "needs-human",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [
@@ -2467,6 +2564,7 @@
             "method": "fuzzy-band",
             "score": 0.74,
             "status": "needs-human",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [
@@ -2494,6 +2592,7 @@
             "method": "fuzzy-band",
             "score": 0.88,
             "status": "needs-human",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [
@@ -2521,6 +2620,7 @@
             "method": "fuzzy-high",
             "score": 0.8,
             "status": "needs-human",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [
@@ -2547,6 +2647,7 @@
             "method": "fuzzy-band",
             "score": 0.79,
             "status": "needs-human",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [
@@ -2574,6 +2675,7 @@
             "method": "fuzzy-band",
             "score": 0.74,
             "status": "needs-human",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [
@@ -2601,6 +2703,7 @@
             "method": "fuzzy-band",
             "score": 0.74,
             "status": "needs-human",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [
@@ -2635,6 +2738,7 @@
             "method": "fuzzy-band",
             "score": 0.71,
             "status": "unlikely",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [
@@ -2661,6 +2765,7 @@
             "method": "fuzzy-band",
             "score": 0.72,
             "status": "unlikely",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [
@@ -2687,6 +2792,7 @@
             "method": "fuzzy-band",
             "score": 0.73,
             "status": "unlikely",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [
@@ -2713,6 +2819,7 @@
             "method": "fuzzy-band",
             "score": 0.77,
             "status": "unlikely",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [
@@ -2739,6 +2846,7 @@
             "method": "fuzzy-band",
             "score": 0.79,
             "status": "unlikely",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [
@@ -2765,6 +2873,7 @@
             "method": "fuzzy-band",
             "score": 0.76,
             "status": "unlikely",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [
@@ -2791,6 +2900,7 @@
             "method": "fuzzy-band",
             "score": 0.7,
             "status": "unlikely",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [
@@ -2817,6 +2927,7 @@
             "method": "fuzzy-band",
             "score": 0.74,
             "status": "unlikely",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [
@@ -2844,6 +2955,7 @@
             "method": "fuzzy-band",
             "score": 0.78,
             "status": "unlikely",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [
@@ -2871,6 +2983,7 @@
             "method": "fuzzy-band",
             "score": 0.77,
             "status": "unlikely",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [
@@ -2898,6 +3011,7 @@
             "method": "fuzzy-band",
             "score": 0.8,
             "status": "unlikely",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [
@@ -2925,6 +3039,7 @@
             "method": "fuzzy-band",
             "score": 0.71,
             "status": "unlikely",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [
@@ -2952,6 +3067,7 @@
             "method": "fuzzy-band",
             "score": 0.73,
             "status": "unlikely",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [
@@ -2979,6 +3095,7 @@
             "method": "fuzzy-band",
             "score": 0.74,
             "status": "unlikely",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [
@@ -3006,6 +3123,7 @@
             "method": "fuzzy-band",
             "score": 0.74,
             "status": "unlikely",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [
@@ -3032,6 +3150,7 @@
             "method": "fuzzy-band",
             "score": 0.73,
             "status": "unlikely",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [
@@ -3059,6 +3178,7 @@
             "method": "fuzzy-band",
             "score": 0.77,
             "status": "unlikely",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [
@@ -3085,6 +3205,7 @@
             "method": "fuzzy-band",
             "score": 0.77,
             "status": "unlikely",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [
@@ -3111,6 +3232,7 @@
             "method": "fuzzy-band",
             "score": 0.7,
             "status": "unlikely",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [
@@ -3138,6 +3260,7 @@
             "method": "fuzzy-band",
             "score": 0.76,
             "status": "unlikely",
+            "model_verdict": null,
             "decision_id": null,
             "companies_house": null,
             "notes": [
@@ -3158,7 +3281,7 @@
             "content": "Supplier match decision: 'Unit 4 Business Software Ltd' (Waverley) and 'Unit4 Business Software Ltd' (Guildford) are the same organisation. Decided by human.",
             "confidence": 1.0,
             "relevance": 0.6344,
-            "decided_at": 1792962480973
+            "decided_at": 1793023703409
           }
         },
         "ledger_tail": [
@@ -3166,14 +3289,14 @@
             "memoryId": "mem-1",
             "action": "create",
             "actor": "vesting-day",
-            "timestamp": 1792962480973,
+            "timestamp": 1793023703409,
             "newState": {
               "id": "mem-1",
               "content": "Supplier match decision: 'Unit 4 Business Software Ltd' (Waverley) and 'Unit4 Business Software Ltd' (Guildford) are the same organisation. Decided by human.",
               "type": "factual",
               "layer": "long_term",
-              "timestamp": 1792962480973,
-              "lastAccessed": 1792962480973,
+              "timestamp": 1793023703409,
+              "lastAccessed": 1793023703409,
               "accessCount": 0,
               "tags": [
                 "decision:supplier-match",
@@ -3186,7 +3309,7 @@
               "source": "human:approval-gate",
               "provenance": {
                 "origin": "user_correction",
-                "learnedAt": 1792962480973,
+                "learnedAt": 1793023703409,
                 "label": "human decision via ApprovalGate"
               },
               "domain": "general",
@@ -3208,7 +3331,7 @@
             "memoryId": "mem-1",
             "action": "read",
             "actor": "vesting-day",
-            "timestamp": 1792962481805,
+            "timestamp": 1793023704228,
             "details": {
               "query": "supplier match decision Unit4 Business Software Ltd Unit 4 Business Software Ltd"
             }
@@ -3218,7 +3341,7 @@
       {
         "type": "generated_text",
         "title": "Briefing",
-        "text": "Supplier overlap across Guildford, Waverley.\nWindows: Guildford Apr - Sep 2026 (FY2026/27 Q1-Q2) - quarterly (financial-year quarters), by payment date: 6883 rows, GBP 48,624,788, 2026-04-02 to 2026-09-29; Waverley Apr - Sep 2026 (FY2026/27 periods 1-6) - half-yearly, by accounting period (payment date not published): 3246 rows, GBP 28,275,155, periods 2026-01 to 2026-06.\n92 supplier pairs are shared with confidence; 1 of them are resolved from remembered human decisions (mem-1). 110 candidate pairs still need a human to confirm or split, and 0 pairs are recorded as different organisations.\nCombined published spend across the shared pairs is GBP 14,971,881.\nLargest shared suppliers: Surrey County Council / Surrey County Council (GBP 4,435,329, auto); PiLON Limited / Pilon Limited (GBP 1,362,420, auto); Zurich Insurance Plc / Zurich Insurance Company (GBP 1,197,787, auto); Thames Water Utilities Ltd / Thames Water  Utilities Ltd (GBP 655,874, auto); Vivid Resourcing Limited / Vivid Resourcing Limited (GBP 547,630, auto).\nNumbers come from the councils' own published payment files; each row carries a provenance id.",
+        "text": "Supplier overlap across Guildford, Waverley.\nWindows: Guildford Apr - Sep 2026 (FY2026/27 Q1-Q2) - quarterly (financial-year quarters), by payment date: 6883 rows, GBP 48,624,788, 2026-04-02 to 2026-09-29; Waverley Apr - Sep 2026 (FY2026/27 periods 1-6) - half-yearly, by accounting period (payment date not published): 3246 rows, GBP 28,275,155, periods 2026-01 to 2026-06.\n92 supplier pairs are shared (identical names after normalisation, or confirmed by a human); 1 of them are resolved from remembered human decisions (mem-1). 110 candidate pairs still need a human to confirm or split, and 0 pairs are recorded as different organisations by a human decision.\nCombined published spend across the shared pairs is GBP 14,971,881.\nLargest shared suppliers: Surrey County Council / Surrey County Council (GBP 4,435,329, auto); PiLON Limited / Pilon Limited (GBP 1,362,420, auto); Zurich Insurance Plc / Zurich Insurance Company (GBP 1,197,787, auto); Thames Water Utilities Ltd / Thames Water  Utilities Ltd (GBP 655,874, auto); Vivid Resourcing Limited / Vivid Resourcing Limited (GBP 547,630, auto).\nNumbers come from the councils' own published payment files; each row carries a provenance id.",
         "model": "sample-mode/template",
         "receipt_id": null,
         "mode": "sample"
@@ -3229,6 +3352,11 @@
         "presented": 92,
         "needs_human": 110,
         "unlikely": 174,
+        "judge_hints": {
+          "same": 0,
+          "different": 0,
+          "reviewed": 0
+        },
         "critic_bounces": 1,
         "councils": [
           "Guildford",
@@ -3265,5 +3393,5 @@
   ],
   "trace_id": "trace-example-03",
   "log_file": "logs/trace-example-03.jsonl",
-  "execution_time_seconds": 0.57
+  "execution_time_seconds": 0.55
 }

@@ -1,7 +1,7 @@
 """Flow: the contract cliff around vesting day.
 
 Router -> Researcher (registers, contracts ending within the window, contracts
-with no end date) -> Critic (provenance, extension options) -> Resolver (which
+with no end date) -> Critic (provenance, recorded extension dates) -> Resolver (which
 cliff suppliers also serve another council) -> Writer (one novation letter for
 the largest contract, evidence-bound) -> Critic (numbers) -> ApprovalGate (held).
 """
@@ -18,7 +18,7 @@ from app.agents.memory import MemoryAgent
 from app.agents.researcher import ResearcherAgent
 from app.agents.resolver import ResolverAgent
 from app.agents.writer import WriterAgent
-from app.flows.common import gbp, numbers_in
+from app.flows.common import checked_draft, gbp, numbers_in
 from app.matching import normalise
 
 
@@ -62,10 +62,11 @@ def run(ctx: RunContext, sources: dict[str, Any]) -> dict[str, Any]:
         shared += bool(others)
     resolver.trace("cross_council_exposure", f"{len(cliff)} cliff contracts vs spend of 3 councils", f"{shared} cliff suppliers are also paid by another council", confidence=0.9)
 
-    # drop extension-option contracts from the hard cliff (they can be extended past vesting day)
+    # a recorded extension date past vesting day takes a contract off the hard cliff; a blank
+    # extension field means none is recorded in the register, not that none exists
     hard = [r for r in cliff if not r["extension_past_vesting_day"]]
     with_option = [r for r in cliff if r["extension_past_vesting_day"]]
-    critic.trace("classify_cliff", f"{len(cliff)} contracts in window", f"{len(hard)} with no extension past {vesting_day} (hard cliff); {len(with_option)} have an extension option; {len(no_end)} contracts have no usable end date and are listed separately",
+    critic.trace("classify_cliff", f"{len(cliff)} contracts in window", f"{len(hard)} with no extension date recorded past {vesting_day} (hard cliff); {len(with_option)} have an extension date recorded past it; {len(no_end)} contracts have no usable end date and are listed separately",
                  target_agent="Writer", confidence=1.0)
 
     total_value = round(sum(float(r["value_gbp"] or 0) for r in hard), 2)
@@ -75,9 +76,9 @@ def run(ctx: RunContext, sources: dict[str, Any]) -> dict[str, Any]:
 
     evidence = [
         f"vesting day {vesting_day}; window plus or minus {window_days} days",
-        f"{len(hard)} contracts end in the window with no extension option past vesting day, total stated value {gbp(total_value)}",
+        f"{len(hard)} contracts end in the window with no extension date recorded past vesting day (the registers often leave the extension field blank, so an unrecorded option may still exist), total stated value {gbp(total_value)}",
     ] + [f"{c}: {v['contracts']} contracts, {gbp(v['value_gbp'])}" for c, v in per_council.items()] + [
-        f"{len(with_option)} further contracts in the window carry an extension option past vesting day",
+        f"{len(with_option)} further contracts in the window have an extension date recorded past vesting day",
         f"{len(no_end)} register entries have no usable end date",
     ]
     if target:
@@ -101,20 +102,20 @@ def run(ctx: RunContext, sources: dict[str, Any]) -> dict[str, Any]:
             f"This letter is a draft prepared from the published contracts register "
             f"(entry {target['provenance_id']}) and requires human approval before it is sent."
         )
-        draft = writer.draft("novation letter", f"Write a short letter to the supplier of the largest contract ending near vesting day, asking them to confirm novation, extension or expiry", evidence, letter_template)
         allowed = numbers_in([vesting_day, target["end_date"], target["value_gbp"], abs(target["days_from_vesting_day"]), target["contract_ref"], target["provenance_id"], window_days, total_value, len(hard), len(with_option), len(no_end)]
                              + [v["contracts"] for v in per_council.values()] + [v["value_gbp"] for v in per_council.values()])
-        dv = critic.review_draft(draft["text"], allowed)
-        if not dv.accepted:
-            draft = writer.draft("novation letter", "Rewrite using only the evidence numbers", evidence, letter_template, retry=1)
+        draft, _ = checked_draft(writer, critic, "novation letter",
+                                 "Write a short letter to the supplier of the largest contract ending near vesting day, asking them to confirm novation, extension or expiry. "
+                                 "It is a draft for human approval: say what the register shows, do not state what will happen, and keep the 'Draft - not sent' opening.",
+                                 evidence, letter_template, allowed)
         held = gate.hold("novation_letter", f"{target['contract_ref']} {target['title']}", draft["text"], draft["model"], [target["provenance_id"]], draft.get("receipt_id"), recipient=target["supplier_raw"])
         draft_text = draft["text"]
 
     summary = (
         f"Contract cliff around vesting day {vesting_day} (plus or minus {window_days} days) for {', '.join(councils)}: "
-        f"{len(hard)} contracts end with no extension option past vesting day, stated value {gbp(total_value)} "
+        f"{len(hard)} contracts end with no extension date recorded past vesting day, stated value {gbp(total_value)} "
         f"({'; '.join(f'{c} {v['contracts']} / {gbp(v['value_gbp'])}' for c, v in per_council.items())}). "
-        f"{len(with_option)} more have an extension option past vesting day; {len(no_end)} register entries have no usable end date. "
+        f"{len(with_option)} more have an extension date recorded past vesting day; {len(no_end)} register entries have no usable end date. "
         f"{shared} cliff suppliers are also paid by another of the three councils. "
         + (f"One action drafted and held for approval: {held['id']} ({target['title']}, {target['council']})." if held else "No contract in the window; nothing drafted.")
     )
@@ -126,9 +127,9 @@ def run(ctx: RunContext, sources: dict[str, Any]) -> dict[str, Any]:
             "Treat the no-end-date entries as a data-quality action for each council before vesting day.",
         ],
         "artifacts": [
-            {"type": "table", "title": f"Hard cliff: contracts ending within {window_days} days of {vesting_day}, no extension past it", "count": len(hard), "rows": hard[:80],
+            {"type": "table", "title": f"Hard cliff: contracts ending within {window_days} days of {vesting_day}, no extension date recorded past it", "count": len(hard), "rows": hard[:80],
              "provenance": "data/sample/contracts.csv -> data/raw/<council>/<register> (provenance_id = council:file:row)"},
-            {"type": "table", "title": "In window but with an extension option past vesting day", "count": len(with_option), "rows": with_option[:40]},
+            {"type": "table", "title": "In window but with an extension date recorded past vesting day", "count": len(with_option), "rows": with_option[:40]},
             {"type": "table", "title": "Register entries with no usable end date", "count": len(no_end), "rows": no_end[:40]},
             {"type": "table", "title": "Register summary per council", "rows": summary_rows},
             {"type": "draft", "title": "Held for approval", "draft": held},

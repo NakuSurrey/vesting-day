@@ -2,7 +2,7 @@
   "run_id": "example-04",
   "status": "success",
   "output": {
-    "summary": "Contract cliff around vesting day 2027-04-01 (plus or minus 180 days) for Woking, Guildford, Waverley: 173 contracts end with no extension option past vesting day, stated value GBP 22,671,525 (Woking 59 / GBP 8,086,069; Guildford 48 / GBP 12,074,355; Waverley 66 / GBP 2,511,101). 29 more have an extension option past vesting day; 4 register entries have no usable end date. 45 cliff suppliers are also paid by another of the three councils. One action drafted and held for approval: draft-1 (Managed Services for Temporary Agency Resources (Call-Off Contract under the ESPO MSTAR4 Framework Agreement 653F/23 dated 11 April 2023), Guildford).",
+    "summary": "Contract cliff around vesting day 2027-04-01 (plus or minus 180 days) for Woking, Guildford, Waverley: 173 contracts end with no extension date recorded past vesting day, stated value GBP 22,671,525 (Woking 59 / GBP 8,086,069; Guildford 48 / GBP 12,074,355; Waverley 66 / GBP 2,511,101). 29 more have an extension date recorded past vesting day; 4 register entries have no usable end date. 45 cliff suppliers are also paid by another of the three councils. One action drafted and held for approval: draft-1 (Managed Services for Temporary Agency Resources (Call-Off Contract under the ESPO MSTAR4 Framework Agreement 653F/23 dated 11 April 2023), Guildford).",
     "recommendations": [
       "Review the 5 largest hard-cliff contracts first: Managed Services for Temporary Agency Resources (Call-Off Contract under the ESPO MSTAR4 Framework Agreement 653F/23 dated 11 April 2023) (Guildford, ends 2027-04-14, GBP 8,500,000); WAV PT Architect and Consultant services & Cranleigh Leisure Centre new build project (Waverley, ends 2026-12-31, GBP 1,330,381); Insurance for Leaseholder Properties 2026 - 27 (Woking, ends 2027-03-31, GBP 1,221,492); Interim Contract for Strategic Assets Disposals (Woking, ends 2027-03-31, GBP 1,000,000); Housing Disabled Adaptations (Woking, ends 2027-03-31, GBP 997,800)",
       "Approve or reject the held draft with: POST /run input.query = \"Approve draft draft-1\"",
@@ -20,7 +20,7 @@
       },
       {
         "type": "table",
-        "title": "Hard cliff: contracts ending within 180 days of 2027-04-01, no extension past it",
+        "title": "Hard cliff: contracts ending within 180 days of 2027-04-01, no extension date recorded past it",
         "count": 173,
         "rows": [
           {
@@ -1828,7 +1828,7 @@
       },
       {
         "type": "table",
-        "title": "In window but with an extension option past vesting day",
+        "title": "In window but with an extension date recorded past vesting day",
         "count": 29,
         "rows": [
           {
@@ -2583,7 +2583,7 @@
           "run_id": "example-04",
           "id": "draft-1",
           "status": "pending",
-          "created_at": "2026-10-25T21:08:02.309110+00:00"
+          "created_at": "2026-10-26T14:08:24.826917+00:00"
         }
       },
       {
@@ -2639,5 +2639,5 @@
   ],
   "trace_id": "trace-example-04",
   "log_file": "logs/trace-example-04.jsonl",
-  "execution_time_seconds": 0.22
+  "execution_time_seconds": 0.25
 }

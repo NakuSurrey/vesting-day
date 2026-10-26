@@ -2,8 +2,9 @@
 
 Normalises names, scores every cross-council pair, applies decisions the
 Memory agent recalled, asks Companies House where it can, and - in live mode -
-asks the Nemotron match judge about the 0.70-0.92 band. It never marks a pair
-confirmed on its own; that needs a human through the ApprovalGate.
+asks the Nemotron match judge about the 0.70-0.92 band. The judge's answer is
+recorded as a hint that orders the human's queue; it never changes a pair's
+status. Only a human, through the ApprovalGate, confirms or splits a pair.
 """
 
 from __future__ import annotations
@@ -85,7 +86,12 @@ class ResolverAgent(Agent):
         self.trace("companies_house", f"{checked} pending pairs looked up", f"{agreed} pairs share a company number", confidence=0.9)
 
     def judge_band(self, cands: list[Candidate], limit: int = 12) -> None:
-        """Live mode: ask the model about the uncertain band. Sample mode: leave them pending."""
+        """Live mode: ask the model about the uncertain band and keep its answer as a hint.
+
+        The hint orders the human's queue (likely-same first) and is shown next to the pair.
+        The pair's status does not change: it still needs a human decision either way.
+        Sample mode: no model, the band stays pending for a human.
+        """
         band = [c for c in cands if c.method == "fuzzy-band" and c.status == "pending"][:limit]
         if not band:
             return
@@ -99,12 +105,10 @@ class ResolverAgent(Agent):
                 self.trace("judge_matches", f"{c.a_name} vs {c.b_name}", f"model error: {e}", model=self.ctx.model.badge, status="error")
                 return
             verdict = (re.search(r"\b(SAME|DIFFERENT|UNSURE)\b", out.text.upper()) or [None, "UNSURE"])[1]
-            c.notes.append(f"judge: {verdict} ({out.model}{', receipt ' + out.receipt_id if out.receipt_id else ''})")
-            if verdict == "DIFFERENT":
-                c.status = "judged-different"
-            elif verdict == "SAME":
-                c.status = "judged-same"   # still needs the human gate to become confirmed
-            self.trace("judge_matches", f"{c.a_name} ({c.a_council}) vs {c.b_name} ({c.b_council})", f"{verdict}", model=out.model, confidence=0.7, receipt_id=out.receipt_id)
+            c.model_verdict = verdict
+            c.notes.append(f"match judge suggests {verdict} ({out.model}{', receipt ' + out.receipt_id if out.receipt_id else ''}); a human still decides")
+            self.trace("judge_matches", f"{c.a_name} ({c.a_council}) vs {c.b_name} ({c.b_council})", f"{verdict} - recorded as a hint for the human queue, status unchanged",
+                       model=out.model, confidence=0.7, receipt_id=out.receipt_id, model_verdict=verdict)
 
     def relabel_bounced(self, cands: list[Candidate], bounced_keys: set[str], reason: str) -> int:
         n = 0
@@ -131,6 +135,7 @@ class ResolverAgent(Agent):
                 "b_provenance": b.get("example_provenance"), "b_source": b.get("source_file"),
                 "combined_gbp": round(float(a.get("total_gbp") or 0) + float(b.get("total_gbp") or 0), 2),
                 "similarity": c.similarity, "method": c.method, "score": c.score, "status": c.status,
+                "model_verdict": c.model_verdict,
                 "decision_id": c.decision_id, "companies_house": c.companies_house, "notes": c.notes,
                 "public_body": is_public_body(c.a_name) or is_public_body(c.b_name),
             })

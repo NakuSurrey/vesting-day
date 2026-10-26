@@ -85,10 +85,11 @@ class Candidate:
     similarity: float
     method: str                 # exact | fuzzy-high | fuzzy-band
     score: float                # the locked score for the method
-    status: str = "pending"     # auto | pending | judged | confirmed | split
+    status: str = "pending"     # auto | pending | needs-human | unlikely | confirmed | split
     decision_id: Optional[str] = None
     companies_house: Optional[dict] = None
     notes: list[str] = field(default_factory=list)
+    model_verdict: Optional[str] = None   # SAME | DIFFERENT | UNSURE - the match judge's hint; never a status
 
     @property
     def key(self) -> str:

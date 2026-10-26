@@ -14,9 +14,9 @@ Open Agent Hackathon 2026, Track 1 (Solving Fragmented Intelligence). Solo entry
 
 | Ask it | It answers with |
 |---|---|
-| Which suppliers do Woking, Guildford and Waverley share? | 228 supplier pairs shared with confidence across the councils' newest published windows (GBP 34.8m combined), 217 pairs that need a human, every row with a provenance id |
+| Which suppliers do Woking, Guildford and Waverley share? | 228 supplier pairs shared (identical names after normalisation) across the councils' newest published windows (GBP 34.8m combined), 217 similar-name pairs queued for a human decision - the match judge model only orders that queue, it never confirms a pair - every row with a provenance id |
 | Confirm that 'A' (Waverley) is the same supplier as 'B' (Guildford) | A human decision stored in Meterless H-MEM. The next overlap answer resolves that pair "using decision mem-N" |
-| Which contracts end within six months of vesting day? | 173 contracts worth GBP 22.7m with no extension option past 1 April 2027; the largest (GBP 8.5m, Guildford) ends 13 days after vesting day. One novation letter drafted and held for approval |
+| Which contracts end within six months of vesting day? | 173 contracts worth GBP 22.7m with no extension date recorded past 1 April 2027; the largest (GBP 8.5m, Guildford) ends 13 days after vesting day. One novation letter drafted and held for approval |
 | Where do the Council Tax Support schemes differ? | 4 of 9 clauses differ (capital limit GBP 10,000 vs 6,000; minimum award GBP 5 vs 10; backdating 6 months vs 1 month; Guildford excludes bands F-H), each citing a page of the published scheme |
 
 Everything above comes from the councils' own published files, downloaded 25 Oct 2026
@@ -68,7 +68,7 @@ Docker: `docker build -t vesting-day . && docker run --rm -p 8000:8000 vesting-d
 
 ```bash
 uv sync --all-groups
-uv run pytest -q          # 25 tests
+uv run pytest -q          # 44 tests
 ```
 
 - `tests/test_hmem_conformance.py` - the official H-MEM conformance suite, ported to pytest,

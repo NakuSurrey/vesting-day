@@ -14,10 +14,10 @@ from typing import Any
 
 from app.agents.approval import ApprovalGateAgent
 from app.agents.base import RunContext
-from app.agents.critic import CriticAgent
+from app.agents.critic import SYNTHETIC_LABEL_CLAIM, CriticAgent
 from app.agents.researcher import ResearcherAgent
 from app.agents.writer import WriterAgent
-from app.flows.common import gbp, numbers_in
+from app.flows.common import checked_draft, gbp, numbers_in
 
 CLAUSE_LABELS = {
     "capital_limit_gbp": "Capital limit (GBP) above which no support is paid",
@@ -116,11 +116,11 @@ def run(ctx: RunContext, sources: dict[str, Any]) -> dict[str, Any]:
         + (f"Day-one check on {len(residents)} SYNTHETIC residents: {len(affected)} would get a different answer depending on which legacy scheme applied.\n" if residents else "")
         + "The new authority must adopt one working-age scheme before the first bills of 2027/28; these are the clauses the decision has to settle. Every value above cites a page of the published scheme."
     )
-    draft = writer.draft("options note", f"Write a 120-word options note for the finance lead on the Council Tax Support clauses that differ between {' and '.join(councils)}", evidence, template)
     allowed = numbers_in([len(cited), n_keys, len(diffs), len(same), len(residents), len(affected)] + [r.get("value_num") for r in cited] + [r.get("value_text") for r in cited] + [r.get("page") for r in cited])
-    dv = critic.review_draft(draft["text"], allowed)
-    if not dv.accepted:
-        draft = writer.draft("options note", "Rewrite using only the evidence numbers", evidence, template, retry=1)
+    draft, _ = checked_draft(writer, critic, "options note",
+                             f"Write a 120-word options note for the finance lead on the Council Tax Support clauses that differ between {' and '.join(councils)}. "
+                             "The residents in the day-one check are SYNTHETIC test cases: if you mention them, call them SYNTHETIC test residents.",
+                             evidence, template, allowed, SYNTHETIC_LABEL_CLAIM if residents else ())
     held = gate.hold("options_note", f"CTS harmonisation: {', '.join(councils)}", draft["text"], draft["model"], [f"{r['source_pdf']}#p{r['page']}" for r in cited], draft.get("receipt_id"))
 
     summary = (f"Council Tax Support in {' and '.join(councils)}: {len(diffs)} of {n_keys} compared clauses differ ("

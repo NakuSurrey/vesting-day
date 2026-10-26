@@ -92,14 +92,14 @@
             "memoryId": "mem-1",
             "action": "create",
             "actor": "vesting-day",
-            "timestamp": 1792962480973,
+            "timestamp": 1793023703409,
             "newState": {
               "id": "mem-1",
               "content": "Supplier match decision: 'Unit 4 Business Software Ltd' (Waverley) and 'Unit4 Business Software Ltd' (Guildford) are the same organisation. Decided by human.",
               "type": "factual",
               "layer": "long_term",
-              "timestamp": 1792962480973,
-              "lastAccessed": 1792962480973,
+              "timestamp": 1793023703409,
+              "lastAccessed": 1793023703409,
               "accessCount": 0,
               "tags": [
                 "decision:supplier-match",
@@ -112,7 +112,7 @@
               "source": "human:approval-gate",
               "provenance": {
                 "origin": "user_correction",
-                "learnedAt": 1792962480973,
+                "learnedAt": 1793023703409,
                 "label": "human decision via ApprovalGate"
               },
               "domain": "general",
@@ -155,5 +155,5 @@
   ],
   "trace_id": "trace-example-02",
   "log_file": "logs/trace-example-02.jsonl",
-  "execution_time_seconds": 0.2
+  "execution_time_seconds": 0.19
 }
