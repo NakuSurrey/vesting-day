@@ -251,6 +251,9 @@ Copy `.env.example` to `.env`, fill in the keys and set `SAMPLE_MODE=false`:
   running it. The NVIDIA API key is set inside Nightshift's Providers, never in this app.
 - `METERLESS_MODEL` - we pin `nvidia/nemotron-3.5-lightning-30b-a3b` so the NVIDIA model is
   named on every request.
+- `ZETARIS_USL` (optional) - after `scripts/zetaris/build_usl.py` has built the Zetaris Unified
+  Semantic Layer, set it to `lightning.metastore.vesting_day.west_surrey` to make the agent read
+  through the USL instead of its own UNION over the three sources (`docs/ZETARIS_SETUP.md`, step 7).
 
 `docs/LIVE_RUN.md` has the exact commands used for the committed live runs.
 
@@ -258,7 +261,7 @@ Copy `.env.example` to `.env`, fill in the keys and set `SAMPLE_MODE=false`:
 
 ```bash
 uv sync --all-groups
-uv run pytest -q          # 114 tests
+uv run pytest -q          # 121 tests
 ```
 
 - `tests/test_hmem_conformance.py` - the official H-MEM conformance suite, ported to pytest,
@@ -270,6 +273,11 @@ uv run pytest -q          # 114 tests
   gate, the structured error for unsupported requests.
 - `tests/test_datalayer_zetaris.py` - a fake Zetaris in the real REST answer shape: every
   Researcher query returns the same rows as SAMPLE_MODE; a partial answer is refused.
+- `tests/test_zetaris_usl.py` - the Unified Semantic Layer: its steps run in an order Zetaris
+  accepts and the four-table COMPILE is sent as one request; its tables carry every column of the
+  council tables, bound from all three sources; its contract-cliff query gives the agent's own
+  answer; with `ZETARIS_USL` set every Researcher query read through it matches SAMPLE_MODE; the
+  runner stops on a failed build step and never writes the key.
 - `tests/test_live_judge_hints.py` - live mode with a fake model: the judge's opinion never
   moves a pair, over-claims and dropped SYNTHETIC labels are bounced, a recalled decision
   must be named, and a model that keeps failing is replaced by the template.
@@ -335,11 +343,54 @@ open data terms.
 Meterless Nightshift and NVIDIA Nemotron are used, the test for each, how the project was
 built, and what was unique about our use of them.
 
-## Development tools and AI use
+## AI and model usage
 
-Built with Claude Code, an AI coding tool the event allows (Cursor was made optional on
-22 Oct 2026; Cursor was not used). Every change was reviewed, tested and committed by the
-author.
+Models, all through Meterless Nightshift, the app's only AI provider (`app/adapters/nightshift.py`,
+OpenAI-format requests):
+
+- `nvidia/nemotron-3.5-lightning-30b-a3b` (NVIDIA Nemotron), pinned by name, does three jobs:
+  - Planner: proposes which checks a broad question needs, as JSON that the code validates;
+  - Writer: drafts the briefings, the novation letter and the policy options note from the
+    evidence table, each checked by the Critic before a person sees it;
+  - the Resolver's match judge: suggests SAME or DIFFERENT for up to 12 uncertain supplier pairs
+    per run - a suggestion that orders the human queue, never a decision.
+- Every model call writes to the trace the model that actually answered (read from Nightshift's
+  reply) and its signed compute receipt id. No other model is used.
+
+Agent framework: none. The eight agents are plain Python modules in `app/agents/` behind a
+FastAPI app (`app/main.py`); the flows in `app/flows/` hand work between them and every step is
+written to a JSONL trace.
+
+Sponsor technology: Zetaris is the data layer (three council sources registered and federated,
+plus an optional Unified Semantic Layer); the Meterless H-MEM engine stores and recalls human
+decisions (`tests/test_hmem_conformance.py`, 13/13); Nightshift is the AI provider; NVIDIA
+Nemotron as above. Detail: `docs/SPONSOR_TECHNOLOGY.md`.
+
+Sample mode: `SAMPLE_MODE=true` (the default in `.env.example`) runs the same agents on cached
+copies of the councils' published files with no call to Zetaris, Nightshift or any network; the
+plan comes from rules and drafts from templates, badged `sample-mode/...` in every output.
+
+Data: the councils' own published open data (`data/raw/MANIFEST.md`); the eight day-one test
+residents are SYNTHETIC and labelled so wherever they appear.
+
+Development tools: built with Claude Code, an AI coding tool the event allows. Cursor was made
+optional on 22 Oct 2026 and was not used. AI-assisted coding was used for code, tests and
+documentation; every change was reviewed, tested and committed by the author.
+
+## Third-party code and licences
+
+- FastAPI (MIT), Uvicorn (BSD-3-Clause), Pydantic (MIT), HTTPX (BSD-3-Clause), python-dotenv
+  (BSD-3-Clause); for tests pytest (MIT) and pytest-asyncio (Apache-2.0); for the one-off data
+  preparation scripts openpyxl (MIT) and pypdf (BSD-3-Clause). Exact versions are pinned in
+  `uv.lock` and `requirements.txt`.
+- `third_party/hmem/vectors.json` - the Meterless H-MEM conformance vectors, copied unmodified
+  (Apache-2.0, see `third_party/hmem/NOTICE`). `app/engines/hmem` is our own Python port of the
+  Meterless TypeScript reference.
+- The Zetaris Lightning SQL in `scripts/zetaris/` follows the syntax in Zetaris's public
+  getting-started guides.
+- Council data: Woking, Guildford and Waverley borough councils' published open data, under each
+  council's open data terms (`data/raw/MANIFEST.md`).
+- This repository: Apache-2.0 (`LICENSE`).
 
 ## Pre-existing components
 
