@@ -46,6 +46,8 @@ USL = "lightning.metastore.vesting_day.west_surrey"
 SOURCES = {"woking_pg": "Woking", "guildford_pg": "Guildford", "waverley_pg": "Waverley"}
 KINDS = ("explore", "build", "check", "query", "dq")
 ROWS_KEPT = 20
+# Only "X already exists" means a re-run; "is not existing" / "does not exist" is a real failure.
+ALREADY_EXISTS = re.compile(r"already\s+exist", re.I)
 
 
 @dataclass
@@ -167,7 +169,7 @@ def run_steps(steps: list[Step], zetaris: Zetaris, log: Callable[[str], None] = 
         note = f" | matches SAMPLE_MODE: {'yes' if rec.get('matches_sample_mode') else 'NO'}" if "matches_sample_mode" in rec else ""
         detail = f"{rec.get('row_count', 0)} rows" if rec["status"] == "success" else rec["error"][:160]
         log(f"[{i}/{len(steps)}] {st.kind} {st.name}: {rec['status']} in {rec['seconds']}s - {detail}{note}")
-        if rec["status"] == "error" and st.kind == "build" and "exist" not in rec["error"].lower():
+        if rec["status"] == "error" and st.kind == "build" and not ALREADY_EXISTS.search(rec["error"]):
             log("stopping: a build step failed and the steps after it depend on it")
             break
     return results

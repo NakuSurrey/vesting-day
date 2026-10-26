@@ -75,6 +75,12 @@ GROUP BY supplier_raw
 ORDER BY total_gbp DESC
 LIMIT 5
 
+-- @step build parent_namespace
+-- On an instance with no USL yet, lightning.metastore itself does not exist and creating a
+-- namespace under it fails with "parent namespace : metastore is not existing" (seen on our
+-- first run, and noted in Zetaris's getting-started companion guide, section 8.4).
+CREATE NAMESPACE IF NOT EXISTS lightning.metastore
+
 -- @step build namespace
 CREATE NAMESPACE IF NOT EXISTS lightning.metastore.vesting_day
 

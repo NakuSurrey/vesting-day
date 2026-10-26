@@ -48,7 +48,8 @@ def _index(steps, name):
 def test_steps_run_in_an_order_zetaris_accepts(steps) -> None:
     kinds = [s.kind for s in steps]
     assert kinds.index("build") > max(i for i, k in enumerate(kinds) if k == "explore")
-    assert _index(steps, "namespace") < _index(steps, "compile") < _index(steps, "activate_council")
+    assert _index(steps, "parent_namespace") < _index(steps, "namespace") < _index(steps, "compile") < _index(steps, "activate_council")
+    assert steps[_index(steps, "parent_namespace")].sql == "CREATE NAMESPACE IF NOT EXISTS lightning.metastore"
     assert max(i for i, s in enumerate(steps) if s.name.startswith("activate_")) < min(i for i, k in enumerate(kinds) if k == "query")
     assert _index(steps, "register_contract_has_end_date") < _index(steps, "run_contract_has_end_date")
     assert _index(steps, "register_payment_is_positive") < _index(steps, "run_payment_is_positive")
@@ -214,3 +215,13 @@ def test_runner_stops_when_a_build_step_fails_but_not_on_a_rerun(steps) -> None:
     z = build_usl.Zetaris("http://zetaris.test/api/v1.0", "1", "k", client=httpx.Client(transport=httpx.MockTransport(handler)))
     results = build_usl.run_steps(steps, z, log=lambda s: None, sample=conn)
     assert len(results) == len(steps)
+
+
+def test_a_missing_parent_namespace_stops_the_run(steps) -> None:
+    # the first live run: "parent namespace : metastore is not existing" contains "exist" but is a real failure
+    msg = '{"msg":"NamespaceException: parent namespace : metastore is not existing"}'
+    handler, sent, conn = _runner_fake(steps, fail_on="namespace", fail_text=msg)
+    z = build_usl.Zetaris("http://zetaris.test/api/v1.0", "1", "k", client=httpx.Client(transport=httpx.MockTransport(handler)))
+    results = build_usl.run_steps(steps, z, log=lambda s: None, sample=conn)
+    assert results[-1]["name"] == "namespace" and results[-1]["status"] == "error"
+    assert not any(x["body"]["sql"].startswith("COMPILE") for x in sent)
