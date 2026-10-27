@@ -10,12 +10,14 @@
   --bg: #F3F2F1; --panel: #FFFFFF; --ink: #0B0C0C; --muted: #505A5F; --line: #B1B4B6; --line-soft: #D8DADB;
   --blue: #1D70B8; --blue-dark: #003078; --blue-tint: #E8F1F8; --green: #00703C; --green-tint: #E9F3EC;
   --yellow: #FFDD00; --red: #D4351C; --red-tint: #FBEAE7; --head: #0B0C0C; --head-ink: #FFFFFF;
+  --purple: #4C2C92; --purple-dark: #3B2272; --purple-tint: #EFEBF6;
 }
 @media (prefers-color-scheme: dark) {
   :root {
     --bg: #0B0C0C; --panel: #1A1C1E; --ink: #F3F2F1; --muted: #B1B4B6; --line: #505A5F; --line-soft: #2E3236;
     --blue: #5694CA; --blue-dark: #8FB8E0; --blue-tint: #16283A; --green: #5BB084; --green-tint: #15291E;
     --red: #F08A7B; --red-tint: #3A1D19; --head: #000000; --head-ink: #FFFFFF;
+    --purple: #7A5CB8; --purple-dark: #C3B1E6; --purple-tint: #251B38;
   }
 }
 * { box-sizing: border-box; }
@@ -86,6 +88,14 @@ button.nx.first { background: var(--blue); color: #FFFFFF; }
 .side { background: var(--panel); padding: 16px 18px; border-bottom: 1px solid var(--line-soft); }
 .pane { background: var(--panel); border-top: 4px solid var(--blue); margin: 14px 0 0; }
 .pane-head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; padding: 10px 16px; border-bottom: 1px solid var(--line-soft); }
+/* each panel keeps one colour: the answer blue, what the agents did purple */
+.pane-head h2 { font-size: 20px; }
+#result .pane-head { background: var(--blue-tint); }
+#result .pane-head h2 { color: var(--blue-dark); }
+#stepsPane { border-top-color: var(--purple); }
+#stepsPane .pane-head { background: var(--purple-tint); }
+#stepsPane .pane-head h2 { color: var(--purple-dark); }
+#stepsPane .seg button[aria-pressed="true"] { background: var(--purple); border-color: var(--purple); color: #FFFFFF; }
 .pane-body { padding: 12px 16px 18px; }
 .intro { margin: 0 0 12px; font-size: 14px; color: var(--muted); }
 .intro b { color: var(--ink); }
@@ -125,6 +135,7 @@ details.more-q summary { cursor: pointer; font-weight: 700; font-size: 14px; col
 .tabs { display: none; gap: 4px; width: 100%; }
 #homeBtn { display: none; }
 .showing-answer #homeBtn { display: inline-block; }
+.next-bar .over { margin-left: 4px; }
 
 /* answer */
 .runmode { display: flex; flex-wrap: wrap; gap: 2px 14px; font-size: 12px; color: var(--muted); margin: 2px 0 10px; }
@@ -372,7 +383,7 @@ button.dl:hover { background: var(--blue-tint); filter: none; }
   <section class="pane" id="result" aria-labelledby="resultTitle">
     <div class="pane-head">
       <h2 id="resultTitle">What the agent found</h2>
-      <button type="button" class="ghost tiny" id="homeBtn">Back to what it found</button>
+      <button type="button" class="ghost tiny" id="homeBtn" title="Clear the answer, the agent steps and the stages. Stored decisions stay; Reset demo memory clears those too.">Start over</button>
       <button type="button" class="ghost tiny expand" id="expandResult" aria-expanded="false" title="Open this panel large over the page (Esc closes it)">Expand</button>
       <div class="status-line" id="status" role="status" aria-live="polite"><span class="dot" aria-hidden="true"></span><span id="statusText"></span></div>
       <div class="tabs" role="tablist" aria-label="Result views">
@@ -538,11 +549,24 @@ function showAnswerArea() {
   $("result").classList.add("showing-answer");
   $("resultTitle").textContent = "Answer";
 }
+var TRACE_HINT = "Ask a question or replay a live run, and each step the agents take shows here, one line each, from the run's trace file.";
 function goHome() {
-  $("demoCard").hidden = true; $("answer").hidden = true; $("results").hidden = false;
+  /* start over: the answer, the steps, the stages and the Next line are cleared; stored decisions stay */
+  closePane();
+  $("demoCard").hidden = true; clear($("answer")); $("answer").hidden = true; $("results").hidden = false;
   $("result").classList.remove("showing-answer");
   $("resultTitle").textContent = "What the agent found";
-  setView("answer");
+  clearStageFilter(); clear($("trace")); clear($("traceHead"));
+  $("traceFile").textContent = TRACE_HINT;
+  $("tabSteps").textContent = "Agent steps"; $("segSteps").textContent = "Agent steps";
+  LASTEV = []; resetPipe(); $("nextBar").hidden = true;
+  $("q").value = ""; setStatus("", false);
+  setRight("runs"); setView("answer"); $("answerBody").scrollTop = 0;
+}
+function startOver() {
+  if (busy) return;
+  goHome();
+  setStatus("Cleared. Stored decisions are kept; Reset demo memory clears those too.", false);
 }
 function showResult() {
   showAnswerArea(); setView("answer"); setRight("steps");
@@ -683,6 +707,7 @@ function showNext(ctx) {
   if (acts[0]) acts[0].classList.add("first");
   var box = clear($("nextActs"));
   acts.forEach(function (b) { box.appendChild(b); });
+  box.appendChild(el("button", { type: "button", class: "ghost tiny over", text: "Start over", title: "Clear the screen and begin again", onclick: startOver }));
   $("nextBar").hidden = false;
   inviteStages();
 }
@@ -1262,7 +1287,7 @@ $("tabAnswer").addEventListener("click", function () { setView("answer"); });
 $("tabSteps").addEventListener("click", function () { setView("steps"); });
 $("segSteps").addEventListener("click", function () { setRight("steps"); setView("steps"); });
 $("segRuns").addEventListener("click", function () { setRight("runs"); setView("steps"); });
-$("homeBtn").addEventListener("click", goHome);
+$("homeBtn").addEventListener("click", startOver);
 $("stageFilterAll").addEventListener("click", clearStageFilter);
 $("expandResult").addEventListener("click", function () { togglePane("result"); });
 $("expandSteps").addEventListener("click", function () { togglePane("stepsPane"); });
@@ -1273,7 +1298,7 @@ $("big").addEventListener("click", function (e) { if (e.target === this) this.cl
 $("bigFilter").addEventListener("input", function () { renderBig(); });
 $("bigFilter").addEventListener("keydown", function (e) { if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); $("big").close(); } });
 if (ONE_SCREEN && ONE_SCREEN.addEventListener) ONE_SCREEN.addEventListener("change", function () { if (!ONE_SCREEN.matches) closePane(); });
-$("navFound").addEventListener("click", function (ev) { ev.preventDefault(); goHome(); if (!(ONE_SCREEN && ONE_SCREEN.matches)) $("result").scrollIntoView({ behavior: REDUCED ? "auto" : "smooth" }); });
+$("navFound").addEventListener("click", function (ev) { ev.preventDefault(); startOver(); if (!(ONE_SCREEN && ONE_SCREEN.matches)) $("result").scrollIntoView({ behavior: REDUCED ? "auto" : "smooth" }); });
 $("navRuns").addEventListener("click", function (ev) { ev.preventDefault(); setRight("runs"); setView("steps"); if (!(ONE_SCREEN && ONE_SCREEN.matches)) $("stepsPane").scrollIntoView({ behavior: REDUCED ? "auto" : "smooth" }); });
 $("resetBtn").addEventListener("click", function () { guarded(async function () { await api("/demo/reset", {}); refreshHealth(); goHome(); resetPipe(); $("nextBar").hidden = true; setStatus("Demo memory cleared: no stored decisions, no held drafts.", false); }); });
 stages().forEach(function (s) {
