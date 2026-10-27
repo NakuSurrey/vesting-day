@@ -55,6 +55,30 @@ header nav a:hover { color: #FFFFFF; border-bottom-color: var(--yellow); }
 .pipe .what { display: block; font-size: 12px; color: var(--muted); line-height: 1.3; }
 .pipe .n { display: block; font-size: 12px; font-weight: 700; color: var(--blue-dark); min-height: 16px; margin-top: 2px; }
 .pipe li.bounced .n { color: var(--red); }
+.pipe li.lit { cursor: pointer; }
+.pipe li.lit:hover b { text-decoration: underline; }
+/* a ring that grows and fades: on hover, and once across the lit stages when a run ends, to show they can be clicked */
+.pipe li.lit:hover::before, .pipe li.lit:focus-visible::before { animation: ring 1.2s ease-out infinite; }
+.pipe li.invite::before { animation: ring 1.1s ease-out var(--d, 0ms) 2; }
+.pipe li.bounced:hover::before, .pipe li.bounced:focus-visible::before, .pipe li.bounced.invite::before { animation-name: ring-red; }
+@keyframes ring { 0% { box-shadow: 0 0 0 0 rgba(29, 112, 184, 0.55); } 100% { box-shadow: 0 0 0 14px rgba(29, 112, 184, 0); } }
+@keyframes ring-red { 0% { box-shadow: 0 0 0 0 rgba(212, 53, 28, 0.55); } 100% { box-shadow: 0 0 0 14px rgba(212, 53, 28, 0); } }
+.pipe li.picked::before { box-shadow: 0 0 0 3px var(--panel), 0 0 0 6px var(--ink); }
+.pipe li.picked b { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 3px; }
+.stage-filter { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; background: var(--blue-tint); border-left: 4px solid var(--blue); padding: 6px 10px; margin: 0 0 8px; font-size: 13px; }
+.stage-filter[hidden] { display: none; }
+ol.trace.filtering li:not(.pick) { display: none; }
+/* after a run: one line that says what happened and offers the next steps */
+.next-bar { max-width: 1500px; margin: 8px auto 0; padding-top: 8px; border-top: 1px solid var(--line-soft); display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px 10px; font-size: 13px; }
+.next-bar[hidden] { display: none; }
+.next-lead { color: var(--muted); }
+.next-k { font-weight: 700; color: var(--green); }
+.next-acts { display: flex; flex-wrap: wrap; gap: 6px; }
+button.nx { font-size: 13px; font-weight: 700; padding: 3px 10px; background: var(--panel); color: var(--blue-dark); border: 2px solid var(--blue); box-shadow: none; }
+button.nx:hover { background: var(--blue-tint); filter: none; }
+button.nx.first { background: var(--blue); color: #FFFFFF; }
+.reveal-hit { animation: hit 1600ms ease-out 1; }
+@keyframes hit { 0% { box-shadow: 0 0 0 0 rgba(29, 112, 184, 0.6); } 100% { box-shadow: 0 0 0 14px rgba(29, 112, 184, 0); } }
 
 /* three panels: ask, answer, agent steps */
 .work { display: block; }
@@ -265,6 +289,7 @@ button.dl:hover { background: var(--blue-tint); filter: none; }
   .tour li button { padding: 6px 12px; }
   .tour li span { font-size: 11.5px; margin-top: 2px; }
   .pane-head { padding: 8px 14px; }
+  .next-bar { margin-top: 6px; padding-top: 6px; }
 }
 /* smaller screens: one column, with Answer and Agent steps as two tabs */
 @media not all and (min-width: 1100px) and (min-height: 600px) {
@@ -311,6 +336,11 @@ button.dl:hover { background: var(--blue-tint); filter: none; }
     <li data-agents="Critic"><b>Critic</b><span class="what">Checks every number, sends weak work back</span><span class="n"></span></li>
     <li data-agents="Writer ApprovalGate"><b>Writer and approval</b><span class="what">Drafts with Nemotron, holds it for a person</span><span class="n"></span></li>
   </ol>
+  <div class="next-bar" id="nextBar" role="region" aria-label="What to do next" hidden>
+    <span class="next-lead" id="nextLead"></span>
+    <span class="next-k">Next:</span>
+    <span class="next-acts" id="nextActs"></span>
+  </div>
 </section>
 
 <div class="work" id="work" data-view="answer">
@@ -378,6 +408,7 @@ button.dl:hover { background: var(--blue-tint); filter: none; }
       <div id="stepsView" hidden>
         <p class="muted small" id="traceFile">Ask a question or replay a live run, and each step the agents take shows here, one line each, from the run's trace file.</p>
         <div class="trace-head" id="traceHead"></div>
+        <div class="stage-filter" id="stageFilter" hidden><span id="stageFilterText"></span><button type="button" class="ghost tiny" id="stageFilterAll">Show all steps</button></div>
         <ol class="trace" id="trace"></ol>
       </div>
       <div id="runsView">
@@ -522,20 +553,138 @@ function showResult() {
 async function runQuery(q, opts) {
   opts = opts || {};
   var id = newId("web");
-  if (!opts.quiet) { $("demoCard").hidden = true; showResult(); setStatus("Running: " + q, true); }
+  if (!opts.quiet) { $("demoCard").hidden = true; $("nextBar").hidden = true; showResult(); setStatus("Running: " + q, true); }
   resetPipe();
   var r = await api("/run", { run_id: id, input: { query: q } });
   if (!opts.noRender) renderAnswer(r, q);
   await showTrace(id, !opts.quiet);
   refreshHealth();
-  if (!opts.quiet) setStatus("Done in " + Number(r.execution_time_seconds || 0).toFixed(2) + " s - run id " + id, false);
+  if (!opts.quiet) { setStatus("Done in " + Number(r.execution_time_seconds || 0).toFixed(2) + " s - run id " + id, false); showNext({ r: r, q: q }); }
   return { id: id, r: r };
 }
 
 function lock(on) {
   busy = on;
   ["runBtn", "demoBtn", "resetBtn", "tour1", "tour3"].forEach(function (b) { $(b).disabled = on; });
-  Array.prototype.forEach.call(document.querySelectorAll(".chips button, .act, .runs button, .finding button"), function (b) { b.disabled = on; });
+  Array.prototype.forEach.call(document.querySelectorAll(".chips button, .act, .runs button, .finding button, .nx"), function (b) { b.disabled = on; });
+}
+
+/* ---------- after a run: what happened, and what to do next ---------- */
+var LASTEV = [];
+function allArts(r) {
+  var out = [];
+  (function walk(list) { (list || []).forEach(function (a) { out.push(a); if (a.type === "step_results") (a.steps || []).forEach(function (s) { walk(s.artifacts); }); }); })(((r || {}).output || {}).artifacts);
+  return out;
+}
+function councilsIn(text) { return ["Woking", "Guildford", "Waverley"].filter(function (c) { return String(text || "").indexOf(c) >= 0; }); }
+function suppliersQ(cs) { return cs.length >= 2 ? "Which suppliers do " + cs.slice(0, -1).join(", ") + " and " + cs[cs.length - 1] + " share?" : EXAMPLES[0]; }
+function jumpSentBack() {
+  clearStageFilter();
+  setRight("steps"); setView("steps");
+  var f = document.querySelector("#trace li.rejected, #trace li.needs_revision");
+  if (f) { f.classList.add("open"); f.scrollIntoView({ behavior: REDUCED ? "auto" : "smooth", block: "center" }); }
+}
+function reveal(test) {
+  /* open the part of the answer that matches, unfold what holds it, and bring it into view */
+  var hit = Array.prototype.filter.call(document.querySelectorAll("#answer [data-title]"), function (n) { return test(n.getAttribute("data-title") || ""); })[0];
+  if (!hit) return;
+  if ($("answer").hidden) showAnswerArea();
+  setView("answer");
+  for (var p = hit; p && p !== document.body; p = p.parentNode) if (p.tagName === "DETAILS") p.open = true;
+  hit.scrollIntoView({ behavior: REDUCED ? "auto" : "smooth", block: "start" });
+  hit.classList.remove("reveal-hit"); void hit.offsetWidth; hit.classList.add("reveal-hit");
+}
+function clearStageFilter() {
+  $("trace").classList.remove("filtering");
+  Array.prototype.forEach.call(document.querySelectorAll("#trace li.pick"), function (li) { li.classList.remove("pick"); });
+  stages().forEach(function (x) { x.classList.remove("picked"); });
+  $("stageFilter").hidden = true;
+}
+function showAgentSteps(agents, label, stage) {
+  /* show only what one stage did, in order; "Show all steps" (or the same stage again) brings the rest back */
+  var items = Array.prototype.slice.call(document.querySelectorAll("#trace li"));
+  if (!items.length) { setStatus("Run a question first; then click a stage to see its steps.", false); return; }
+  clearStageFilter();
+  setRight("steps"); setView("steps");
+  var mine = items.filter(function (li) { return agents.indexOf(li.getAttribute("data-agent")) >= 0; });
+  mine.forEach(function (li) { li.classList.add("pick"); });
+  $("trace").classList.add("filtering");
+  if (stage) stage.classList.add("picked");
+  $("stageFilterText").textContent = mine.length ? "Showing what " + label + " did: " + mine.length + " of " + items.length + " steps." : label.charAt(0).toUpperCase() + label.slice(1) + " did not run for this question.";
+  $("stageFilterAll").textContent = "Show all " + items.length + " steps";
+  $("stageFilter").hidden = false;
+  $("stepsView").parentNode.scrollTop = 0;
+}
+function showStageSteps(s) {
+  if (s.classList.contains("picked")) { clearStageFilter(); return; }
+  showAgentSteps(s.getAttribute("data-agents").split(" "), "the " + s.querySelector("b").textContent + " stage", s);
+}
+function inviteStages() {
+  if (REDUCED) return;
+  stages().filter(function (s) { return s.classList.contains("lit"); }).forEach(function (s, i) {
+    s.classList.remove("invite"); void s.offsetWidth;
+    s.style.setProperty("--d", (i * 140) + "ms");
+    s.classList.add("invite");
+  });
+  setTimeout(function () { stages().forEach(function (s) { s.classList.remove("invite"); }); }, 3600);
+}
+function nx(label, fn, title) { return el("button", { type: "button", class: "nx", text: label, title: title || "", onclick: function () { fn(); } }); }
+function askNx(label, q) { return nx(label, function () { $("q").value = q; guarded(function () { return runQuery(q); }); }, q); }
+function openTableNx(label, a) {
+  if (!a) return null;
+  var count = (a.count !== undefined && a.count !== null) ? a.count : (a.rows || []).length;
+  return nx(label + " (" + count + ")", function () { openBig({ title: a.title, rows: a.rows || [], count: count, export: a.export, synthetic: a.synthetic }); });
+}
+function showNext(ctx) {
+  var r = ctx.r || {}, acts = [], ev = LASTEV || [];
+  var back = ev.filter(function (e) { return e.status === "rejected" || e.status === "needs_revision"; }).length;
+  var agents = {}; ev.forEach(function (e) { if (e.agent_name !== "Orchestrator") agents[e.agent_name] = 1; });
+  var arts = allArts(r), tables = arts.filter(function (a) { return a.type === "table"; });
+  var find = function (re) { return tables.filter(function (a) { return re.test(a.title || ""); })[0]; };
+  var mode = arts.filter(function (a) { return a.type === "run_mode"; })[0] || {};
+  var flow = ctx.replay ? (ctx.replay.flow || mode.flow) : mode.flow;
+  var draft = arts.filter(function (a) { return a.type === "draft" && a.draft; })[0];
+  if (r.status !== "success") {
+    $("nextLead").textContent = "That question was outside what the agents answer.";
+    acts.push(askNx("Ask the big question", BIG_Q));
+    acts.push(nx("See questions that work", function () { var d = document.querySelector("details.more-q"); d.open = true; d.scrollIntoView({ block: "nearest" }); }));
+  } else {
+    $("nextLead").textContent = (ctx.replay ? "Replay finished" : ctx.demo ? "Memory demo finished" : "Run finished") + ": " + Object.keys(agents).length + " agents, " + ev.length + " steps" + (back ? ", " + back + " sent back" : "") + ". Click a stage to see its steps.";
+    if (back) acts.push(nx("See why the Critic sent work back", jumpSentBack));
+    if (ctx.demo) {
+      acts.push(nx("See where memory was used", function () { showAgentSteps(["Memory"], "the Memory agent", stageFor("Memory")); }));
+      if (LATEST) acts.push(nx("Replay a live Nemotron run", function () { guarded(function () { return replayRun(LATEST); }); }));
+      acts.push(nx("Reset the demo memory", function () { $("resetBtn").click(); }));
+    } else if (flow === "confirm_match") {
+      if (!ctx.replay) acts.unshift(askNx("Ask again: " + suppliersQ(councilsIn(ctx.q)), suppliersQ(councilsIn(ctx.q))));
+      acts.push(nx("See where memory stored it", function () { showAgentSteps(["Memory"], "the Memory agent", stageFor("Memory")); }));
+    } else if (flow === "supplier_overlap") {
+      var queue = find(/needing a human decision/i);
+      if (queue && (queue.rows || []).length && !ctx.replay) acts.push(nx("Decide a pair yourself", function () { reveal(function (t) { return /needing a human decision/i.test(t); }); }));
+      acts.push(openTableNx("Open the shared suppliers", find(/Shared suppliers/i)));
+    } else if (flow === "contract_cliff" || flow === "day_one_brief") {
+      acts.push(openTableNx("Open the contract list", find(/Hard cliff/i)));
+      if (draft) acts.push(nx("Read the held letter (" + draft.draft.id + ")", function () { reveal(function (t) { return t === "draft " + draft.draft.id; }); }));
+    } else if (flow === "policy_gap") {
+      acts.push(nx("See the clauses that differ", function () { reveal(function (t) { return /clause/i.test(t); }); }));
+      acts.push(openTableNx("Open the SYNTHETIC residents check", find(/SYNTHETIC/i)));
+    } else if (flow === "approve_draft") {
+      acts.push(askNx("Ask the big question", BIG_Q));
+    }
+    if (ctx.replay) {
+      if (ctx.q) acts.push(askNx("Ask it yourself (sample mode)", ctx.q));
+      acts.push(nx("Replay another run", function () { setRight("runs"); setView("steps"); }));
+    } else if (!ctx.demo) {
+      if (flow !== "confirm_match") acts.push(nx("Watch memory change the answer", function () { guarded(memoryDemo); }));
+      if (LATEST) acts.push(nx("Replay a live Nemotron run", function () { guarded(function () { return replayRun(LATEST); }); }));
+    }
+  }
+  acts = acts.filter(Boolean).slice(0, 4);
+  if (acts[0]) acts[0].classList.add("first");
+  var box = clear($("nextActs"));
+  acts.forEach(function (b) { box.appendChild(b); });
+  $("nextBar").hidden = false;
+  inviteStages();
 }
 async function guarded(fn) {
   if (busy) return; lock(true);
@@ -629,9 +778,10 @@ function tableArtifact(a, inline) {
       dlLink(a.export)
     ]));
   }
-  if (inline) return el("div", {}, [el("h3", { text: (a.title || "Table") + " - " + count })].concat(kids));
+  if (inline) return el("div", { "data-title": a.title || "Table" }, [el("h3", { text: (a.title || "Table") + " - " + count })].concat(kids));
   var open = FIRST_TABLE; FIRST_TABLE = false;
-  return fold(a.title || "Table", count, open, kids);
+  var f = fold(a.title || "Table", count, open, kids); f.setAttribute("data-title", a.title || "Table");
+  return f;
 }
 function renderArtifact(a) {
   switch (a.type) {
@@ -705,12 +855,13 @@ function renderArtifact(a) {
         onclick: function () { openBig({ title: a.title || "Clauses", rows: gridRows, count: gridRows.length }); } })])];
       if ((a.agreements || []).length) kids.push(el("p", { class: "muted small", text: "They agree on: " + a.agreements.map(function (g) { return g.label || g.clause_key || String(g); }).join("; ") }));
       var open = FIRST_TABLE; FIRST_TABLE = false;
-      return fold(a.title || "Clauses", (a.differences || []).length + " differ", open, kids);
+      var cf = fold(a.title || "Clauses", (a.differences || []).length + " differ", open, kids); cf.setAttribute("data-title", "clauses " + (a.title || ""));
+      return cf;
     }
     case "draft": {
       var d = a.draft; if (!d) return el("div", {}, [el("h3", { text: a.title || "Draft" }), el("p", { class: "empty", text: "No draft was produced for this run." })]);
       var pending = d.status === "pending" && !REPLAY;
-      return el("div", {}, [el("h3", { text: (a.title || "Draft") + " - " + d.id }), el("div", { class: "draft" }, [
+      return el("div", { "data-title": "draft " + d.id }, [el("h3", { text: (a.title || "Draft") + " - " + d.id }), el("div", { class: "draft" }, [
         el("div", {}, [el("b", { text: d.title }), " ", el("span", { class: "tag mode" + (pending ? "" : " live"), text: d.status })]),
         el("pre", { text: d.text }),
         el("span", { class: "badge model", text: "written by " + d.model }),
@@ -746,10 +897,12 @@ function renderArtifact(a) {
 /* ---------- agent steps: one line each, click a step for its detail ---------- */
 async function showTrace(id, animate) {
   var head = clear($("traceHead")), list = clear($("trace"));
+  clearStageFilter();
   setRight("steps");
   var t;
   try { t = await api("/trace/" + encodeURIComponent(id)); } catch (e) { list.appendChild(el("li", { text: "Trace not available: " + e.message })); return; }
   var ev = t.events || [];
+  LASTEV = ev;
   $("traceFile").textContent = "Trace file " + t.trace_file + " - " + ev.length + " steps, written by the agents as they ran. Click a step for its detail.";
   $("tabSteps").textContent = "Agent steps (" + ev.length + ")";
   $("segSteps").textContent = "Agent steps (" + ev.length + ")";
@@ -763,7 +916,7 @@ async function showTrace(id, animate) {
   if (planned) head.appendChild(el("span", { class: "badge", text: planned + " checks delegated" }));
   head.appendChild(back
     ? el("span", { class: "badge jump", role: "button", tabindex: "0", title: "Jump to the first step that was sent back", text: back + " sent back - show me",
-        onclick: function () { setView("steps"); var f = document.querySelector("#trace li.rejected, #trace li.needs_revision"); if (f) { f.classList.add("open"); f.scrollIntoView({ behavior: REDUCED ? "auto" : "smooth", block: "center" }); } },
+        onclick: jumpSentBack,
         onkeydown: function (k) { if (k.key === "Enter") this.click(); } })
     : el("span", { class: "badge", text: "0 sent back" }));
   head.appendChild(el("span", { class: "badge", text: data + " data-layer queries" }));
@@ -780,7 +933,7 @@ async function showTrace(id, animate) {
     if (e.details && e.details.receipt_id) meta.push("receipt " + e.details.receipt_id);
     if (e.retry_count) meta.push("retry " + e.retry_count);
     if (e.confidence !== null && e.confidence !== undefined) meta.push("confidence " + e.confidence);
-    var li = el("li", { class: cls, tabindex: "0", title: "Click for the detail" }, [
+    var li = el("li", { class: cls, tabindex: "0", title: "Click for the detail", "data-agent": e.agent_name }, [
       el("div", { class: "ev-top" }, [
         el("span", { class: "i", text: String(i + 1) }),
         el("span", { class: "agent", text: e.agent_name }),
@@ -810,6 +963,7 @@ function delta(label, before, after) {
 }
 
 async function memoryDemo() {
+  $("nextBar").hidden = true;
   showResult();
   $("demoCard").hidden = false;
   clear($("answer"));
@@ -838,6 +992,7 @@ async function memoryDemo() {
   renderAnswer(c.r, GW_Q);
   await showTrace(c.id, true);
   setStatus("Done: the same question gave a different answer because a person's decision was remembered. The steps shown are from step 3.", false);
+  showNext({ r: c.r, q: GW_Q, demo: true });
 }
 
 /* ---------- what it found, and the recorded live runs (read from the committed logs) ---------- */
@@ -902,6 +1057,7 @@ async function loadEvidence() {
 
 async function replayRun(r) {
   $("demoCard").hidden = true;
+  $("nextBar").hidden = true;
   showResult();
   setStatus("Replaying recorded live run " + r.run_id + "...", true);
   var resp = await api("/evidence/" + encodeURIComponent(r.run_id));
@@ -909,6 +1065,7 @@ async function replayRun(r) {
   await showTrace(r.run_id, true);
   setStatus("Replayed " + r.run_id + " from the committed log: " + r.model_calls_with_receipts + " Nemotron calls with signed receipts, " + r.zetaris_queries + " Zetaris queries. Nothing was re-run.", false);
   REPLAY = false;
+  showNext({ r: resp, q: r.query, replay: r });
 }
 
 /* ---------- a table in a large window: every row (from the run's CSV when the answer only carries a preview), filter, sort ---------- */
@@ -1106,6 +1263,7 @@ $("tabSteps").addEventListener("click", function () { setView("steps"); });
 $("segSteps").addEventListener("click", function () { setRight("steps"); setView("steps"); });
 $("segRuns").addEventListener("click", function () { setRight("runs"); setView("steps"); });
 $("homeBtn").addEventListener("click", goHome);
+$("stageFilterAll").addEventListener("click", clearStageFilter);
 $("expandResult").addEventListener("click", function () { togglePane("result"); });
 $("expandSteps").addEventListener("click", function () { togglePane("stepsPane"); });
 $("scrim").addEventListener("click", closePane);
@@ -1117,7 +1275,12 @@ $("bigFilter").addEventListener("keydown", function (e) { if (e.key === "Escape"
 if (ONE_SCREEN && ONE_SCREEN.addEventListener) ONE_SCREEN.addEventListener("change", function () { if (!ONE_SCREEN.matches) closePane(); });
 $("navFound").addEventListener("click", function (ev) { ev.preventDefault(); goHome(); if (!(ONE_SCREEN && ONE_SCREEN.matches)) $("result").scrollIntoView({ behavior: REDUCED ? "auto" : "smooth" }); });
 $("navRuns").addEventListener("click", function (ev) { ev.preventDefault(); setRight("runs"); setView("steps"); if (!(ONE_SCREEN && ONE_SCREEN.matches)) $("stepsPane").scrollIntoView({ behavior: REDUCED ? "auto" : "smooth" }); });
-$("resetBtn").addEventListener("click", function () { guarded(async function () { await api("/demo/reset", {}); refreshHealth(); goHome(); resetPipe(); setStatus("Demo memory cleared: no stored decisions, no held drafts.", false); }); });
+$("resetBtn").addEventListener("click", function () { guarded(async function () { await api("/demo/reset", {}); refreshHealth(); goHome(); resetPipe(); $("nextBar").hidden = true; setStatus("Demo memory cleared: no stored decisions, no held drafts.", false); }); });
+stages().forEach(function (s) {
+  s.setAttribute("tabindex", "0"); s.setAttribute("role", "button"); s.setAttribute("title", "Show this stage's steps on the right");
+  s.addEventListener("click", function () { showStageSteps(s); });
+  s.addEventListener("keydown", function (k) { if (k.key === "Enter" || k.key === " ") { k.preventDefault(); showStageSteps(s); } });
+});
 resetPipe();
 refreshHealth();
 loadEvidence();
