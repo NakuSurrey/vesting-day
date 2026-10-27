@@ -4,6 +4,7 @@
   "track": "Track 1 - Solving Fragmented Intelligence",
   "team": "VESTING DAY (solo)",
   "description": "An agent for England's merging councils (West Surrey, vesting day 1 April 2027). It federates three councils' published spend, contracts and Council Tax Support policy in place through Zetaris, plans which checks a broad question needs (NVIDIA Nemotron proposes the plan in live mode and the code validates it), resolves which suppliers they share, remembers every human decision with the Meterless H-MEM engine so later answers change, finds the contract cliff and the policy gaps residents hit on day one, and drafts the first actions under a human approval gate.",
+  "live_demo": "https://vestingday.nakularora.tech (sample mode, nothing to install)",
   "entry_point": {
     "command": "python run.py",
     "http": {

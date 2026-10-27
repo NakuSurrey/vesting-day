@@ -75,7 +75,8 @@ macOS / Linux `curl -LsSf https://astral.sh/uv/install.sh | sh`, Windows PowerSh
 The same commands work in PowerShell, Terminal and bash. Port 8000 busy? Set `PORT`:
 `PORT=8080 uv run python run.py` (macOS / Linux) or `$env:PORT=8080; uv run python run.py` (PowerShell).
 
-Then open **http://localhost:8000**. Everything fits on one screen: the question on the left, the
+Then open **http://localhost:8000**. On a first visit a short guided tour points out each area and
+how they connect (Take the tour in the top bar replays it). Everything fits on one screen: the question on the left, the
 answer in the middle, every agent step from the run's trace on the right, and six stages across
 the top that light up as each agent works (the Critic turns red when it sends work back). Three
 buttons on the left walk you through it: ask the big question, watch memory change the answer
