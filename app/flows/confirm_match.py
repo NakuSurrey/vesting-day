@@ -7,13 +7,23 @@ The next supplier_overlap run recalls it: that is the memory engine changing a l
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any
 
 from app.agents.approval import ApprovalGateAgent
 from app.agents.base import RunContext
 from app.agents.memory import MemoryAgent
 from app.agents.researcher import ResearcherAgent
+from app.config import ROOT
 from app.matching import normalise
+
+
+def _shown_path(p: Path) -> str:
+    """The memory folder relative to the repo, so an answer never carries a local user name."""
+    try:
+        return Path(p).resolve().relative_to(ROOT).as_posix()
+    except ValueError:
+        return Path(p).name
 
 
 class FlowError(Exception):
@@ -67,6 +77,6 @@ def run(ctx: RunContext, sources: dict[str, Any]) -> dict[str, Any]:
         "artifacts": [
             {"type": "decision", "title": "Human decision", "decision": stored, "verdict": verdict},
             {"type": "evidence", "title": "Published rows behind each name", "a": {"council": a_council, "name": a_name, "rows": a_rows}, "b": {"council": b_council, "name": b_name, "rows": b_rows}},
-            {"type": "memory", "title": "H-MEM ledger entries for this decision", "ledger_tail": memory.ledger_tail(4), "memory_dir": str(ctx.settings.memory_dir)},
+            {"type": "memory", "title": "H-MEM ledger entries for this decision", "ledger_tail": memory.ledger_tail(4), "memory_dir": _shown_path(ctx.settings.memory_dir)},
         ],
     }

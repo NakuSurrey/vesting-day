@@ -3296,7 +3296,7 @@
             "content": "Supplier match decision: 'Unit 4 Business Software Ltd' (Waverley) and 'Unit4 Business Software Ltd' (Guildford) are the same organisation. Decided by human.",
             "confidence": 1.0,
             "relevance": 0.6344,
-            "decided_at": 1793043551973
+            "decided_at": 1793063609121
           }
         },
         "ledger_tail": [
@@ -3304,14 +3304,14 @@
             "memoryId": "mem-1",
             "action": "create",
             "actor": "vesting-day",
-            "timestamp": 1793043551973,
+            "timestamp": 1793063609121,
             "newState": {
               "id": "mem-1",
               "content": "Supplier match decision: 'Unit 4 Business Software Ltd' (Waverley) and 'Unit4 Business Software Ltd' (Guildford) are the same organisation. Decided by human.",
               "type": "factual",
               "layer": "long_term",
-              "timestamp": 1793043551973,
-              "lastAccessed": 1793043551973,
+              "timestamp": 1793063609121,
+              "lastAccessed": 1793063609121,
               "accessCount": 0,
               "tags": [
                 "decision:supplier-match",
@@ -3324,7 +3324,7 @@
               "source": "human:approval-gate",
               "provenance": {
                 "origin": "user_correction",
-                "learnedAt": 1793043551973,
+                "learnedAt": 1793063609121,
                 "label": "human decision via ApprovalGate"
               },
               "domain": "general",
@@ -3346,7 +3346,7 @@
             "memoryId": "mem-1",
             "action": "read",
             "actor": "vesting-day",
-            "timestamp": 1793043553193,
+            "timestamp": 1793063609665,
             "details": {
               "query": "supplier match decision Unit4 Business Software Ltd Unit 4 Business Software Ltd"
             }
@@ -3409,5 +3409,5 @@
   ],
   "trace_id": "trace-example-03",
   "log_file": "logs/trace-example-03.jsonl",
-  "execution_time_seconds": 0.83
+  "execution_time_seconds": 0.37
 }

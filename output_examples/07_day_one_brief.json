@@ -2657,7 +2657,7 @@
                   "run_id": "example-07",
                   "id": "draft-3",
                   "status": "pending",
-                  "created_at": "2026-10-26T19:39:15.841371+00:00"
+                  "created_at": "2026-10-27T01:13:31.101905+00:00"
                 }
               },
               {
@@ -5985,7 +5985,7 @@
                     "content": "Supplier match decision: 'Unit 4 Business Software Ltd' (Waverley) and 'Unit4 Business Software Ltd' (Guildford) are the same organisation. Decided by human.",
                     "confidence": 1.0,
                     "relevance": 0.6344,
-                    "decided_at": 1793043551973
+                    "decided_at": 1793063609121
                   }
                 },
                 "ledger_tail": [
@@ -5993,14 +5993,14 @@
                     "memoryId": "mem-1",
                     "action": "create",
                     "actor": "vesting-day",
-                    "timestamp": 1793043551973,
+                    "timestamp": 1793063609121,
                     "newState": {
                       "id": "mem-1",
                       "content": "Supplier match decision: 'Unit 4 Business Software Ltd' (Waverley) and 'Unit4 Business Software Ltd' (Guildford) are the same organisation. Decided by human.",
                       "type": "factual",
                       "layer": "long_term",
-                      "timestamp": 1793043551973,
-                      "lastAccessed": 1793043551973,
+                      "timestamp": 1793063609121,
+                      "lastAccessed": 1793063609121,
                       "accessCount": 0,
                       "tags": [
                         "decision:supplier-match",
@@ -6013,7 +6013,7 @@
                       "source": "human:approval-gate",
                       "provenance": {
                         "origin": "user_correction",
-                        "learnedAt": 1793043551973,
+                        "learnedAt": 1793063609121,
                         "label": "human decision via ApprovalGate"
                       },
                       "domain": "general",
@@ -6035,7 +6035,7 @@
                     "memoryId": "mem-1",
                     "action": "read",
                     "actor": "vesting-day",
-                    "timestamp": 1793043553193,
+                    "timestamp": 1793063609665,
                     "details": {
                       "query": "supplier match decision Unit4 Business Software Ltd Unit 4 Business Software Ltd"
                     }
@@ -6044,14 +6044,14 @@
                     "memoryId": "mem-2",
                     "action": "create",
                     "actor": "vesting-day",
-                    "timestamp": 1793043555150,
+                    "timestamp": 1793063610792,
                     "newState": {
                       "id": "mem-2",
                       "content": "Draft draft-1 (novation_letter: IKEN 011240 Managed Services for Temporary Agency Resources (Call-Off Contract under the ESPO MSTAR4 Framework Agreement 653F/23 dated 11 April 2023)) was approved by a human.",
                       "type": "factual",
                       "layer": "long_term",
-                      "timestamp": 1793043555150,
-                      "lastAccessed": 1793043555150,
+                      "timestamp": 1793063610792,
+                      "lastAccessed": 1793063610792,
                       "accessCount": 0,
                       "tags": [
                         "decision:draft",
@@ -6062,7 +6062,7 @@
                       "source": "human:approval-gate",
                       "provenance": {
                         "origin": "user_correction",
-                        "learnedAt": 1793043555150,
+                        "learnedAt": 1793063610792,
                         "label": "human approval decision"
                       },
                       "domain": "tech",
@@ -6086,7 +6086,7 @@
                     "memoryId": "mem-1",
                     "action": "read",
                     "actor": "vesting-day",
-                    "timestamp": 1793043557306,
+                    "timestamp": 1793063611804,
                     "details": {
                       "query": "supplier match decision Unit4 Business Software Ltd Unit 4 Business Software Ltd"
                     }
@@ -6095,7 +6095,7 @@
                     "memoryId": "mem-2",
                     "action": "read",
                     "actor": "vesting-day",
-                    "timestamp": 1793043557307,
+                    "timestamp": 1793063611804,
                     "details": {
                       "query": "supplier match decision Unit4 Business Software Ltd Unit 4 Business Software Ltd"
                     }
@@ -6699,7 +6699,7 @@
                   "run_id": "example-07",
                   "id": "draft-4",
                   "status": "pending",
-                  "created_at": "2026-10-26T19:39:17.350843+00:00"
+                  "created_at": "2026-10-27T01:13:31.827943+00:00"
                 }
               }
             ]
@@ -6768,5 +6768,5 @@
   ],
   "trace_id": "trace-example-07",
   "log_file": "logs/trace-example-07.jsonl",
-  "execution_time_seconds": 1.83
+  "execution_time_seconds": 0.87
 }
