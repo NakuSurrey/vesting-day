@@ -65,20 +65,34 @@ Ask your own question - the Router reads the flow, the councils and the time win
 ```bash
 git clone https://github.com/NakuSurrey/vesting-day
 cd vesting-day
-uv sync                          # Python 3.12; https://docs.astral.sh/uv/
+uv sync                          # installs Python 3.12 and the pinned packages if they are missing
 uv run python run.py             # serves the web page, POST /run and GET /health on 0.0.0.0:8000
 ```
 
-Then open **http://localhost:8000**. The page lets you ask your own question or click an example,
-run a three-step demo of memory changing the answer, confirm or split a supplier pair, approve a
-held draft, and see every agent step from the run's trace beside the answer - with the steps the
-Critic sent back highlighted. Every table has a "Download all rows (CSV)" link. The page opens
-with the results of the newest recorded live run and a list of every live run committed in
-`logs/`, each of which can be replayed step by step (read from the log, nothing re-run, action
-buttons off). It is a thin layer over `POST /run`; nothing on it is pre-written.
+No uv yet? One line installs it (from https://docs.astral.sh/uv/):
+macOS / Linux `curl -LsSf https://astral.sh/uv/install.sh | sh`, Windows PowerShell
+`powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"`.
+The same commands work in PowerShell, Terminal and bash. Port 8000 busy? Set `PORT`:
+`PORT=8080 uv run python run.py` (macOS / Linux) or `$env:PORT=8080; uv run python run.py` (PowerShell).
 
-Without uv: `python -m venv .venv`, activate it, `pip install -r requirements.txt`, then
-`python run.py`. With Docker: `docker build -t vesting-day . && docker run --rm -p 8000:8000 vesting-day`
+Then open **http://localhost:8000**. Everything fits on one screen: the question on the left, the
+answer in the middle, every agent step from the run's trace on the right, and six stages across
+the top that light up as each agent works (the Critic turns red when it sends work back). Three
+buttons on the left walk you through it: ask the big question, watch memory change the answer
+(a person confirms one supplier pair, the same question is asked again), and replay a recorded
+live Nemotron run. After each run a line under the stages says what happened and offers the next
+steps; click a stage to see only what it did. You can also confirm or split a supplier pair and
+approve a held draft. Any table opens large with every row, a filter and sortable columns, and
+downloads in full as CSV. The page opens with the results of the newest recorded live run and a
+list of every live run committed in `logs/`, each of which can be replayed step by step (read
+from the log, nothing re-run, action buttons off). Start over clears the screen; Reset demo
+memory also forgets stored decisions. It is a thin layer over `POST /run`; nothing on it is
+pre-written.
+
+Without uv (Python 3.11 or newer): `python -m venv .venv`, activate it
+(`source .venv/bin/activate`, or `.venv\Scripts\Activate.ps1` on Windows),
+`pip install -r requirements.txt`, then `python run.py`. With Docker:
+`docker build -t vesting-day . && docker run --rm -p 8000:8000 vesting-day`
 (CI builds the image and runs it with `--network none`).
 
 With no `.env`, or with `cp .env.example .env` (it ships `SAMPLE_MODE=true`), the app runs in
@@ -92,6 +106,12 @@ curl -s -X POST localhost:8000/run -H 'Content-Type: application/json' \
 
 curl -s -X POST localhost:8000/run -H 'Content-Type: application/json' \
   -d '{"run_id": "my-1", "input": {"query": "Which Guildford contracts end within a year of vesting day?"}}'
+```
+
+In Windows PowerShell:
+
+```powershell
+Invoke-RestMethod -Method Post -Uri http://localhost:8000/run -ContentType 'application/json' -InFile input_examples/01_supplier_overlap.json
 ```
 
 Or without the server:

@@ -124,11 +124,12 @@ def run(ctx: RunContext, sources: dict[str, Any]) -> dict[str, Any]:
         held = gate.hold("novation_letter", f"{target['contract_ref']} {target['title']}", draft["text"], draft["model"], [target["provenance_id"]], draft.get("receipt_id"), recipient=target["supplier_raw"])
         draft_text = draft["text"]
 
+    by_council = "; ".join(f"{c} {v['contracts']} / {gbp(v['value_gbp'])}" for c, v in per_council.items())
     summary = (
         (f"No contract ends within {asked_window} days of vesting day {vesting_day} for {', '.join(councils)}; the window was widened to {widened_to} days to find the nearest. " if widened_to else "")
         + f"Contract cliff around vesting day {vesting_day} (plus or minus {window_days} days) for {', '.join(councils)}: "
         f"{len(hard)} contracts end with no extension date recorded past vesting day, stated value {gbp(total_value)} "
-        f"({'; '.join(f'{c} {v['contracts']} / {gbp(v['value_gbp'])}' for c, v in per_council.items())}). "
+        f"({by_council}). "
         f"{len(with_option)} more have an extension date recorded past vesting day; {len(no_end)} register entries have no usable end date. "
         f"{shared} cliff suppliers are also paid by another of the three councils. "
         + (f"One action drafted and held for approval: {held['id']} ({target['title']}, {target['council']})." if held else "No contract in the window; nothing drafted.")
