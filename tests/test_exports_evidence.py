@@ -101,6 +101,11 @@ def test_headline_comes_from_the_newest_live_brief(client) -> None:
     assert h["suppliers"]["shared"] == 228 and h["suppliers"]["awaiting_human"] == 217
     assert h["policy"]["differ"] == 4 and h["policy"]["clauses"] == 9 and h["policy"]["synthetic_differ"] == 4
     assert h["contracts"]["export"]["rows"] == 173                           # its CSV is next to it, so it is offered
+    page = client.get("/").text                                              # the page as first sent, before any script runs
+    for needle in ("GBP 22.7m", "173 contracts end within 180 days of vesting day", "228 supplier pairs are shared",
+                   "From the recorded live run live-09", 'href="/evidence/live-09"', 'href="/trace/live-09"'):
+        assert needle in page, needle
+    assert all(ord(ch) < 128 for ch in page)
     (client.logs / "exports" / "live-09" / Path(h["contracts"]["export"]["file"]).name).unlink()
     assert client.get("/evidence").json()["headline"]["contracts"]["export"] is None   # a missing CSV is not offered
 

@@ -28,6 +28,7 @@ from app.config import settings
 from app.evidence import evidence_index, live_response
 from app.exports import export_path
 from app.orchestrator import Orchestrator
+from app.prerender import prerender
 from app.schemas import RunRequest
 
 app = FastAPI(title="VESTING DAY", version="0.1.0",
@@ -112,7 +113,12 @@ def demo_reset() -> dict:
 
 @app.get("/", response_class=HTMLResponse)
 def page() -> HTMLResponse:
-    return HTMLResponse(_PAGE.read_text(encoding="utf-8"))
+    html = _PAGE.read_text(encoding="utf-8")
+    try:
+        html = prerender(html, evidence_index(settings.logs_dir))   # results readable without JavaScript too
+    except Exception:   # the script still fills the page from GET /evidence; never fail the page over this
+        pass
+    return HTMLResponse(html)
 
 
 @app.get("/api")

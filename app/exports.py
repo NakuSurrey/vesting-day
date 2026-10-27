@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any, Iterator
 
 NAME = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*")
-KEEP_WEB_EXPORTS = 200          # a hosted demo keeps the newest web runs' folders only
+KEEP_WEB_EXPORTS = 200          # a hosted demo keeps the newest web runs' folders and traces only
 
 
 def _tables(artifacts: list[dict[str, Any]], prefix: str = "") -> Iterator[tuple[str, dict[str, Any]]]:
@@ -83,6 +83,9 @@ def _prune(logs_dir: Path) -> None:
     runs = sorted((logs_dir / "exports").glob("web-*"), key=lambda p: p.stat().st_mtime)
     for p in runs[:-KEEP_WEB_EXPORTS]:
         shutil.rmtree(p, ignore_errors=True)
+    traces = sorted(logs_dir.glob("trace-web-*.jsonl"), key=lambda p: p.stat().st_mtime)   # and their traces, so a busy demo cannot fill the disk
+    for p in traces[:-KEEP_WEB_EXPORTS]:
+        p.unlink(missing_ok=True)
 
 
 def export_path(logs_dir: Path, run_id: str, name: str) -> Path | None:

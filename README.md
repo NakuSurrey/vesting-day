@@ -4,7 +4,9 @@
 > **Sponsor technology:** Zetaris (data layer), Meterless H-MEM engine (memory), Meterless Nightshift (primary AI provider), NVIDIA Nemotron.
 > **Run:** `uv sync` then `uv run python run.py`, then open `http://localhost:8000` (or `POST /run`). No credentials needed.
 
-Live demo (sample mode, no setup): https://vestingday.nakularora.tech
+Live demo (sample mode, no setup): https://vestingday.nakularora.tech - its demo memory is shared by
+everyone using it, and Reset demo memory clears it. The page carries the headline results in its HTML,
+so they read without JavaScript too; `/evidence` gives the recorded live runs as JSON.
 
 ## What a finance lead gets today
 
@@ -138,6 +140,47 @@ the status - and echoes the same lines to the terminal. The response is one JSON
 (`run_id`, `status`, `output`, `agents`, `trace_id`, `log_file`,
 `execution_time_seconds`); `--out FILE` also writes it as UTF-8. Seven example inputs are in
 `input_examples/` with their real outputs in `output_examples/`.
+
+## Check the claims yourself
+
+The main numbers in this README come back from a fresh clone in a few minutes. The comment under
+each command is text its output contains.
+
+```bash
+uv run pytest -q
+#   127 passed
+
+uv run python run.py --query "Which contracts end within six months of vesting day?"
+#   173 contracts end with no extension date recorded past vesting day, stated value GBP 22,671,525
+
+uv run python run.py --query "Which suppliers do Woking, Guildford and Waverley share?"
+#   228 supplier pairs are shared ... 217 candidate pairs still need a human ... GBP 34,786,202
+
+uv run python run.py --query "Where do the Council Tax Support schemes differ between Woking and Guildford?"
+#   4 of 9 compared clauses differ ... 4 of 8 SYNTHETIC test residents
+
+uv run python run.py --query "What are the biggest risks on vesting day?"
+#   Day-one brief for Woking, Guildford, Waverley - 3 of 3 checks run, planned by rules
+
+uv run python run.py --reset-memory --input input_examples/01_supplier_overlap.json
+uv run python run.py --input input_examples/02_confirm_match.json
+uv run python run.py --input input_examples/03_supplier_overlap_after_decision.json
+#   1 of them are resolved from remembered human decisions (mem-1)
+
+uv run python run.py --query "What is the weather in Woking?"
+#   "type": "UnsupportedRequest"
+```
+
+The live runs (Zetaris, and NVIDIA Nemotron through Meterless Nightshift) are in the committed logs:
+
+```bash
+grep '"action": "plan"' logs/trace-live-06.jsonl
+#   3 step(s) from model: contract_cliff ... "model": "nvidia/nemotron-3.5-lightning-30b-a3b" ... "receipt_id": "rcpt_req_wu8606u2"
+grep -c '"receipt_id": "rcpt' logs/trace-live-06.jsonl
+#   18
+grep '"status": "rejected"' logs/trace-live-06.jsonl
+#   2 lines: the Critic holding back 216 pairs below the confirmation bar, and the first brief, sent back for not naming mem-1
+```
 
 ## How it works
 

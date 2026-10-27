@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="VESTING DAY: one question across the published data of Woking, Guildford and Waverley, the councils that become one on 1 April 2027. Eight agents answer through Zetaris and NVIDIA Nemotron via Meterless Nightshift, and every step they take is shown.">
 <title>VESTING DAY</title>
 <style>
 /* Palette: the colours of UK public-service websites (black, blue, green, yellow focus), nothing else borrowed. */
@@ -387,7 +388,7 @@ button.dl:hover { background: var(--blue-tint); filter: none; }
     </details>
     <div class="side-foot">
       <button type="button" class="ghost tiny" id="resetBtn" title="Clears stored decisions and held drafts">Reset demo memory</button>
-      <p class="fine">A prototype, not a government service. The page calls <code>POST /run</code> and every run writes <code>logs/trace-&lt;run_id&gt;.jsonl</code>. The eight test residents are SYNTHETIC; drafts are held for a person, never sent.<span id="health"></span></p>
+      <p class="fine">A prototype, not a government service. The page calls <code>POST /run</code> and every run writes <code>logs/trace-&lt;run_id&gt;.jsonl</code>. The eight test residents are SYNTHETIC; drafts are held for a person, never sent. Machine-readable: <a href="/evidence">/evidence</a> (the recorded live runs as JSON), <a href="/docs">/docs</a>, <a href="/health">/health</a>.<span id="health"></span></p>
     </div>
   </aside>
   <div class="split" id="split1" data-side="left" role="separator" aria-orientation="vertical" aria-controls="ask" aria-label="Resize the question panel" title="Drag to resize. Double-click to reset." tabindex="0"></div>
@@ -1385,9 +1386,16 @@ function endTour() {
   setView("answer");
 }
 function maybeAutoTour() {
-  var seen = true;
-  try { seen = !!localStorage.getItem(TOUR_KEY); } catch (e) { seen = true; }
-  if (!seen && !busy && !TOUR) startTour();
+  /* ?tour=1 always shows it, ?tour=0 never does; an automated browser is not stopped by it */
+  var ask = (location.search.match(/[?&]tour=([01])/) || [])[1];
+  if (ask === "0" || busy || TOUR) return;
+  if (ask !== "1") {
+    if (navigator.webdriver) return;
+    var seen = true;
+    try { seen = !!localStorage.getItem(TOUR_KEY); } catch (e) { seen = true; }
+    if (seen) return;
+  }
+  startTour();
 }
 $("tourNext").addEventListener("click", function () {
   if (!TOUR) return;
