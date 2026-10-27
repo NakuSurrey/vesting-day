@@ -262,6 +262,17 @@ button.dl { font-size: 12px; font-weight: 700; padding: 2px 8px; border: 2px sol
 button.dl:hover { background: var(--blue-tint); filter: none; }
 .tbl-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: 6px 0 0; }
 
+/* a short guided tour for a first visit: everything dims except one area, and a card says what it does */
+.tour-block { position: fixed; inset: 0; z-index: 70; }
+.tour-spot { position: fixed; z-index: 71; pointer-events: none; border-radius: 6px; box-shadow: 0 0 0 4px var(--yellow), 0 0 0 9999px rgba(11, 12, 12, 0.62); transition: top 220ms ease, left 220ms ease, width 220ms ease, height 220ms ease; }
+.tour-card { position: fixed; z-index: 72; width: min(380px, calc(100vw - 16px)); background: var(--panel); color: var(--ink); border-top: 5px solid var(--yellow); box-shadow: 0 18px 48px rgba(0, 0, 0, 0.35); padding: 12px 16px; }
+.tour-card .count { font-size: 12px; color: var(--muted); }
+.tour-card h2 { font-size: 18px; margin: 2px 0 6px; }
+.tour-card p { margin: 0 0 6px; font-size: 14px; }
+.tour-card p.flow { font-size: 13px; background: var(--bg); border-left: 4px solid var(--blue); padding: 6px 8px; }
+.tour-acts { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+.tour-acts #tourEnd { margin-right: auto; }
+
 /* one screen on a laptop or desktop: the page itself does not scroll, each panel scrolls on its own */
 @media (min-width: 1100px) and (min-height: 600px) {
   html, body { height: 100%; overflow: hidden; }
@@ -331,6 +342,7 @@ button.dl:hover { background: var(--blue-tint); filter: none; }
   <span class="tag track">Solving Fragmented Intelligence</span>
   <span class="tag mode" id="modePill">checking mode...</span>
   <nav aria-label="Page">
+    <a href="#" id="navTour">Take the tour</a>
     <a href="#" id="navFound">What it found</a>
     <a href="#" id="navRuns">Live runs</a>
     <a href="/docs">API</a>
@@ -445,6 +457,18 @@ button.dl:hover { background: var(--blue-tint); filter: none; }
   </div>
   <div class="big-body" id="bigBody"></div>
 </dialog>
+<div class="tour-block" id="tourBlock" hidden></div>
+<div class="tour-spot" id="tourSpot" hidden></div>
+<div class="tour-card" id="tourCard" role="dialog" aria-modal="true" aria-labelledby="tourTitle" hidden>
+  <div class="count" id="tourCount"></div>
+  <h2 id="tourTitle"></h2>
+  <div id="tourText"></div>
+  <div class="tour-acts">
+    <button type="button" class="ghost tiny" id="tourEnd">End tour</button>
+    <button type="button" class="ghost tiny" id="tourBack">Back</button>
+    <button type="button" class="tiny" id="tourNext">Next</button>
+  </div>
+</div>
 
 <script>
 "use strict";
@@ -1274,6 +1298,121 @@ window.addEventListener("resize", applyWidths);
 if (ONE_SCREEN && ONE_SCREEN.addEventListener) ONE_SCREEN.addEventListener("change", applyWidths);
 applyWidths();
 
+/* ---------- a guided tour: one area at a time, what it does and how it connects to the next ---------- */
+var TOUR_KEY = "vesting-day-tour-seen";
+var TOUR = null;
+function tourFlow() {
+  var wide = ONE_SCREEN && ONE_SCREEN.matches;
+  return el("p", { class: "flow", text: wide ? "You ask (left) -> the agents work (top) -> the answer (middle) -> how they got there (right)." : "You ask -> the agents work -> the answer -> how they got there." });
+}
+var TOUR_STEPS = [
+  { sel: "header", title: "Welcome to VESTING DAY", text: [
+    "Woking, Guildford and Waverley become one council on 1 April 2027, but their data stays in three places. Here you ask one question across all three and watch the agents answer it.",
+    tourFlow,
+    "The pill in the top bar shows the mode: Live is Zetaris and Nemotron through Nightshift; Sample is the same agents on cached copies of the councils' files."] },
+  { sel: "#ask", title: "1. You ask here", text: [
+    "Type your own question, or use the three buttons in order: ask the big question, watch memory change the answer, then replay a recorded live run. More questions to try are just below them."] },
+  { sel: "#pipe", title: "2. The agents work here", text: [
+    "Each circle is one stage of the work. It lights up while its agent works and shows how many steps it took; it turns red when the Critic sends work back.",
+    "After a run, a line appears under the stages with the next steps, and clicking a stage shows only what it did."] },
+  { sel: "#result", prepare: function () { setView("answer"); }, title: "3. The answer comes here", text: [
+    "Before you ask, this shows what the agents found in the newest recorded live run. After you ask, it shows the answer: key numbers first, then the tables behind them.",
+    "Any table opens large with every row, a filter and a download."] },
+  { sel: "#stepsPane", prepare: function () { setView("steps"); }, title: "4. How they got there", text: [
+    "Every step the agents took, one line each, from the run's trace file: who acted, what they did and who they handed to. Click a line for its detail.",
+    "Live runs lists the real recorded runs; Replay shows any of them step by step."] },
+  { sel: "#split1", pad: 10, prepare: function () { setView("answer"); }, title: "Make room where you need it", text: [
+    "Drag the thin lines between the panels to resize them. Expand opens a panel large over the page.",
+    "Start over clears the screen; Reset demo memory also forgets stored decisions."] },
+  { sel: "#tour1", prepare: function () { setView("answer"); }, title: "Start here", text: [
+    "The big question is the best first try: the Planner picks the checks, the agents run them, and the Critic checks the answer before you see it.",
+    "You can take this tour again from Take the tour in the top bar."] }
+];
+function tourShown(st) { var n = document.querySelector(st.sel); if (!n) return false; var r = n.getBoundingClientRect(); return r.width > 2 && r.height > 2; }
+function placeTour() {
+  if (!TOUR) return;
+  var st = TOUR_STEPS[TOUR.i], n = document.querySelector(st.sel);
+  if (!n) return;
+  var r = n.getBoundingClientRect(), pad = st.pad === undefined ? 6 : st.pad;
+  var vw = document.documentElement.clientWidth, vh = window.innerHeight;
+  var x = Math.max(4, r.left - pad), y = Math.max(4, r.top - pad), x2 = Math.min(vw - 4, r.right + pad), y2 = Math.min(vh - 4, r.bottom + pad);
+  var sp = $("tourSpot").style;
+  sp.left = x + "px"; sp.top = y + "px"; sp.width = Math.max(0, x2 - x) + "px"; sp.height = Math.max(0, y2 - y) + "px";
+  /* the card goes below the area, else above, else beside it, and always stays on screen */
+  var card = $("tourCard"), cw = card.offsetWidth, ch = card.offsetHeight, gap = 14, top = null, left;
+  if (y2 + gap + ch <= vh - 8) top = y2 + gap;
+  else if (y - gap - ch >= 8) top = y - gap - ch;
+  if (top === null) {
+    top = clampN((y + y2) / 2 - ch / 2, 8, vh - ch - 8);
+    if (x2 + gap + cw <= vw - 8) left = x2 + gap;
+    else if (x - gap - cw >= 8) left = x - gap - cw;
+    else { left = vw - cw - 16; top = vh - ch - 16; }
+  } else left = clampN((x + x2) / 2 - cw / 2, 8, vw - cw - 8);
+  card.style.left = Math.round(left) + "px"; card.style.top = Math.round(top) + "px";
+}
+function showTourStep(i, dir) {
+  while (i >= 0 && i < TOUR_STEPS.length) {
+    if (TOUR_STEPS[i].prepare) TOUR_STEPS[i].prepare();
+    if (tourShown(TOUR_STEPS[i])) break;
+    i += dir;
+  }
+  if (i < 0 || i >= TOUR_STEPS.length) { endTour(); return; }
+  TOUR.i = i;
+  var st = TOUR_STEPS[i], last = i === TOUR_STEPS.length - 1;
+  if (!(ONE_SCREEN && ONE_SCREEN.matches)) document.querySelector(st.sel).scrollIntoView({ block: "center" });
+  $("tourCount").textContent = "Step " + (i + 1) + " of " + TOUR_STEPS.length;
+  $("tourTitle").textContent = st.title;
+  var box = clear($("tourText"));
+  st.text.forEach(function (t) { box.appendChild(typeof t === "string" ? el("p", { text: t }) : t()); });
+  $("tourBack").hidden = i === 0;
+  $("tourNext").textContent = last ? "Ask the big question" : "Next";
+  $("tourEnd").textContent = last ? "Finish" : "End tour";
+  placeTour();
+  $("tourNext").focus({ preventScroll: true });
+}
+function startTour() {
+  if (busy) return;
+  try { if ($("big").open) $("big").close(); } catch (e) { /* no dialog open */ }
+  closePane();
+  TOUR = { i: 0 };
+  $("tourBlock").hidden = false; $("tourSpot").hidden = false; $("tourCard").hidden = false;
+  try { localStorage.setItem(TOUR_KEY, "1"); } catch (e) { /* not kept; the tour still runs */ }
+  showTourStep(0, 1);
+}
+function endTour() {
+  TOUR = null;
+  $("tourBlock").hidden = true; $("tourSpot").hidden = true; $("tourCard").hidden = true;
+  setView("answer");
+}
+function maybeAutoTour() {
+  var seen = true;
+  try { seen = !!localStorage.getItem(TOUR_KEY); } catch (e) { seen = true; }
+  if (!seen && !busy && !TOUR) startTour();
+}
+$("tourNext").addEventListener("click", function () {
+  if (!TOUR) return;
+  if (TOUR.i === TOUR_STEPS.length - 1) { endTour(); $("tour1").click(); }
+  else showTourStep(TOUR.i + 1, 1);
+});
+$("tourBack").addEventListener("click", function () { if (TOUR) showTourStep(TOUR.i - 1, -1); });
+$("tourEnd").addEventListener("click", endTour);
+$("navTour").addEventListener("click", function (ev) { ev.preventDefault(); startTour(); });
+document.addEventListener("keydown", function (e) {
+  if (!TOUR) return;
+  if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); endTour(); }
+  else if (e.key === "ArrowRight") { e.preventDefault(); $("tourNext").click(); }
+  else if (e.key === "ArrowLeft" && !$("tourBack").hidden) { e.preventDefault(); $("tourBack").click(); }
+  else if (e.key === "Tab") {
+    /* keep the keyboard inside the tour card */
+    var f = [$("tourEnd"), $("tourBack"), $("tourNext")].filter(function (b) { return !b.hidden; });
+    var at = f.indexOf(document.activeElement);
+    e.preventDefault();
+    f[(at + (e.shiftKey ? f.length - 1 : 1)) % f.length].focus();
+  }
+}, true);
+window.addEventListener("resize", placeTour);
+window.addEventListener("scroll", placeTour, true);
+
 /* ---------- wire up ---------- */
 EXAMPLES.forEach(function (q) { $("chips").appendChild(el("button", { type: "button", text: q, onclick: function () { $("q").value = q; guarded(function () { return runQuery(q); }); } })); });
 $("askForm").addEventListener("submit", function (ev) { ev.preventDefault(); var q = $("q").value.trim(); if (q) guarded(function () { return runQuery(q); }); });
@@ -1308,7 +1447,7 @@ stages().forEach(function (s) {
 });
 resetPipe();
 refreshHealth();
-loadEvidence();
+loadEvidence().then(maybeAutoTour, maybeAutoTour);
 </script>
 <noscript><p style="padding:20px">This page needs JavaScript. Without it, use the API: POST /run (see the README).</p></noscript>
 </body>
