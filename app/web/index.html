@@ -200,6 +200,33 @@ ol.trace li.open .ev-more { display: block; }
 .runs .q { font-weight: 700; font-size: 14px; }
 .runs .facts { font-size: 12px; color: var(--muted); }
 
+/* seeing more: a panel can open large over the page, and any table can open in a large window with every row */
+.expand { margin-left: auto; }
+.scrim { position: fixed; inset: 0; z-index: 45; background: rgba(11, 12, 12, 0.55); }
+.pane.big-pane { position: fixed; inset: 3vh 3vw; z-index: 50; margin: 0; box-shadow: 0 24px 64px rgba(0, 0, 0, 0.35); animation: grow 160ms ease-out both; }
+.big-pane .summary, .big-pane .finding { max-width: 1100px; }
+@keyframes grow { from { opacity: 0; transform: scale(0.985); } to { opacity: 1; transform: none; } }
+dialog.big { width: min(1500px, 94vw); height: 90vh; max-width: none; max-height: none; padding: 0; border: 0; border-top: 4px solid var(--blue); background: var(--panel); color: var(--ink); box-shadow: 0 24px 64px rgba(0, 0, 0, 0.35); }
+dialog.big[open] { display: flex; flex-direction: column; animation: grow 160ms ease-out both; }
+dialog.big::backdrop { background: rgba(11, 12, 12, 0.55); }
+.big-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding: 12px 18px; border-bottom: 1px solid var(--line-soft); }
+.big-head h2 { flex: 1 1 0; min-width: 0; }
+.big-tools { flex-basis: 100%; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; }
+.big-tools input { flex: 0 1 320px; min-width: 160px; font-size: 14px; padding: 6px 8px; border: 2px solid var(--ink); background: var(--panel); color: var(--ink); }
+.big-note { flex-basis: 100%; margin: 0; font-size: 12px; color: var(--muted); }
+.big-body { flex: 1; min-height: 0; overflow: auto; padding: 0 18px 18px; }
+.big-body th { position: sticky; top: 0; z-index: 1; cursor: pointer; user-select: none; box-shadow: 0 1px 0 var(--line); }
+.big-body th:hover { background: var(--blue-tint); }
+.big-body th[aria-sort="ascending"]::after { content: " (up)"; font-weight: 400; color: var(--muted); }
+.big-body th[aria-sort="descending"]::after { content: " (down)"; font-weight: 400; color: var(--muted); }
+.big-body tr:hover td { background: var(--blue-tint); }
+.big-body table { width: auto; min-width: 100%; }
+.big-body td { white-space: nowrap; }
+.big-body td.long { white-space: normal; min-width: 22em; }
+button.dl { font-size: 12px; font-weight: 700; padding: 2px 8px; border: 2px solid var(--blue); color: var(--blue-dark); background: var(--panel); box-shadow: none; }
+button.dl:hover { background: var(--blue-tint); filter: none; }
+.tbl-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: 6px 0 0; }
+
 /* one screen on a laptop or desktop: the page itself does not scroll, each panel scrolls on its own */
 @media (min-width: 1100px) and (min-height: 600px) {
   html, body { height: 100%; overflow: hidden; }
@@ -218,6 +245,9 @@ ol.trace li.open .ev-more { display: block; }
   .side { overflow-y: auto; border: 1px solid var(--line-soft); border-top: 4px solid var(--green); }
   .pane { margin: 0; display: flex; flex-direction: column; min-height: 0; border: 1px solid var(--line-soft); border-top: 4px solid var(--blue); }
   .pane-body { flex: 1; min-height: 0; overflow-y: auto; }
+  /* fixed places, so a panel opened large leaves the other two where they are */
+  #ask { grid-column: 1; grid-row: 1; } #split1 { grid-column: 2; grid-row: 1; } #result { grid-column: 3; grid-row: 1; }
+  #split2 { grid-column: 4; grid-row: 1; } #stepsPane { grid-column: 5; grid-row: 1; }
 }
 /* a shorter laptop screen: the same layout, a little tighter */
 @media (min-width: 1100px) and (min-height: 600px) and (max-height: 820px) {
@@ -240,6 +270,7 @@ ol.trace li.open .ev-more { display: block; }
 @media not all and (min-width: 1100px) and (min-height: 600px) {
   .work { padding: 0 12px 16px; }
   .side { margin: 0 -12px; }
+  .expand { display: none; }
   .tabs { display: flex; }
   .work[data-view="answer"] #stepsPane { display: none; }
   .work[data-view="steps"] #answerBody { display: none; }
@@ -312,6 +343,7 @@ ol.trace li.open .ev-more { display: block; }
     <div class="pane-head">
       <h2 id="resultTitle">What the agent found</h2>
       <button type="button" class="ghost tiny" id="homeBtn">Back to what it found</button>
+      <button type="button" class="ghost tiny expand" id="expandResult" aria-expanded="false" title="Open this panel large over the page (Esc closes it)">Expand</button>
       <div class="status-line" id="status" role="status" aria-live="polite"><span class="dot" aria-hidden="true"></span><span id="statusText"></span></div>
       <div class="tabs" role="tablist" aria-label="Result views">
         <button type="button" role="tab" id="tabAnswer" aria-controls="answerBody" aria-selected="true">Answer</button>
@@ -340,6 +372,7 @@ ol.trace li.open .ev-more { display: block; }
         <button type="button" id="segSteps" aria-pressed="false">Agent steps</button>
         <button type="button" id="segRuns" aria-pressed="true">Live runs</button>
       </div>
+      <button type="button" class="ghost tiny expand" id="expandSteps" aria-expanded="false" title="Open this panel large over the page (Esc closes it)">Expand</button>
     </div>
     <div class="pane-body">
       <div id="stepsView" hidden>
@@ -355,6 +388,21 @@ ol.trace li.open .ev-more { display: block; }
   </section>
 </div>
 </div>
+<div class="scrim" id="scrim" hidden></div>
+<dialog class="big" id="big" aria-labelledby="bigTitle">
+  <div class="big-head">
+    <h2 id="bigTitle">Table</h2>
+    <button type="button" class="ghost tiny" id="bigClose">Close</button>
+    <div class="big-tools">
+      <label for="bigFilter" class="vh">Filter rows</label>
+      <input id="bigFilter" type="text" autocomplete="off" placeholder="Filter rows, e.g. a supplier or council">
+      <span class="muted small" id="bigCount"></span>
+      <span id="bigLink"></span>
+    </div>
+    <p class="big-note" id="bigNote"></p>
+  </div>
+  <div class="big-body" id="bigBody"></div>
+</dialog>
 
 <script>
 "use strict";
@@ -573,9 +621,13 @@ function tableArtifact(a, inline) {
       t.appendChild(tr);
     });
     tw.appendChild(t); kids.push(tw);
-    var more = (rows.length > LIMIT || count > LIMIT) ? "Showing " + Math.min(LIMIT, rows.length) + " of " + count + ". " : "";
-    var link = dlLink(a.export);
-    if (more || link) kids.push(el("p", { class: "muted small" }, [more, link]));
+    var shown = Math.min(LIMIT, rows.length);
+    kids.push(el("div", { class: "tbl-foot muted small" }, [
+      el("button", { type: "button", class: "dl", text: "Open large", title: "See every row in a large window, with a filter and sortable columns",
+        onclick: function () { openBig({ title: a.title || "Table", rows: rows, count: count, export: a.export, synthetic: a.synthetic }); } }),
+      count > shown ? el("span", { text: "Showing " + shown + " of " + count + " here." }) : null,
+      dlLink(a.export)
+    ]));
   }
   if (inline) return el("div", {}, [el("h3", { text: (a.title || "Table") + " - " + count })].concat(kids));
   var open = FIRST_TABLE; FIRST_TABLE = false;
@@ -644,7 +696,13 @@ function renderArtifact(a) {
         t.appendChild(el("tr", {}, [el("td", { text: d.label || d.clause_key })].concat(councils.map(function (c) { var v = d[c] || {}; return el("td", { text: (v.value_text || "-") + (v.page ? "  (p." + v.page + ")" : "") }); }))));
       });
       var tw = el("div", { class: "tablewrap" }); tw.appendChild(t);
-      var kids = [tw];
+      var gridRows = (a.differences || []).map(function (d) {
+        var gr = { clause: d.label || d.clause_key };
+        councils.forEach(function (c) { var v = d[c] || {}; gr[c] = (v.value_text || "-") + (v.page ? "  (p." + v.page + ")" : ""); });
+        return gr;
+      });
+      var kids = [tw, el("div", { class: "tbl-foot" }, [el("button", { type: "button", class: "dl", text: "Open large", title: "See this table in a large window",
+        onclick: function () { openBig({ title: a.title || "Clauses", rows: gridRows, count: gridRows.length }); } })])];
       if ((a.agreements || []).length) kids.push(el("p", { class: "muted small", text: "They agree on: " + a.agreements.map(function (g) { return g.label || g.clause_key || String(g); }).join("; ") }));
       var open = FIRST_TABLE; FIRST_TABLE = false;
       return fold(a.title || "Clauses", (a.differences || []).length + " differ", open, kids);
@@ -795,6 +853,10 @@ function finding(fig, sub, what, next, acts) {
     acts.length ? el("div", { class: "acts" }, acts) : null
   ]);
 }
+function openList(exp, label, title) {
+  return exp && exp.url ? el("button", { type: "button", class: "dl", text: label + " (" + exp.rows + ")", title: "Open the full list in a large window; it can be downloaded as CSV from there",
+    onclick: function () { openBig({ title: title, rows: [], count: exp.rows, export: exp }); } }) : null;
+}
 function askBtn(q) { return el("button", { type: "button", class: "ghost tiny", text: "Ask it now", title: q, onclick: function () { $("q").value = q; guarded(function () { return runQuery(q); }); } }); }
 
 async function loadEvidence() {
@@ -824,11 +886,11 @@ async function loadEvidence() {
   if (h && h.contracts) f.appendChild(finding(gbpShort(h.contracts.value_gbp), h.contracts.count + " contracts",
     h.contracts.count + " contracts end within " + h.contracts.window_days + " days of vesting day with no extension date recorded past it; " + h.contracts.shared_suppliers + " of their suppliers are also paid by another council.",
     "decide novation, extension or planned expiry, largest first. The letter for the largest is held as " + (h.contracts.drafts || []).join(", ") + "; nothing is sent.",
-    [askBtn(ASK.contracts), dlLink(h.contracts.export, "Contract list")].filter(Boolean)));
+    [askBtn(ASK.contracts), openList(h.contracts.export, "Contract list", "Contracts ending within " + h.contracts.window_days + " days of vesting day, no extension date recorded past it")].filter(Boolean)));
   if (h && h.suppliers) f.appendChild(finding(String(h.suppliers.shared), "supplier pairs shared",
     h.suppliers.shared + " supplier pairs are shared across the councils, " + gbp(h.suppliers.spend_gbp) + " combined spend" + ((h.suppliers.recalled || []).length ? "; resolved using remembered decision " + h.suppliers.recalled.join(", ") : "") + ".",
     "one contract instead of two or three, biggest spend first. " + h.suppliers.awaiting_human + " similar names wait for a person; each decision is remembered.",
-    [askBtn(ASK.suppliers), dlLink(h.suppliers.export, "Shared suppliers"), dlLink(h.suppliers.queue_export, "Decision queue")].filter(Boolean)));
+    [askBtn(ASK.suppliers), openList(h.suppliers.export, "Shared suppliers", "Supplier pairs shared across the councils"), openList(h.suppliers.queue_export, "Decision queue", "Similar supplier names waiting for a person to decide")].filter(Boolean)));
   if (h && h.policy) f.appendChild(finding(h.policy.differ + " of " + h.policy.clauses, "clauses differ",
     h.policy.differ + " of " + h.policy.clauses + " Council Tax Support clauses differ between " + (h.policy.councils || []).join(" and ") + "; " + h.policy.synthetic_differ + " of " + h.policy.synthetic_residents + " SYNTHETIC test residents would get a different answer on day one.",
     "agree one scheme before vesting day. The options note is held as " + (h.policy.drafts || []).join(", ") + ".",
@@ -848,6 +910,120 @@ async function replayRun(r) {
   setStatus("Replayed " + r.run_id + " from the committed log: " + r.model_calls_with_receipts + " Nemotron calls with signed receipts, " + r.zetaris_queries + " Zetaris queries. Nothing was re-run.", false);
   REPLAY = false;
 }
+
+/* ---------- a table in a large window: every row (from the run's CSV when the answer only carries a preview), filter, sort ---------- */
+var BIG = { rows: [], cols: [], key: null, dir: 1 };
+var BIG_MAX = 2000;
+function sval(v) { return v === null || v === undefined ? "" : (typeof v === "object" ? JSON.stringify(v) : String(v)); }
+function numish(v) { return typeof v === "number" || (typeof v === "string" && /^-?\d+(\.\d+)?$/.test(v.trim())); }
+function cmpVals(a, b) {
+  var ea = sval(a) === "", eb = sval(b) === "";
+  if (ea || eb) return ea === eb ? 0 : (ea ? 1 : -1);
+  if (numish(a) && numish(b)) return Number(a) - Number(b);
+  return sval(a).localeCompare(sval(b), "en-GB", { numeric: true, sensitivity: "base" });
+}
+function bigCell(k, v) {
+  if (typeof v === "string" && /^-?\d+(\.\d+)?$/.test(v.trim()) && !/provenance|_id$|_ref$|^id$/.test(k)) v = Number(v);
+  var td = cell(k, v);
+  if (sval(v).length > 40) td.classList.add("long");   /* long text wraps at words in a wider column */
+  return td;
+}
+function parseCsv(text) {
+  var out = [], row = [], f = "", inQ = false, c;
+  text = text.replace(/^\uFEFF/, "");
+  for (var i = 0; i < text.length; i++) {
+    c = text.charAt(i);
+    if (inQ) {
+      if (c === '"') { if (text.charAt(i + 1) === '"') { f += '"'; i++; } else inQ = false; }
+      else f += c;
+    } else if (c === '"') inQ = true;
+    else if (c === ",") { row.push(f); f = ""; }
+    else if (c === "\n") { row.push(f); out.push(row); row = []; f = ""; }
+    else if (c !== "\r") f += c;
+  }
+  if (f !== "" || row.length) { row.push(f); out.push(row); }
+  var head = out.shift() || [];
+  return out.filter(function (r) { return r.length > 1 || r[0] !== ""; }).map(function (r) {
+    var o = {}; head.forEach(function (h, j) { o[h] = r[j] === undefined ? "" : r[j]; }); return o;
+  });
+}
+function bigColumns(rows) {
+  var keys = [];
+  rows.slice(0, 200).forEach(function (r) { Object.keys(r).forEach(function (k) { if (k.charAt(0) !== "_" && keys.indexOf(k) < 0) keys.push(k); }); });
+  var first = rows.length ? columnsFor(rows, null).filter(function (k) { return keys.indexOf(k) >= 0; }) : [];
+  return first.concat(keys.filter(function (k) { return first.indexOf(k) < 0; }));
+}
+function renderBig(focusCol) {
+  var q = $("bigFilter").value.trim().toLowerCase();
+  var rows = BIG.rows;
+  if (q) rows = rows.filter(function (r) { return BIG.cols.some(function (c) { return sval(r[c]).toLowerCase().indexOf(q) >= 0; }); });
+  if (BIG.key) {
+    var k = BIG.key, d = BIG.dir;
+    rows = rows.slice().sort(function (x, y) {
+      var ex = sval(x[k]) === "", ey = sval(y[k]) === "";
+      if (ex || ey) return ex === ey ? 0 : (ex ? 1 : -1);   /* blanks stay at the bottom either way */
+      return d * cmpVals(x[k], y[k]);
+    });
+  }
+  var head = el("tr");
+  BIG.cols.forEach(function (c) {
+    var th = el("th", { scope: "col", tabindex: "0", title: "Sort by " + c.replace(/_/g, " "), text: c.replace(/_/g, " ") });
+    if (BIG.key === c) th.setAttribute("aria-sort", BIG.dir > 0 ? "ascending" : "descending");
+    var go = function () { if (BIG.key === c) BIG.dir = -BIG.dir; else { BIG.key = c; BIG.dir = 1; } renderBig(c); };
+    th.addEventListener("click", go);
+    th.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } });
+    head.appendChild(th);
+  });
+  var body = el("tbody");
+  rows.slice(0, BIG_MAX).forEach(function (r) { body.appendChild(el("tr", {}, BIG.cols.map(function (c) { return bigCell(c, r[c]); }))); });
+  clear($("bigBody")).appendChild(el("table", {}, [el("thead", {}, [head]), body]));
+  if (!BIG.rows.length) $("bigBody").appendChild(el("p", { class: "empty", text: "No rows." }));
+  var n = BIG.rows.length;
+  $("bigCount").textContent = (q ? rows.length + " of " + n + " rows match" : n + (n === 1 ? " row" : " rows")) + (rows.length > BIG_MAX ? "; the first " + BIG_MAX + " are shown" : "");
+  if (focusCol) { var ths = $("bigBody").querySelectorAll("th"); var at = BIG.cols.indexOf(focusCol); if (ths[at]) ths[at].focus(); }
+}
+async function openBig(o) {
+  var dlg = $("big");
+  BIG = { rows: (o.rows || []).slice(), cols: [], key: null, dir: 1 };
+  var count = (o.count !== undefined && o.count !== null) ? o.count : BIG.rows.length;
+  var note = o.synthetic ? "These residents are SYNTHETIC test cases, not real people. " : "";
+  $("bigTitle").textContent = o.title || "Table";
+  $("bigFilter").value = "";
+  clear($("bigLink")); var link = dlLink(o.export, "Download"); if (link) $("bigLink").appendChild(link);
+  $("bigCount").textContent = "Loading...";
+  $("bigNote").textContent = note;
+  clear($("bigBody"));
+  if (!dlg.open) dlg.showModal();
+  if (o.export && o.export.url && count > BIG.rows.length) {
+    try {
+      var r = await fetch(o.export.url);
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      BIG.rows = parseCsv(await r.text());
+    } catch (e) { note += "Only the first " + BIG.rows.length + " of " + count + " rows could be loaded here (" + e.message + "). "; }
+  } else if (count > BIG.rows.length) {
+    note += "This answer carries the first " + BIG.rows.length + " of " + count + " rows. ";
+  }
+  $("bigNote").textContent = note + "Click a column name to sort by it; type above to filter.";
+  BIG.cols = bigColumns(BIG.rows);
+  renderBig();
+  $("bigFilter").focus();
+}
+
+/* ---------- a panel opened large over the page ---------- */
+var BIGPANE = null;
+function closePane() {
+  if (!BIGPANE) return;
+  var p = $(BIGPANE), b = p.querySelector(".expand");
+  p.classList.remove("big-pane"); b.textContent = "Expand"; b.setAttribute("aria-expanded", "false");
+  $("scrim").hidden = true; BIGPANE = null;
+}
+function openPane(id) {
+  closePane();
+  var p = $(id), b = p.querySelector(".expand");
+  p.classList.add("big-pane"); b.textContent = "Close"; b.setAttribute("aria-expanded", "true");
+  $("scrim").hidden = false; BIGPANE = id; b.focus();
+}
+function togglePane(id) { if (BIGPANE === id) closePane(); else openPane(id); }
 
 /* ---------- panel widths: drag a line between two panels; double-click it to go back to the default ---------- */
 var WIDTHS_KEY = "vesting-day-widths";
@@ -930,6 +1106,15 @@ $("tabSteps").addEventListener("click", function () { setView("steps"); });
 $("segSteps").addEventListener("click", function () { setRight("steps"); setView("steps"); });
 $("segRuns").addEventListener("click", function () { setRight("runs"); setView("steps"); });
 $("homeBtn").addEventListener("click", goHome);
+$("expandResult").addEventListener("click", function () { togglePane("result"); });
+$("expandSteps").addEventListener("click", function () { togglePane("stepsPane"); });
+$("scrim").addEventListener("click", closePane);
+document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !$("big").open) closePane(); });
+$("bigClose").addEventListener("click", function () { $("big").close(); });
+$("big").addEventListener("click", function (e) { if (e.target === this) this.close(); });
+$("bigFilter").addEventListener("input", function () { renderBig(); });
+$("bigFilter").addEventListener("keydown", function (e) { if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); $("big").close(); } });
+if (ONE_SCREEN && ONE_SCREEN.addEventListener) ONE_SCREEN.addEventListener("change", function () { if (!ONE_SCREEN.matches) closePane(); });
 $("navFound").addEventListener("click", function (ev) { ev.preventDefault(); goHome(); if (!(ONE_SCREEN && ONE_SCREEN.matches)) $("result").scrollIntoView({ behavior: REDUCED ? "auto" : "smooth" }); });
 $("navRuns").addEventListener("click", function (ev) { ev.preventDefault(); setRight("runs"); setView("steps"); if (!(ONE_SCREEN && ONE_SCREEN.matches)) $("stepsPane").scrollIntoView({ behavior: REDUCED ? "auto" : "smooth" }); });
 $("resetBtn").addEventListener("click", function () { guarded(async function () { await api("/demo/reset", {}); refreshHealth(); goHome(); resetPipe(); setStatus("Demo memory cleared: no stored decisions, no held drafts.", false); }); });
