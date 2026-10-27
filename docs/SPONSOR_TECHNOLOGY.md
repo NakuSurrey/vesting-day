@@ -39,8 +39,8 @@ the same four the agent lists) and `payment_is_positive` (19,847 lines, 252 inva
 credit and zero lines). Setting `ZETARIS_USL` makes the agent's Researcher read through the USL.
 Building it we found that a filter `A AND B AND (C OR D)` on a USL table was answered as if the
 brackets were dropped (59 contracts became 115); the same filter on the source was correct. The
-USL query avoids `OR`, and the issue is kept as a reproducible step. `docs/ZETARIS_USL.md` maps
-each of Zetaris's evaluation criteria to the evidence.
+USL query avoids `OR`, and the issue is kept as a reproducible step. `docs/ZETARIS_USL.md` has the
+full write-up: what we queried, how the layer was built and checked, and what we learned.
 
 **Test / evidence.**
 - Live traces `logs/trace-live-0N.jsonl`: every `query_data_layer` event names
@@ -124,18 +124,16 @@ request in the trace. Code: `app/agents/planner.py`, `app/agents/writer.py`,
 Super-class endpoints were retired, excluded or end-of-life for this account, so Lightning does
 both the matching suggestions and the drafting.
 
-## Cursor - development
+## Cursor
 
-Cursor was not used. The event made Cursor optional on 22 Oct 2026 and allowed any AI coding
-tool; this project was built with Claude Code. Every change was reviewed, tested and committed
-by the author, and the commit history is the record of the build.
+Cursor was not used in this project.
 
 ## What was unique
 
 - **The model decides the plan; the code keeps it safe.** For a broad question Nemotron chooses
   the checks, and the Planner validates, delegates, assesses and revises - every decision is a
   trace line with the model and receipt. In SAMPLE_MODE a rule-based planner, badged as such, does
-  the same job, so judges see the same control flow without credentials.
+  the same job, so the same control flow runs without credentials.
 - **Memory that changes the answer, and has to say so.** A human decision stored in H-MEM
   changes the next answer, and the Critic rejects any briefing that relied on a remembered
   decision without naming it. The live briefing says "resolved using a remembered human
@@ -148,7 +146,7 @@ by the author, and the commit history is the record of the build.
 - **Federation, not migration, with the live path proven equal to the offline path.** Three
   council databases are never merged; Zetaris queries them in place behind a read-only login
   with no open port. A test replays Zetaris's real answer shape and proves every live query
-  returns exactly what SAMPLE_MODE returns, so the judge-runnable path and the live path are
+  returns exactly what SAMPLE_MODE returns, so the offline path and the live path are
   the same agent.
 - **Every number is accountable.** Each figure carries a `council:file:row` provenance id, each
   generated sentence carries its model badge and Meterless receipt, and SYNTHETIC test

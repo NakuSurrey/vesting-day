@@ -24,7 +24,7 @@ def _truthy(v: str | None) -> bool:
 def _secret(name: str) -> str:
     """A credential from the environment, or "" when it is unset or still the .env.example placeholder.
 
-    A judge who copies .env.example to .env gets values like "your-zetaris-api-key"; those must not
+    Anyone who copies .env.example to .env gets values like "your-zetaris-api-key"; those must not
     switch the app into live mode against services that are not there.
     """
     v = (os.getenv(name) or "").strip()

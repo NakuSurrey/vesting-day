@@ -1,4 +1,4 @@
-"""Canonical H-MEM shapes (AGENTS.md sections 2 and 9).
+"""Canonical H-MEM shapes.
 
 Python port of the Meterless H-MEM reference (engines/hmem/reference/src/types.ts).
 Attribute names are snake_case in Python; snapshot() emits the canonical camelCase

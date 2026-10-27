@@ -1,4 +1,4 @@
-"""Conflict detection and resolution (AGENTS.md section 10). The losing record
+"""Conflict detection and resolution. The losing record
 is marked supersededBy (kept, penalized in ranking), never deleted.
 Auto-resolve only at decision confidence >= 0.70; everything else queues.
 

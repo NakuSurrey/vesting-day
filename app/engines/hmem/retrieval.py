@@ -1,4 +1,4 @@
-"""Hybrid retrieval and reinjection (AGENTS.md section 6). The canonical formula:
+"""Hybrid retrieval and reinjection. The canonical formula:
 
     raw = 0.35*semantic + 0.20*keyword + 0.10*tag + 0.10*domain
         + 0.15*entity   + 0.05*layer   + 0.05*recency - 0.20*superseded
@@ -137,7 +137,7 @@ class MemoryRetrievalService:
         lines.append("[/MEMORY CONTEXT]")
         return "\n".join(lines)
 
-    # Exact feedback deltas (AGENTS.md section 9.2).
+    # How each feedback signal changes a memory's confidence and access count.
     def feedback(self, memory_id: str, kind: str) -> None:
         m = self._store.get(memory_id)
         if m is None:

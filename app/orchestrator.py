@@ -1,4 +1,4 @@
-"""Orchestrator: wires one request through the agents and returns the HackOS response shape.
+"""Orchestrator: wires one request through the agents and returns one JSON response.
 
 Mode is decided once per run (sample or live), the adapters are built to match,
 and the Router picks the flow. H-MEM and the approval store persist across runs
@@ -101,7 +101,7 @@ class Orchestrator:
             return self._error(req, tracer, t0, e.type_, str(e), recoverable=e.recoverable)
         except ModelError as e:
             return self._error(req, tracer, t0, "ModelError", str(e), recoverable=e.recoverable)
-        except Exception as e:  # never crash the judge's curl
+        except Exception as e:  # never crash the caller; return a structured error
             return self._error(req, tracer, t0, type(e).__name__, f"{e}", recoverable=False)
         finally:
             tracer.close()

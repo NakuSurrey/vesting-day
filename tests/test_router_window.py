@@ -1,4 +1,4 @@
-"""The contract-cliff window comes from the judge's own words, not a fixed default.
+"""The contract-cliff window comes from the user's own words, not a fixed default.
 
 A fresh-clone check asked "Which Guildford contracts end within a year of vesting day?" and got a
 +/-180-day answer: the old parser only read digits followed by days or months.
@@ -61,7 +61,7 @@ def test_a_year_window_changes_the_answer(tmp_path: Path) -> None:
     assert count(year) >= count(half)     # a wider window can only add contracts
 
 
-# --- judges' own phrasings route to the right flow; off-topic stays an honest "unsupported" ------
+# --- people's own phrasings route to the right flow; off-topic stays an honest "unsupported" ------
 
 def _flow(orch: Orchestrator, run_id: str, q: str) -> str:
     import json

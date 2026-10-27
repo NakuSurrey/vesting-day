@@ -1,4 +1,4 @@
-"""Sleep cycle (AGENTS.md section 8). Preview-first: preview() computes the
+"""Sleep cycle. Preview-first: preview() computes the
 full action plan and mutates nothing; execute() takes a backup snapshot first
 and exposes restore(). Guardrails: superseding/current records, derived or
 synthesized memories, and relationship hubs are NEVER archived.

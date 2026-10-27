@@ -1,4 +1,4 @@
-"""Dreaming (AGENTS.md section 7): constructive synthesis with an approval
+"""Dreaming: constructive synthesis with an approval
 boundary. Proposals are NEVER auto-materialized; only approve() turns one into
 durable memory, with derivedFrom lineage.
 

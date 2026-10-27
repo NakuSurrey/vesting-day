@@ -1,7 +1,7 @@
 # Live run on the laptop (Nightshift + Zetaris)
 
-The judges run SAMPLE_MODE. The live run is for the committed traces and the video: real
-Zetaris federation and real Nemotron requests through Nightshift, with receipts.
+SAMPLE_MODE needs none of this. The live run is how the committed traces in `logs/` were made:
+real Zetaris federation and real Nemotron requests through Nightshift, with receipts.
 
 ## 1. Once: clone and install
 
@@ -69,4 +69,4 @@ e.g. `git add logs/response-live-03.json logs/trace-live-03.jsonl`.
 
 ## 7. Server at the end
 
-Zetaris can be stopped with `docker compose down` (no `-v`). Judges never touch the server.
+Zetaris can be stopped with `docker compose down` (no `-v`, which would delete the data).

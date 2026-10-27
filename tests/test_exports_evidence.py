@@ -2,7 +2,7 @@
 
 Every table an answer shows is written in full as CSV next to the run's trace (the JSON keeps
 short preview rows), and GET /export serves it. GET /evidence lists the live runs committed in
-logs/ with the facts a judge checks first and the headline results of the newest live brief;
+logs/ with the facts worth checking first and the headline results of the newest live brief;
 nothing is re-run and no number is typed into the page.
 """
 

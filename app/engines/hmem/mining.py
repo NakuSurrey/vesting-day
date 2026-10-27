@@ -1,7 +1,7 @@
-"""Acquisition pipeline (AGENTS.md section 4). The model-free fallback path is
+"""Acquisition pipeline. The model-free fallback path is
 the DEFAULT: heuristic sentence extraction preserves capture continuity with
 no model available. An optional miner_fn hook accepts an extraction prompt and
-returns a strict JSON array of memory strings; its output is parsed robustly
+returns a strict JSON array of memory strings; its output is parsed leniently
 (markdown fences stripped, format noise tolerated).
 
 Port of reference/src/memoryMining.ts. The hook is a plain callable so the

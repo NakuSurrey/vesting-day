@@ -1,8 +1,8 @@
 """Recorded live runs, read back from the committed logs (nothing is re-run).
 
 Every live run committed in logs/ is a pair: response-<run_id>.json (the POST /run answer) and
-trace-<run_id>.jsonl (what each agent did). This module lists them with the facts a judge
-checks first - which question, which model, how many signed receipts, how many Zetaris
+trace-<run_id>.jsonl (what each agent did). This module lists them with the facts worth
+checking first - which question, which model, how many signed receipts, how many Zetaris
 queries, how many times the Critic sent work back - and pulls the headline results out of the
 newest live day-one brief, so the web page can open with real results from a real live run
 without typing a single number into the page.

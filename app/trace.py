@@ -1,7 +1,7 @@
 """JSONL agent traces - the evidence of real agent work.
 
 One file per run: logs/trace-<run_id>.jsonl. One JSON object per line with the
-HackOS fields: timestamp, run_id, agent_name, action, input_summary,
+fields: timestamp, run_id, agent_name, action, input_summary,
 output_summary, target_agent, model, confidence, retry_count, status.
 Lines are also echoed to the console (stderr, so the CLI's JSON on stdout stays clean). Traces are only ever written by the agents
 as they run, never by hand.
@@ -32,7 +32,7 @@ class Tracer:
 
     @property
     def log_file(self) -> str:
-        # relative to the repo root, as in the guide's example
+        # relative to the repo root
         return f"logs/{self.path.name}"
 
     def log(

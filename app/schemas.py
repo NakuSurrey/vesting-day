@@ -1,7 +1,7 @@
 """Request and response shapes for POST /run.
 
-These follow the HackOS Technical Execution Guide exactly: a judge drives the
-agent with curl and these field names.
+One JSON request in, one JSON response out, so the agent can be driven with curl
+as easily as from the web page.
 """
 
 from __future__ import annotations

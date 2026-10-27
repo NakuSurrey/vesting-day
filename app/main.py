@@ -2,7 +2,7 @@
 
 GET  /                  -> the web page: ask a question, watch the agents work (a thin layer over POST /run)
 GET  /health            -> {"status": "ok", "sample_mode": bool, ...}
-POST /run               -> the HackOS run contract (see app/schemas.py)
+POST /run               -> run the agent on one request (see app/schemas.py)
 GET  /trace/{run_id}    -> the run's trace events (logs/trace-<run_id>.jsonl)
 GET  /export/{run_id}/{name}.csv -> a full action list from that run as CSV (logs/export-<run_id>-<name>.csv)
 GET  /evidence          -> the recorded live runs committed in logs/, with headline results (nothing is re-run)

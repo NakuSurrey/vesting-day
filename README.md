@@ -100,7 +100,7 @@ uv run python run.py --query "Which companies are paid by all three councils?"
 uv run python run.py --query "What are the biggest risks on vesting day?"      # the Planner chooses and runs the checks
 ```
 
-Run the examples in order to watch memory change the answer:
+Run the examples in sequence to watch memory change the answer:
 
 ```bash
 uv run python run.py --reset-memory --input input_examples/01_supplier_overlap.json   # Unit4 pair: awaiting a human
@@ -110,8 +110,8 @@ uv run python run.py --input input_examples/03_supplier_overlap_after_decision.j
 
 Each run writes `logs/trace-<run_id>.jsonl` - one line per agent action: who acted, what it
 received and produced, which agent it handed to, the model and receipt, the retry count and
-the status - and echoes the same lines to the terminal. The response follows the HackOS
-contract (`run_id`, `status`, `output`, `agents`, `trace_id`, `log_file`,
+the status - and echoes the same lines to the terminal. The response is one JSON object
+(`run_id`, `status`, `output`, `agents`, `trace_id`, `log_file`,
 `execution_time_seconds`); `--out FILE` also writes it as UTF-8. Seven example inputs are in
 `input_examples/` with their real outputs in `output_examples/`.
 
@@ -191,8 +191,8 @@ in `data/sample/residents_synthetic.csv`) is labelled SYNTHETIC wherever it appe
 
 ## Why this is an agent system, not a pipeline
 
-The judging guides list the behaviours that separate agents from a chain. Each one is a line
-in `logs/trace-<run_id>.jsonl` that a judge can open:
+What makes this more than a fixed chain of calls, and where to see it. Each behaviour is a line
+in `logs/trace-<run_id>.jsonl`:
 
 | Behaviour | Where it happens | Trace line to look for |
 |---|---|---|
@@ -252,8 +252,8 @@ Zetaris returned.
 | Rule `payment_is_positive` | 19,847 lines, 252 invalid - Woking's credit and zero lines |
 | Issue found | a filter `A AND B AND (C OR D)` on a USL table was answered as if the brackets were dropped (59 contracts became 115); the source was correct. Reproduced in the evidence; the USL query avoids `OR` |
 
-`docs/ZETARIS_USL.md` maps this to Zetaris's evaluation criteria, with our write-ups on time
-saved, how a USL helps this work, and requirements to make it stronger.
+`docs/ZETARIS_USL.md` is the full write-up: the build, whether it saved time, where a USL
+helps this kind of work, and what would make it stronger.
 
 ## Live mode (Zetaris + Nightshift)
 
@@ -299,11 +299,11 @@ uv run pytest -q          # 127 tests
   Zetaris answered wrongly, which the repro steps keep; with `ZETARIS_USL` set every Researcher
   query read through it matches SAMPLE_MODE; the runner stops on a failed build step, records a
   re-run's "already exists" without calling it an error, and never writes the key.
-- `tests/test_live_judge_hints.py` - live mode with a fake model: the judge's opinion never
+- `tests/test_live_judge_hints.py` - live mode with a fake model: the match judge's opinion never
   moves a pair, over-claims and dropped SYNTHETIC labels are bounced, a recalled decision
   must be named, and a model that keeps failing is replaced by the template.
-- `tests/test_router_window.py` - judges' own phrasings route to the right flow and the time
-  window comes from their words.
+- `tests/test_router_window.py` - questions in people's own words route to the right flow and
+  the time window comes from their words.
 - `tests/test_planner.py` - a valid model plan is used (with its receipt in the trace), an invalid
   one is rejected for the rule-based plan and the trace says so, unknown checks are dropped, a
   step that cannot run as asked is revised, a failed step is skipped and named, every step
@@ -319,8 +319,8 @@ uv run pytest -q          # 127 tests
   trace route returns the agents' real steps and rejects bad ids, and the memory demo works
   over HTTP and resets cleanly.
 
-CI (`.github/workflows/ci.yml`) runs all of them, a secrets scan, a fresh-clone run, the
-judges' self-test (copy `.env.example`, ask questions that are not in the examples), and the
+CI (`.github/workflows/ci.yml`) runs all of them, a secrets scan, a fresh-clone run, a
+clean-setup check (copy `.env.example`, ask questions that are not in the examples), and the
 Docker image with no network.
 
 ## Data
@@ -394,9 +394,7 @@ plan comes from rules and drafts from templates, badged `sample-mode/...` in eve
 Data: the councils' own published open data (`data/raw/MANIFEST.md`); the eight day-one test
 residents are SYNTHETIC and labelled so wherever they appear.
 
-Development tools: built with Claude Code, an AI coding tool the event allows. Cursor was made
-optional on 22 Oct 2026 and was not used. AI-assisted coding was used for code, tests and
-documentation; every change was reviewed, tested and committed by the author.
+Development tools: Python 3.12, uv, pytest, Docker, GitHub Actions and Claude Code.
 
 ## Third-party code and licences
 

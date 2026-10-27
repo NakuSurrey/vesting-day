@@ -1,4 +1,4 @@
-"""Tiered memory store with enrichment (AGENTS.md sections 2, 3, 5).
+"""Tiered memory store with enrichment.
 
 A record with no source is rejected by construction. Enrichment runs on every
 add: domain classification, namespace, entity extraction (cap 10), relatedTo
@@ -88,7 +88,7 @@ class MemoryStoreService:
     ) -> MemoryRecord:
         if source is None or str(source).strip() == "":
             raise ValueError(
-                "H-MEM: a memory record with no source must be rejected by construction (AGENTS.md section 2)"
+                "H-MEM: a memory record with no source must be rejected by construction"
             )
         now = self._clock()
         self._seq += 1
@@ -173,7 +173,7 @@ class MemoryStoreService:
             raise KeyError(f"H-MEM: unknown memory id {rid}")
         return rec
 
-    # -- enrichment (AGENTS.md section 5) -----------------------------------
+    # -- enrichment -----------------------------------
 
     def classify_domain(self, content: str, tags: list[str], type: str) -> str:
         for t in tags:

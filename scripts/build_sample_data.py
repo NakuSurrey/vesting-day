@@ -6,7 +6,7 @@ Output: data/sample/spend.csv, contracts.csv, sources.json   (+ counts printed)
 Every output row keeps a provenance id (council:file:row) so any number shown by
 the agent can be traced to the published file and line it came from.
 
-Rules applied (Official Rules section 11, data handling):
+Rules applied (no personal data):
 - rows whose payee looks like a natural person are dropped (title-prefixed names,
   "redacted" placeholders, and first-name + surname patterns)
 - the Woking "AccountHolder" column (names of council card holders) is never copied
@@ -111,7 +111,7 @@ def col(header: list[str], *names: str) -> int | None:
     return None
 
 
-# --- natural-person filter (Official Rules section 11) ----------------------
+# --- natural-person filter ----------------------
 
 TITLE_RE = re.compile(r"^(mr|mrs|ms|miss|dr|rev|mr\.|mrs\.|ms\.|dr\.)\b", re.IGNORECASE)
 REDACTED_RE = re.compile(r"\b(redacted|name withheld|personal data|private individual|individual)\b", re.IGNORECASE)

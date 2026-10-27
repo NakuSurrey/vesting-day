@@ -1,9 +1,9 @@
-"""Append-only trust ledger (AGENTS.md section 9.1). Entries are never mutated
+"""Append-only trust ledger. Entries are never mutated
 or deleted. history() reconstructs a memory's full change record from the
 previousState/newState snapshots carried on each entry.
 
 Port of reference/src/trustLedger.ts. When persist_dir is set, every entry is
-appended to ledger.jsonl - the file we ship to logs/ as judge evidence.
+appended to ledger.jsonl, so every change to memory can be traced afterwards.
 """
 
 from __future__ import annotations

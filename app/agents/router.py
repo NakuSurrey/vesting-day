@@ -1,6 +1,6 @@
 """RouterAgent: turns a free-text request into one of the supported flows.
 
-Judges will type their own questions. The router scores each flow by the
+People ask in their own words. The router scores each flow by the
 phrases it recognises, picks the best, and returns a structured "unsupported"
 when nothing fits - never a guess dressed up as an answer.
 """
@@ -70,7 +70,7 @@ _WINDOW = re.compile(r"\b(?:(\d+)[\s-]*|(" + _WORDS + r")[\s-]+)(day|week|month|
 def window_days_in(q: str) -> int | None:
     """The time window a question asks for, in days: 'within a year' -> 365, 'three months' -> 90.
 
-    Judges type their own questions, so the window is read from digits or number words with any
+    People ask in their own words, so the window is read from digits or number words with any
     of days, weeks, months or years. Returns None when the question names no window.
     """
     q = q.lower()

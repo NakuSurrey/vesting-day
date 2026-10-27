@@ -65,7 +65,7 @@
     "meterless_nightshift": "primary AI provider: app/adapters/nightshift.py speaks Nightshift's OpenAI-compatible endpoint with the runtime token; every response's signed compute receipt is kept",
     "nvidia": "nvidia/nemotron-3.5-lightning-30b-a3b through Nightshift: proposes the Planner's plan as JSON (validated by code), writes the briefings, letters and options note, and suggests SAME/DIFFERENT for uncertain supplier pairs (a suggestion for the human queue, never a decision); the model name and receipt are logged per request"
   },
-  "development_tools": "Built with Claude Code (an AI coding tool the event allows; Cursor was made optional on 22 Oct 2026). Cursor was not used. Every change was reviewed and committed by the author.",
+  "development_tools": "Python 3.12, uv, pytest, Docker, GitHub Actions, Claude Code",
   "pre_existing_components": "None. The first commit is 2026-10-24; all code was written during the build window. Third party: the Meterless H-MEM reference conformance vectors (Apache-2.0, third_party/hmem) and the councils' published open data (data/raw/MANIFEST.md).",
   "traces": "logs/trace-<run_id>.jsonl, one JSON object per agent action, written by the agents as they run",
   "inputs": "input_examples/*.json (run 01, 02, 03 in order to see memory change the answer; 07 is a broad question the Planner breaks into checks)",

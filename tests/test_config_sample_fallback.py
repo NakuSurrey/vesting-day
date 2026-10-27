@@ -1,6 +1,6 @@
-"""A judge who copies .env.example to .env must land in SAMPLE_MODE, not in a broken live mode.
+"""Anyone who copies .env.example to .env must land in SAMPLE_MODE, not in a broken live mode.
 
-The official self-test is: clone, `cp .env.example .env`, run, POST a new input. Before this
+The clean-setup check is: clone, `cp .env.example .env`, run, POST a new input. Before this
 guard, .env.example shipped SAMPLE_MODE=false with placeholder keys, so the app went live
 against a Zetaris that was not there and returned UpstreamTimeout.
 """

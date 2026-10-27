@@ -1,5 +1,5 @@
 """Python port of the Meterless H-MEM engine (reference: github.com/Meterless/Meterless,
-engines/hmem, Apache-2.0). Spec: AGENTS.md. Conformance: tests/test_hmem_conformance.py
+engines/hmem, Apache-2.0). Conformance: tests/test_hmem_conformance.py
 against the unmodified upstream vectors in third_party/hmem/vectors.json.
 """
 

@@ -36,12 +36,12 @@ jobs:
           uv run python run.py --input input_examples/01_supplier_overlap.json > /tmp/out.json
           python3 -c "import json; d=json.load(open('/tmp/out.json')); assert d['status']=='success', d; print('ok', d['execution_time_seconds'], 's')"
           test -f logs/trace-example-01.jsonl
-      - name: Judges' self-test - copy .env.example to .env, ask NEW questions with no options
+      - name: Clean-setup check - copy .env.example to .env, ask new questions with no options
         run: |
           set -e
           cp .env.example .env
-          uv run python run.py --run-id judge-new-1 --query "Which Guildford contracts end within a year of vesting day?" > /tmp/j1.json
-          uv run python run.py --run-id judge-new-2 --query "Which companies are paid by all three councils?" > /tmp/j2.json
+          uv run python run.py --run-id new-1 --query "Which Guildford contracts end within a year of vesting day?" > /tmp/j1.json
+          uv run python run.py --run-id new-2 --query "Which companies are paid by all three councils?" > /tmp/j2.json
           python3 -c "
           import json
           j1 = json.load(open('/tmp/j1.json')); j2 = json.load(open('/tmp/j2.json'))

@@ -1,7 +1,7 @@
 """The web page and the routes it uses: a thin layer over POST /run.
 
 GET / serves one self-contained page (no external scripts, styles or fonts, so it works with
-no network). It drives the same POST /run judges can curl, reads the run's trace through
+no network). It drives the same POST /run anyone can curl, reads the run's trace through
 GET /trace/{run_id}, and can clear the shared demo memory through POST /demo/reset.
 """
 
