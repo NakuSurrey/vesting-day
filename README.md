@@ -93,7 +93,8 @@ Without uv (Python 3.11 or newer): `python -m venv .venv`, activate it
 (`source .venv/bin/activate`, or `.venv\Scripts\Activate.ps1` on Windows),
 `pip install -r requirements.txt`, then `python run.py`. With Docker:
 `docker build -t vesting-day . && docker run --rm -p 8000:8000 vesting-day`
-(CI builds the image and runs it with `--network none`).
+(CI builds the image and runs it with `--network none`). CI also runs every test on Windows and
+on Python 3.11, 3.12 and 3.13, and asks a question on each.
 
 With no `.env`, or with `cp .env.example .env` (it ships `SAMPLE_MODE=true`), the app runs in
 SAMPLE_MODE: the same agents and the same logic over the cached published data, with a
