@@ -5,7 +5,7 @@ Runs our Python engine against the UNMODIFIED upstream vectors
 (third_party/hmem/vectors.json). Each vector becomes one pytest case with the
 upstream id, so the scorecard reads the same as the official runner:
 13 checks across 7 sections. Assertions are the exact tier: formula
-arithmetic, deltas, gates and boundaries the spec fully determines.
+arithmetic, deltas, gates and boundaries the reference fully determines.
 
 Run:  uv run pytest tests/test_hmem_conformance.py -v
 """

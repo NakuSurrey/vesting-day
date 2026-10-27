@@ -68,12 +68,12 @@
   "development_tools": "Python 3.12, uv, pytest, Docker, GitHub Actions, Claude Code",
   "pre_existing_components": "None. The first commit is 2026-10-24; all code was written during the build window. Third party: the Meterless H-MEM reference conformance vectors (Apache-2.0, third_party/hmem) and the councils' published open data (data/raw/MANIFEST.md).",
   "traces": "logs/trace-<run_id>.jsonl, one JSON object per agent action, written by the agents as they run",
-  "inputs": "input_examples/*.json (run 01, 02, 03 in order to see memory change the answer; 07 is a broad question the Planner breaks into checks)",
+  "inputs": "input_examples/*.json (run 01, 02, 03 in sequence to see memory change the answer; 07 is a broad question the Planner breaks into checks)",
   "data_period": "the newest six months each council has published (Woking Nov 2025-Apr 2026 monthly; Guildford and Waverley Apr-Sep 2026); every answer carries a per-council period badge",
   "synthetic_data": "data/sample/residents_synthetic.csv only, labelled SYNTHETIC in every output",
   "limitations": [
     "Supplier identity below the exact/Companies-House bar is never asserted; it is queued for a human",
-    "Only the Lightning Nemotron lane is used (the Super-class endpoints were unavailable to this account during the event)",
+    "Only the Lightning Nemotron lane is used (the Super-class endpoints were unavailable to this account while this was built)",
     "Waverley's Council Tax Support scheme is not yet in the clause table; the policy flow covers Woking and Guildford",
     "Drafts are held, never sent",
     "The Router answers the supported question types (supplier overlap, contract cliff with any time window, Council Tax Support gap, confirm a match, approve a draft); anything else gets a structured unsupported error that lists them"

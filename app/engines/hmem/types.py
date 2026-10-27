@@ -2,7 +2,7 @@
 
 Python port of the Meterless H-MEM reference (engines/hmem/reference/src/types.ts).
 Attribute names are snake_case in Python; snapshot() emits the canonical camelCase
-field names from the spec so ledger and state files stay spec-shaped.
+field names from the Meterless reference, so ledger and state files match it.
 """
 
 from __future__ import annotations
@@ -77,7 +77,7 @@ class Provenance:
         return Provenance(origin=d["origin"], learned_at=d["learnedAt"], label=d["label"], refs=d.get("refs"))
 
 
-# Python attribute -> canonical spec field name.
+# Python attribute -> canonical field name in the Meterless reference.
 CANONICAL_FIELDS: dict[str, str] = {
     "id": "id",
     "content": "content",

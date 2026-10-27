@@ -97,7 +97,7 @@ class MemoryMiningService:
         return parse_strict_json_array(self._miner_fn(prompt))
 
 
-# Robust parsing: strip markdown fences, tolerate minor noise (section 4.1 step 3).
+# Lenient parsing: strip markdown fences, tolerate minor noise.
 def parse_strict_json_array(raw: str) -> list[str]:
     cleaned = raw.strip()
     cleaned = _FENCE_OPEN.sub("", cleaned)

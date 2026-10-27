@@ -75,7 +75,7 @@ class ConflictDetectionService:
         if not reason:
             return None
 
-        # Confidence modifiers (section 10.1).
+        # Confidence modifiers.
         shared = [e for e in a.entities if e in b.entities]
         if shared:
             confidence += 0.1
@@ -94,7 +94,7 @@ class ConflictDetectionService:
             resolved=False,
         )
 
-    # Weighted auto-decision heuristics (section 10.2).
+    # Weighted auto-decision heuristics.
     def auto_resolve(self, conflict: ConflictRecord) -> str:
         a = self._store.get(conflict.memory_a)
         b = self._store.get(conflict.memory_b)

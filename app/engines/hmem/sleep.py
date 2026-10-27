@@ -50,7 +50,7 @@ class SleepCycleService:
             unreferenced = m.id not in referenced
             if not (old_enough and low_access and unreferenced):
                 continue
-            # Guardrails (section 8.2): never archive these three classes.
+            # Guardrails: never archive these three classes.
             if m.supersedes:
                 continue  # superseding/current record
             if m.derived_from:

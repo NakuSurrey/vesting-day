@@ -120,7 +120,7 @@ The model is pinned by name (`METERLESS_MODEL`), so the Nemotron model is named 
 request in the trace. Code: `app/agents/planner.py`, `app/agents/writer.py`,
 `app/agents/resolver.py` (`judge_band`).
 
-**Limitation, stated plainly.** Only the Lightning lane is used. During the event the
+**Limitation, stated plainly.** Only the Lightning lane is used. While this was built the
 Super-class endpoints were retired, excluded or end-of-life for this account, so Lightning does
 both the matching suggestions and the drafting.
 
@@ -157,6 +157,6 @@ Cursor was not used in this project.
 - Claimed: Zetaris as the data layer; the H-MEM engine, ported and conformance-tested, in a
   working feature; Nightshift as the primary provider; Nemotron Lightning through it.
 - Not claimed: the other Meterless engines (World Model, Markovian, Scout Intent) are not
-  used. The Router is a deterministic classifier, not Scout Intent. Cursor was not used.
+  used. The Router is a deterministic classifier, not Scout Intent.
 - Third party: `third_party/hmem/vectors.json` (Apache-2.0, Meterless) is the only copied
   artefact; `app/engines/hmem` is our own port of the reference.

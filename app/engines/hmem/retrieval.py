@@ -119,7 +119,7 @@ class MemoryRetrievalService:
             ),
         )
 
-    # Domain-grouped reinjection blocks with layer markers and entities (section 6.2).
+    # Domain-grouped reinjection blocks with layer markers and entities.
     def format_reinjection(self, items: list[RetrievedMemory]) -> str:
         if not items:
             return ""

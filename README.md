@@ -344,7 +344,7 @@ open data terms.
 ## Limitations, stated plainly
 
 - Only the Lightning Nemotron lane is used. The Super-class endpoints were retired, excluded
-  or end-of-life for this account during the event, so Lightning does both matching
+  or end-of-life for this account while this was built, so Lightning does both matching
   suggestions and drafting. The match judge reviews at most 12 pairs per run.
 - Supplier identity below the exact / Companies-House bar is never asserted; those pairs are
   queued for a human. The fuzzy heuristics are deliberately conservative.

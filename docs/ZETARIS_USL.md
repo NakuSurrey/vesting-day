@@ -1,12 +1,12 @@
 # Building with Zetaris - the VESTING DAY Unified Semantic Layer
 
-This maps Zetaris's "Build with Zetaris evaluation criteria" to what we built and where the
-evidence is. Every result quoted here comes from the live run recorded in
+This is the write-up of the Unified Semantic Layer we built over the three councils, step by
+step, with where the evidence for each step is. Every result quoted here comes from the live run recorded in
 `docs/ZETARIS_USL_EVIDENCE.md` (started 2026-10-26 22:54 UTC, 29 of 29 steps succeeded), which
 `scripts/zetaris/build_usl.py` generated from Zetaris's own answers; the SQL of every step is in
 `scripts/zetaris/usl.sql`. Sections 2a-2c are our own views and are labelled as such.
 
-| Criterion | Minimum asked | What we did | Evidence |
+| Step | What the step asks for | What we did | Evidence |
 |---|---|---|---|
 | 1a Use case and sources | 3 or more data sources | Three councils, three separate databases, registered as three Zetaris sources | Section 1a; `scripts/zetaris/register_sources.sql` |
 | 1b Onboard and explore | 2-3 queries per source | 3 queries per source, 9 in all | Evidence steps 1-9 |
