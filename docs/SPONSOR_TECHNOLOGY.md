@@ -29,7 +29,7 @@ with a read-only `vd_reader` login; `scripts/zetaris/register_sources.sql` regis
 (`CREATE DATASOURCE` + `REGISTER DATASOURCE TABLES`). The databases sit on Zetaris's private
 Docker network with no port open to the internet. `docs/ZETARIS_SETUP.md` is the runbook.
 
-**Unified Semantic Layer.** Over the three sources we built the USL
+**Unified Semantic Layer.** Over the three sources I built the USL
 `lightning.metastore.vesting_day.west_surrey`: four tables (`council`, `spend`, `contracts`,
 `policy_clause`) with primary keys and a foreign key from each to `council`, each activated with
 one SELECT over the three sources, so nothing is copied. Through it Zetaris gives the agent's own
@@ -37,10 +37,10 @@ answers (payments per council; the contract cliff, 173 contracts / GBP 22,671,52
 data-quality rules run where the data is: `contract_has_end_date` (501 contracts, 4 invalid -
 the same four the agent lists) and `payment_is_positive` (19,847 lines, 252 invalid - Woking's
 credit and zero lines). Setting `ZETARIS_USL` makes the agent's Researcher read through the USL.
-Building it we found that a filter `A AND B AND (C OR D)` on a USL table was answered as if the
+Building it I found that a filter `A AND B AND (C OR D)` on a USL table was answered as if the
 brackets were dropped (59 contracts became 115); the same filter on the source was correct. The
 USL query avoids `OR`, and the issue is kept as a reproducible step. `docs/ZETARIS_USL.md` has the
-full write-up: what we queried, how the layer was built and checked, and what we learned.
+full write-up: what I queried, how the layer was built and checked, and what I learned.
 
 **Test / evidence.**
 - Live traces `logs/trace-live-0N.jsonl`: every `query_data_layer` event names
@@ -66,7 +66,7 @@ Resolver resolves that pair "using decision mem-N", and the Critic will not let 
 leave without naming that decision. The engine visibly changes a later answer, and every read
 and write lands in its append-only trust ledger.
 
-**How it is integrated.** `app/engines/hmem/` is our Python port of the Meterless reference
+**How it is integrated.** `app/engines/hmem/` is my Python port of the Meterless reference
 (types, embeddings, store, ledger, retrieval, mining, conflicts, sleep, dreaming, facade).
 `app/agents/memory.py` is the agent that uses it; `app/flows/confirm_match.py` writes
 decisions; `app/flows/supplier_overlap.py` recalls them. State persists in
@@ -159,4 +159,4 @@ Cursor was not used in this project.
 - Not claimed: the other Meterless engines (World Model, Markovian, Scout Intent) are not
   used. The Router is a deterministic classifier, not Scout Intent.
 - Third party: `third_party/hmem/vectors.json` (Apache-2.0, Meterless) is the only copied
-  artefact; `app/engines/hmem` is our own port of the reference.
+  artefact; `app/engines/hmem` is my own port of the reference.

@@ -3,8 +3,8 @@
 Nightshift exposes one OpenAI-compatible endpoint on the builder's machine
 (METERLESS_BASE_URL, Bearer METERLESS_RUNTIME_TOKEN). The NVIDIA key lives
 inside Nightshift, never here. Every response carries a signed Meterless
-compute receipt naming the model that did the work - we keep the model name
-and receipt id so each generated sentence can show its badge.
+compute receipt naming the model that did the work - the model name and
+receipt id are kept so each generated sentence can show its badge.
 
 Two rules learned the hard way with Nemotron thinking models:
   send reasoning_effort "none" and max_tokens >= 256, or you get empty text.

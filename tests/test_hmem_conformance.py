@@ -1,7 +1,7 @@
 """H-MEM conformance suite - pytest port of the official runner
 (github.com/Meterless/Meterless engines/hmem/conformance/runner.ts).
 
-Runs our Python engine against the UNMODIFIED upstream vectors
+Runs the Python engine against the UNMODIFIED upstream vectors
 (third_party/hmem/vectors.json). Each vector becomes one pytest case with the
 upstream id, so the scorecard reads the same as the official runner:
 13 checks across 7 sections. Assertions are the exact tier: formula

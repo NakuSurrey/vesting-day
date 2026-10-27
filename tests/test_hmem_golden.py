@@ -1,4 +1,4 @@
-"""Golden test: our Python H-MEM port must reproduce the upstream TypeScript
+"""Golden test: the Python H-MEM port must reproduce the upstream TypeScript
 reference bit-for-bit on fixed scenarios.
 
 tests/golden/hmem_reference_output.json was produced by running the Meterless

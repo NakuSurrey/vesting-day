@@ -242,7 +242,7 @@ def test_a_missing_parent_namespace_stops_the_run(steps) -> None:
 
 
 def test_the_cliff_query_avoids_or_and_the_repro_steps_show_the_correct_answer(steps) -> None:
-    # On our Zetaris "A AND B AND (C OR D)" over the USL gave the answer of "A AND B AND C OR D"
+    # On my Zetaris "A AND B AND (C OR D)" over the USL gave the answer of "A AND B AND C OR D"
     # (Woking 115 instead of 59). The USL query must not depend on that, and the two repro steps
     # must ask the same question, so a different live answer can only mean the behaviour.
     cliff = steps[_index(steps, "usl_contract_cliff")].sql

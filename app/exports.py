@@ -86,7 +86,7 @@ def _prune(logs_dir: Path) -> None:
 
 
 def export_path(logs_dir: Path, run_id: str, name: str) -> Path | None:
-    """The file behind GET /export/<run_id>/<name>.csv, or None if the name is not one we write."""
+    """The file behind GET /export/<run_id>/<name>.csv, or None if the name is not one this app writes."""
     if not NAME.fullmatch(name):
         return None
     p = logs_dir / "exports" / run_id / f"{name}.csv"

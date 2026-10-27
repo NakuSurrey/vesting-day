@@ -144,7 +144,7 @@ class ZetarisDataLayer(DataLayer):
                 rows = _rows_from_payload(payload)
                 total = payload.get("total") if isinstance(payload, dict) else None
                 if isinstance(total, int) and total > len(rows) and len(rows) < limit:
-                    # Zetaris cut the result short of what we asked for - never answer on part of the data.
+                    # Zetaris cut the result short of what was asked for - never answer on part of the data.
                     raise DataLayerError(
                         f"Zetaris returned {len(rows)} of {total} rows (asked for up to {limit}); refusing to answer on partial data",
                         recoverable=False,

@@ -1,18 +1,18 @@
 # Building with Zetaris - the VESTING DAY Unified Semantic Layer
 
-This is the write-up of the Unified Semantic Layer we built over the three councils, step by
+This is the write-up of the Unified Semantic Layer I built over the three councils, step by
 step, with where the evidence for each step is. Every result quoted here comes from the live run recorded in
 `docs/ZETARIS_USL_EVIDENCE.md` (started 2026-10-26 22:54 UTC, 29 of 29 steps succeeded), which
 `scripts/zetaris/build_usl.py` generated from Zetaris's own answers; the SQL of every step is in
-`scripts/zetaris/usl.sql`. Sections 2a-2c are our own views and are labelled as such.
+`scripts/zetaris/usl.sql`. Sections 2a-2c are my own views and are labelled as such.
 
-| Step | What the step asks for | What we did | Evidence |
+| Step | What the step asks for | What I did | Evidence |
 |---|---|---|---|
 | 1a Use case and sources | 3 or more data sources | Three councils, three separate databases, registered as three Zetaris sources | Section 1a; `scripts/zetaris/register_sources.sql` |
 | 1b Onboard and explore | 2-3 queries per source | 3 queries per source, 9 in all | Evidence steps 1-9 |
 | 1c Build and verify a USL | 1 USL and its DDL; 2-3 queries showing it active; 1 data-quality rule executed | USL `west_surrey`, 4 tables with keys; 4 queries, each giving the agent's own answer; 2 custom rules and 7 key rules, run | Evidence steps 10-29; section 1c |
-| 2a Time saved vs hand coding | A write-up (bonus: compare a hand-coded part) | Section 2a, with a side-by-side comparison from our own code | This document |
-| 2b How a USL helps our work | A write-up (bonus: a project and a forecast) | Section 2b | This document |
+| 2a Time saved vs hand coding | A write-up (bonus: compare a hand-coded part) | Section 2a, with a side-by-side comparison from my own code | This document |
+| 2b How a USL helps my work | A write-up (bonus: a project and a forecast) | Section 2b | This document |
 | 2c How to make the USL stronger | A PM-style requirement (bonus: a mocked feature) | Section 2c: five requirements, the first backed by a reproduced issue, and a mocked feature | This document; evidence steps 22-23 |
 
 ## 1a. Use case and data sources
@@ -60,7 +60,7 @@ What the exploration showed, and what it changed:
 
 ## 1c. The USL, its DDL, the queries that show it is active, and data quality
 
-The model is `lightning.metastore.vesting_day.west_surrey` (USL id 952 on our Zetaris): four
+The model is `lightning.metastore.vesting_day.west_surrey` (USL id 952 on my Zetaris): four
 tables, one primary key each and a foreign key from every table to `council`.
 
 ```sql
@@ -154,48 +154,48 @@ sources; `tests/test_zetaris_usl.py` checks that every Researcher query then ret
 rows as SAMPLE_MODE. The committed live runs `live-01` to `live-06` were made before the USL
 existed and read the three sources directly.
 
-**What we found while building it.** On our Zetaris, a filter of the form
+**What I found while building it.** On my Zetaris, a filter of the form
 `A AND B AND (C OR D)` on a USL table returned the answer of `A AND B AND C OR D`, as if the
 brackets were dropped:
 
-- Our first contract-cliff query used `AND (max_extension_end IS NULL OR max_extension_end <= '2027-04-01')`
+- My first contract-cliff query used `AND (max_extension_end IS NULL OR max_extension_end <= '2027-04-01')`
   and returned Woking 115 contracts / GBP 19,717,533.31 instead of 59 / GBP 8,086,068.60.
 - A diagnostic query showed the USL rows are identical to the source (221 Woking contracts, 86 in
   the window, 27 with an extension past vesting day), and the bracket-free reading gives 115 /
   GBP 19,717,533.31 to the penny.
 - The same query on the registered source `woking_pg.contracts` directly gives the correct 59
-  (evidence step 23), so we saw it only through the USL (step 22 reproduces it).
-- We rewrote the USL query with `CASE` (no `OR`), and kept both forms as repro steps. The agent's
+  (evidence step 23), so I saw it only through the USL (step 22 reproduces it).
+- I rewrote the USL query with `CASE` (no `OR`), and kept both forms as repro steps. The agent's
   own SQL has one `AND (x OR y)`, in its "no usable end date" lookup; there the second test
   (`end_date = ''`) can never be true for a date, so the answer is the same either way - and the
   live run's 4 rows match.
 
-## 2a. Did the USL save us time, compared with hand coding? (our view)
+## 2a. Did the USL save me time, compared with hand coding? (my view)
 
-Honestly, not in this project. We hand-coded the federation first and built the USL on the last
+Honestly, not in this project. I hand-coded the federation first and built the USL on the last
 day, so the USL came on top of work already done. It took about 40 minutes from the first
 USL commit to a 29-of-29 run, across five live runs (one repeated by mistake) that hit three
 problems in turn: a missing parent namespace, a NOT NULL column fed by a nullable expression,
 and the bracket issue above. The whole 29-step build then runs in
 about 15 seconds of Zetaris time.
 
-What we hand-coded, and what a USL built on day one would have replaced:
+What I hand-coded, and what a USL built on day one would have replaced:
 
-- **The UNION in every query.** Our adapter renders every table as
+- **The UNION in every query.** My adapter renders every table as
   `(SELECT * FROM woking_pg.contracts UNION ALL SELECT * FROM guildford_pg.contracts UNION ALL SELECT * FROM waverley_pg.contracts) AS contracts`;
-  through the USL it is `lightning.metastore.vesting_day.west_surrey.contracts`. Our adapter
+  through the USL it is `lightning.metastore.vesting_day.west_surrey.contracts`. My adapter
   already kept that in one place, so the saving there is small.
 - **Hand-written checks.** The agent finds contracts with no usable end date with its own query
   and a classification step in Python; in the USL it is one `REGISTER DQ` statement and
   `RUN DQ`, with the same four rows and their provenance. The seven key checks (unique ids,
-  every row's council exists) we never wrote at all - the USL generated them from the DDL.
-- **A schema other people can see.** `LOAD USL` returns the model as JSON; ours lived in code.
+  every row's council exists) I never wrote at all - the USL generated them from the DDL.
+- **A schema other people can see.** `LOAD USL` returns the model as JSON; mine lived in code.
 
 What it would not have replaced: Zetaris's REST API returns every value as text, typed USL
 columns included, so the adapter's conversion of numbers and dates stays; and the bracket issue
 needs care with `OR` in USL filters.
 
-**Bonus - one part compared side by side, from our own code.** The same question asked both ways:
+**Bonus - one part compared side by side, from my own code.** The same question asked both ways:
 
 ```sql
 -- Hand coded: what the agent's Researcher sends today (contracts in the window; the
@@ -220,7 +220,7 @@ check: the agent's
 hand-coded `contracts_without_end_date` query returns 4 rows; `RUN DQ contract_has_end_date`
 returns 501 total, 497 valid, 4 invalid - the same four contracts.
 
-## 2b. How a USL would help, and not help, in this kind of work (our view)
+## 2b. How a USL would help, and not help, in this kind of work (my view)
 
 It would help a merging council's finance team because:
 
@@ -242,21 +242,21 @@ It would not help, or not yet:
 
 **Bonus - a project that would benefit, and a forecast.** The rest of Surrey's reorganisation:
 every remaining council in each new authority publishes the same three kinds of file in its own
-shape. Today we turn each council's files into one common shape offline, in a 440-line Python
+shape. Today I turn each council's files into one common shape offline, in a 440-line Python
 script (`scripts/build_sample_data.py`), before loading them. With a USL, each council's files
 could be registered as they are and mapped to the common model in that council's branch of each
-activation (about 15 lines of SQL per table per council, judging by our own activations), and
+activation (about 15 lines of SQL per table per council, judging by my own activations), and
 every key and data-quality rule would then apply to the new council with no new code.
-Our forecast - an estimate, not a measurement: adding a council would shrink from extending and
+My forecast - an estimate, not a measurement: adding a council would shrink from extending and
 re-testing an offline mapping script, a load and the agent's checks, to registering a source,
 adding one branch to each activation and rerunning a build that takes seconds.
 
-## 2c. How to make the USL stronger - requirements, written as a PM (our view)
+## 2c. How to make the USL stronger - requirements, written as a PM (my view)
 
 **R1. Filters on USL tables must keep their brackets (correctness, highest priority).**
-- Problem: on our instance, `WHERE A AND B AND (C OR D)` on a USL table returned the rows of
+- Problem: on my instance, `WHERE A AND B AND (C OR D)` on a USL table returned the rows of
   `A AND B AND C OR D`. The same filter on the registered source was correct.
-- Impact: a silent wrong answer. Our contract-cliff count rose from 59 to 115 contracts and the
+- Impact: a silent wrong answer. My contract-cliff count rose from 59 to 115 contracts and the
   value at risk was overstated by GBP 11,631,464.71, with no error. A finance lead would act on it.
 - Repro: evidence steps 22 and 23 (`scripts/zetaris/usl.sql`, `repro` steps), against the USL
   and the source, on the same data.
@@ -277,11 +277,11 @@ namespace (Zetaris's getting-started guide quotes it as "parent namespace : meta
 existing"). Create `lightning.metastore` on first use, or name the fix in the message.
 
 **R5. Activation errors should point at the fix.** "Column 'amount_gbp': nullable -> NOT NULL"
-was right, but our expression was already a COALESCE wrapped in a CAST. Say that a CAST makes an
+was right, but my expression was already a COALESCE wrapped in a CAST. Say that a CAST makes an
 expression nullable and suggest putting COALESCE outermost.
 
 **Bonus - a mocked feature: activate one table from a set of like-shaped sources.** Fragmented
-data usually means many sources of the same shape. Today each of our tables needs a
+data usually means many sources of the same shape. Today each of my tables needs a
 `UNION ALL` branch per source; the contracts activation alone is 51 lines of SQL for three
 councils. Proposed syntax (this does not exist in Zetaris today; it is a mock of the feature):
 

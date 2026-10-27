@@ -4,6 +4,8 @@
 > **Sponsor technology:** Zetaris (data layer), Meterless H-MEM engine (memory), Meterless Nightshift (primary AI provider), NVIDIA Nemotron.
 > **Run:** `uv sync` then `uv run python run.py`, then open `http://localhost:8000` (or `POST /run`). No credentials needed.
 
+Live demo (sample mode, no setup): https://vestingday.nakularora.tech
+
 ## What a finance lead gets today
 
 From the three councils' own published files, in one run of about 30 seconds live:
@@ -35,7 +37,7 @@ gaps residents hit on day one, and drafts the first actions - under a human appr
 **Who it is for:** the finance lead of the West Surrey shadow authority, now, before vesting
 day. The migration of every system into one takes years; the merger's questions cannot wait.
 
-**Why this track:** the three councils are three separately published, separately shaped
+**Why federation, not migration:** the three councils are three separately published, separately shaped
 sources with different cadences. Zetaris federates them in place - one SQL statement across
 three databases that are never merged - and every number in an answer names the council,
 file and row it came from.
@@ -238,7 +240,7 @@ Six live runs are committed in `logs/` (`response-live-0N.json` and `trace-live-
 
 ### Zetaris Unified Semantic Layer (live)
 
-Over the three sources we built the Zetaris USL `lightning.metastore.vesting_day.west_surrey`
+Over the three sources I built the Zetaris USL `lightning.metastore.vesting_day.west_surrey`
 (`council`, `spend`, `contracts`, `policy_clause`, with keys), and checked it live: 29 of 29
 steps in `docs/ZETARIS_USL_EVIDENCE.md`, written by `scripts/zetaris/build_usl.py` from what
 Zetaris returned.
@@ -264,11 +266,11 @@ Copy `.env.example` to `.env`, fill in the keys and set `SAMPLE_MODE=false`:
   standing in for that council's own system: loaded from its published files, never merged,
   read through a read-only login, and with no port open to the internet
   (`scripts/zetaris/` has the load script and the Lightning SQL; `docs/ZETARIS_SETUP.md` is
-  the runbook). We run Zetaris on a 16 GB server and reach it over an SSH tunnel so the URL
+  the runbook). I run Zetaris on a 16 GB server and reach it over an SSH tunnel so the URL
   stays `localhost:8888`.
 - `METERLESS_BASE_URL`, `METERLESS_RUNTIME_TOKEN` - from Nightshift's Console on the machine
   running it. The NVIDIA API key is set inside Nightshift's Providers, never in this app.
-- `METERLESS_MODEL` - we pin `nvidia/nemotron-3.5-lightning-30b-a3b` so the NVIDIA model is
+- `METERLESS_MODEL` - I pin `nvidia/nemotron-3.5-lightning-30b-a3b` so the NVIDIA model is
   named on every request.
 - `ZETARIS_USL` (optional) - after `scripts/zetaris/build_usl.py` has built the Zetaris Unified
   Semantic Layer, set it to `lightning.metastore.vesting_day.west_surrey` to make the agent read
@@ -285,7 +287,7 @@ uv run pytest -q          # 127 tests
 
 - `tests/test_hmem_conformance.py` - the official H-MEM conformance suite, ported to pytest,
   run against the unmodified upstream vectors: **13/13**.
-- `tests/test_hmem_golden.py` - our Python engine reproduces the TypeScript reference
+- `tests/test_hmem_golden.py` - my Python engine reproduces the TypeScript reference
   bit-for-bit (embeddings, ranking, scores, conflict resolution).
 - `tests/test_run_sample_mode.py` - the run interface, real handoffs and a Critic bounce in the
   trace, provenance on every number, the memory loop changing a later answer, the approval
@@ -333,7 +335,7 @@ quote against the PDF.
 Why the windows differ: Woking publishes monthly and its newest file is April 2026;
 Guildford publishes financial-year quarters and is at Jul-Sep 2026; Waverley publishes
 half-yearly by accounting period and is at Apr-Sep 2026. There is no single month all three
-have published beyond April 2026, so we take each council's newest six months and badge
+have published beyond April 2026, so I take each council's newest six months and badge
 every answer with its window. That mismatch is the fragmentation the project exists to
 federate.
 
@@ -362,7 +364,7 @@ open data terms.
 
 `docs/SPONSOR_TECHNOLOGY.md` explains exactly how Zetaris, the Meterless H-MEM engine,
 Meterless Nightshift and NVIDIA Nemotron are used, the test for each, how the project was
-built, and what was unique about our use of them.
+built, and what was unique about how I used them.
 
 ## AI and model usage
 
@@ -403,7 +405,7 @@ Development tools: Python 3.12, uv, pytest, Docker, GitHub Actions and Claude Co
   preparation scripts openpyxl (MIT) and pypdf (BSD-3-Clause). Exact versions are pinned in
   `uv.lock` and `requirements.txt`.
 - `third_party/hmem/vectors.json` - the Meterless H-MEM conformance vectors, copied unmodified
-  (Apache-2.0, see `third_party/hmem/NOTICE`). `app/engines/hmem` is our own Python port of the
+  (Apache-2.0, see `third_party/hmem/NOTICE`). `app/engines/hmem` is my own Python port of the
   Meterless TypeScript reference.
 - The Zetaris Lightning SQL in `scripts/zetaris/` follows the syntax in Zetaris's public
   getting-started guides.
@@ -416,5 +418,5 @@ Development tools: Python 3.12, uv, pytest, Docker, GitHub Actions and Claude Co
 None. The first commit is 24 Oct 2026; all code in this repository was written during the
 build window (22-27 Oct 2026). Third party: `third_party/hmem/vectors.json` is the Meterless
 H-MEM conformance suite, copied unmodified (Apache-2.0, see `third_party/hmem/NOTICE`);
-`app/engines/hmem` is our own port of the Meterless TypeScript reference. The council data
+`app/engines/hmem` is my own port of the Meterless TypeScript reference. The council data
 is the councils' own published open data. Licence: Apache-2.0.

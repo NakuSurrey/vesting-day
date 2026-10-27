@@ -4,7 +4,7 @@ Downloaded 2026-10-25 from the councils' own websites. Nothing here is edited.
 `scripts/build_sample_data.py` maps these into `data/sample/` (one schema, provenance ids).
 
 Why these windows: each council publishes on its own cadence and lag, so there is no
-single month all three have published beyond April 2026. We take the NEWEST six months
+single month all three have published beyond April 2026. I take the NEWEST six months
 each council has released and badge every number with its council's window. That
 mismatch is the fragmentation the project exists to federate.
 

@@ -1,7 +1,7 @@
 // Cross-check scenarios: run the upstream Meterless H-MEM TypeScript reference
 // on fixed inputs and print JSON. The output is frozen in
 // tests/golden/hmem_reference_output.json and tests/test_hmem_golden.py replays
-// the same scenarios through our Python port and compares.
+// the same scenarios through the Python port and compares.
 //
 // Regenerate (needs Node 22 + a clone of github.com/Meterless/Meterless):
 //   HMEM_REFERENCE_SRC=/abs/path/to/Meterless/engines/hmem/reference/src/index.ts \

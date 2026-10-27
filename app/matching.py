@@ -103,7 +103,7 @@ def pair_key(a_council: str, a_name: str, b_council: str, b_name: str) -> str:
 
 
 def _blocks(names: Iterable[str]) -> dict[str, list[str]]:
-    """Blocking keys so we do not compare every pair: first token and 4-char prefix."""
+    """Blocking keys, so not every pair is compared: first token and 4-char prefix."""
     out: dict[str, list[str]] = {}
     for n in names:
         toks = tokens(n)

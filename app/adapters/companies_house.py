@@ -1,7 +1,7 @@
 """Companies House lookups for supplier identity.
 
 Live mode: the public Companies House API (search by name; needs COMPANIES_HOUSE_API_KEY,
-rate limit ~600 requests / 5 minutes, we stay well under with a 0.6s gap).
+rate limit ~600 requests / 5 minutes; a 0.6s gap keeps well under it).
 Sample mode: a cached file data/sample/companies_house.json of earlier lookups.
 If neither is available the Resolver carries on without it - a match then needs
 a human to confirm, which is the honest outcome.

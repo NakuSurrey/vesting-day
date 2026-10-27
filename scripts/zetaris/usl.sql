@@ -13,7 +13,7 @@
 -- Each block starts with a line:  -- @step <kind> <name>
 --   explore = exploratory query on one source   build = namespace, compile, activate
 --   check   = inspect the deployed model         query = query the activated USL
---   repro   = reproduce a Zetaris behaviour we found (a different answer is the expected result)
+--   repro   = reproduce a Zetaris behaviour I found (a different answer is the expected result)
 --   dq      = data-quality rules and their results
 
 -- @step explore woking_spend_profile
@@ -78,7 +78,7 @@ LIMIT 5
 
 -- @step build parent_namespace
 -- On an instance with no USL yet, lightning.metastore itself does not exist and creating a
--- namespace under it fails with "parent namespace : metastore is not existing" (seen on our
+-- namespace under it fails with "parent namespace : metastore is not existing" (seen on my
 -- first run, and noted in Zetaris's getting-started companion guide, section 8.4).
 CREATE NAMESPACE IF NOT EXISTS lightning.metastore
 
@@ -326,7 +326,7 @@ ORDER BY combined_spend_gbp DESC, supplier_name
 LIMIT 10
 
 -- @step repro usl_or_inside_brackets
--- The same contract-cliff rule written with OR inside brackets. On our Zetaris (26 Oct 2026)
+-- The same contract-cliff rule written with OR inside brackets. On my Zetaris (26 Oct 2026)
 -- this returned Woking 115 / GBP 19,717,533.31 instead of 59 / GBP 8,086,068.60 - exactly the
 -- answer of "A AND B AND C OR D", as if the brackets were dropped. The USL rows themselves are
 -- identical to the source (221 rows, 86 in the window, 27 with an extension past vesting day).
