@@ -107,5 +107,5 @@ def test_headline_comes_from_the_newest_live_brief(client) -> None:
 
 def test_page_has_the_results_band_and_recorded_runs(client) -> None:
     html = client.get("/").text
-    for needle in ('id="results"', 'id="runsCard"', "loadEvidence()", "/evidence", "replayRun", "Download all rows", "no number is typed into this page"):
+    for needle in ('id="results"', 'id="runsView"', "loadEvidence()", "/evidence", "replayRun", "Download all rows", "no number is typed into this page"):
         assert needle in html
