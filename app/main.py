@@ -33,6 +33,33 @@ from app.schemas import RunRequest
 
 app = FastAPI(title="VESTING DAY", version="0.1.0",
               description="Federates merging councils' spend, contract and policy data in place; remembers human decisions; drafts day-one actions under an approval gate.")
+
+
+class HeadLikeGet:
+    """Answer HEAD wherever GET works: link checkers ask "is this page there?" with HEAD, not GET.
+
+    The app sees a copy of the request marked GET; the server keeps its own HEAD and sends no body.
+    """
+
+    def __init__(self, inner):
+        self.inner = inner
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] != "http" or scope["method"] != "HEAD":
+            await self.inner(scope, receive, send)
+            return
+
+        async def without_body(message):
+            if message["type"] == "http.response.body":
+                message = {**message, "body": b""}
+            await send(message)
+
+        await self.inner({**scope, "method": "GET"}, receive, without_body)
+
+
+app.add_middleware(HeadLikeGet)
+
+
 _orchestrator: Orchestrator | None = None
 _lock = threading.Lock()          # one run at a time: H-MEM and the approval store are shared state
 _RUN_ID = re.compile(r"[A-Za-z0-9_-]{1,80}")

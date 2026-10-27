@@ -50,6 +50,11 @@ def test_page_is_served_and_self_contained(client) -> None:
     assert not re.search(r"<link[^>]+href=", html, re.I)
     assert "@import" not in html and "fonts.googleapis" not in html
     assert all(ord(c) < 128 for c in html), "page source must be plain ASCII"
+    # a link checker's HEAD request gets the same answer as GET, with no body
+    for path in ("/", "/health", "/evidence", "/docs"):
+        h = client.head(path)
+        assert h.status_code == 200 and h.content == b"", (path, h.status_code)
+    assert client.head("/").headers["content-type"].startswith("text/html")
 
 
 def test_api_index_lists_the_routes(client) -> None:
